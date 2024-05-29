@@ -1,0 +1,37 @@
+name: semo
+description: "A streaming application"
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cached_network_image: ^3.3.1
+  connectivity_plus: ^6.0.3
+  firebase_analytics: ^10.10.6
+  firebase_auth: ^4.19.6
+  firebase_core: ^2.31.1
+  firebase_crashlytics: ^3.5.6
+  firebase_messaging: ^14.9.3
+  flutter_fgbg: ^0.3.0
+  flutter_local_notifications: ^17.1.2
+  flutter_vlc_player: ^7.4.1
+  font_awesome_flutter: ^10.7.0
+  google_sign_in: ^6.2.1
+  http: ^1.2.1
+  package_info_plus: ^8.0.0
+  page_transition: ^2.1.0
+  settings_ui: ^2.0.2
+  shared_preferences: ^2.2.3
+  video_player: ^2.8.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/

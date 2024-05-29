@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "373107998814",
+    "project_id": "semo-5557f",
+    "storage_bucket": "semo-5557f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373107998814:android:a963cce13fa1e1521774cf",
+        "android_client_info": {
+          "package_name": "net.examnet.semo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "373107998814-ab1ec65gne4rsfg6n7e5pnkt6ss184vm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.examnet.semo",
+            "certificate_hash": "464be7a74e1ead8a5793e2c5e55a1404386b60f6"
+          }
+        },
+        {
+          "client_id": "373107998814-q3dm6nqt1lhhneo8mdv7csqbfase76qk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.examnet.semo",
+            "certificate_hash": "b4d9fdf1d6d7947bc1dbb5d20b11f7c013c36aca"
+          }
+        },
+        {
+          "client_id": "373107998814-pd40tjns96ae7b5ncjb03gqsr5bsk59e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhE5EUKt2eYHf8ZaUvJOcteEeMaXNoqQs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "373107998814-pd40tjns96ae7b5ncjb03gqsr5bsk59e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "net.examnet.semo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

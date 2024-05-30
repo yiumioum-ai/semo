@@ -2,12 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/favorites.dart';
-import 'package:semo/home.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
 import 'package:semo/movies.dart';
+import 'package:semo/search.dart';
 import 'package:semo/settings.dart';
 import 'package:semo/tv_shows.dart';
+import 'package:semo/utils/enums.dart';
 
 class Fragments extends StatefulWidget {
   @override
@@ -23,6 +24,7 @@ class _FragmentsState extends State<Fragments> {
       if (user == null) {
         navigate(
           destination: Landing(),
+          replace: true,
         );
       }
     });
@@ -32,42 +34,51 @@ class _FragmentsState extends State<Fragments> {
     setState(() {
       _navigationPages = [
         NavigationPage(
-          icon: Icons.home,
-          title: 'Home',
-          widget: Home(),
-        ),
-        NavigationPage(
           icon: Icons.movie,
           title: 'Movies',
           widget: Movies(),
+          pageType: PageType.movies,
         ),
         NavigationPage(
           icon: Icons.video_library,
           title: 'TV Shows',
           widget: TVShows(),
+          pageType: PageType.tv_shows,
         ),
         NavigationPage(
           icon: Icons.favorite,
           title: 'Favorites',
           widget: Favorites(),
+          pageType: PageType.favorites,
         ),
         NavigationPage(
           icon: Icons.settings,
           title: 'Settings',
           widget: Settings(),
+          pageType: PageType.settings,
         ),
       ];
     });
   }
 
-  navigate({required Widget destination}) async {
-    await Navigator.pushReplacement(
-      context,
-      PageTransition(
-        type: PageTransitionType.rightToLeft,
-        child: destination,
-      ),
-    );
+  navigate({required Widget destination, bool replace = false}) async {
+    if (replace) {
+      await Navigator.pushReplacement(
+        context,
+        PageTransition(
+          type: PageTransitionType.rightToLeft,
+          child: destination,
+        ),
+      );
+    } else {
+      await Navigator.push(
+        context,
+        PageTransition(
+          type: PageTransitionType.rightToLeft,
+          child: destination,
+        ),
+      );
+    }
   }
 
   @override
@@ -115,13 +126,13 @@ class _FragmentsState extends State<Fragments> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(
             _navigationPages[_selectedPageIndex].title,
           style: Theme.of(context).textTheme.titleSmall!.copyWith(
             color: Colors.white,
           ),
         ),
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -135,6 +146,21 @@ class _FragmentsState extends State<Fragments> {
             );
           },
         ),
+        actions: [
+          _selectedPageIndex != 3 ? IconButton(
+            icon: Icon(
+              Icons.search,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              navigate(
+                destination: Search(
+                  pageType: _navigationPages[_selectedPageIndex].pageType,
+                ),
+              );
+            },
+          ) : Container(),
+        ],
       ),
       body: _navigationPages[_selectedPageIndex].widget,
       drawer: SafeArea(
@@ -153,11 +179,7 @@ class _FragmentsState extends State<Fragments> {
                   ),
                 ),
               ),
-              NavigationTile(0),
-              NavigationTile(1),
-              NavigationTile(2),
-              NavigationTile(3),
-              NavigationTile(4),
+              for (final (index, item) in _navigationPages.indexed) NavigationTile(index),
             ],
           ),
         ),

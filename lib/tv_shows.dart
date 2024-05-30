@@ -8,14 +8,25 @@ class TVShows extends StatefulWidget {
 }
 
 class _TVShowsState extends State<TVShows> {
-  navigate({required Widget destination}) async {
-    await Navigator.pushReplacement(
-      context,
-      PageTransition(
-        type: PageTransitionType.rightToLeft,
-        child: destination,
-      ),
-    );
+
+  navigate({required Widget destination, bool replace = false}) async {
+    if (replace) {
+      await Navigator.pushReplacement(
+        context,
+        PageTransition(
+          type: PageTransitionType.rightToLeft,
+          child: destination,
+        ),
+      );
+    } else {
+      await Navigator.push(
+        context,
+        PageTransition(
+          type: PageTransitionType.rightToLeft,
+          child: destination,
+        ),
+      );
+    }
   }
 
   @override

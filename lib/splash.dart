@@ -180,7 +180,7 @@ class _SplashState extends State<Splash> {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(
-                      top: 10,
+                      bottom: 10,
                       right: 16,
                       left: 16,
                     ),

@@ -8,17 +8,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  audio_video_progress_bar: ^2.0.3
   cached_network_image: ^3.3.1
   connectivity_plus: ^6.0.3
-  firebase_analytics: ^10.10.7
-  firebase_auth: ^4.20.0
-  firebase_core: ^2.32.0
-  firebase_crashlytics: ^3.5.7
-  firebase_messaging: ^14.9.4
+  firebase_analytics: ^11.0.1
+  firebase_auth: ^5.1.0
+  firebase_core: ^3.1.0
+  firebase_crashlytics: ^4.0.1
+  firebase_messaging: ^15.0.1
   flick_video_player: ^0.8.0
   flutter_fgbg: ^0.3.0
   flutter_local_notifications: ^17.1.2
-  flutter_vlc_player: ^7.4.1
+  flutter_vlc_player: ^7.4.2
   font_awesome_flutter: ^10.7.0
   google_sign_in: ^6.2.1
   http: ^1.2.1
@@ -26,7 +27,7 @@ dependencies:
   page_transition: ^2.1.0
   settings_ui: ^2.0.2
   shared_preferences: ^2.2.3
-  video_player: ^2.8.6
+  video_player: ^2.8.7
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,6 @@
 /lib/api_keys.dart
+.vscode/
+.idx/
 
 # Miscellaneous
 *.class

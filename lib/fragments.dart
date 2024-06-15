@@ -5,7 +5,6 @@ import 'package:semo/favorites.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
 import 'package:semo/movies.dart';
-import 'package:semo/player.dart';
 import 'package:semo/search.dart';
 import 'package:semo/settings.dart';
 import 'package:semo/tv_shows.dart';
@@ -154,13 +153,10 @@ class _FragmentsState extends State<Fragments> {
               color: Colors.white,
             ),
             onPressed: () {
-              /*navigate(
+              navigate(
                 destination: Search(
                   pageType: _navigationPages[_selectedPageIndex].pageType,
                 ),
-              );*/
-              navigate(
-                destination: Player(),
               );
             },
           ) : Container(),

@@ -32,9 +32,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         autoPlay: true,
         autoInitialize: true,
         options: VlcPlayerOptions(
-          advanced: VlcAdvancedOptions([
-            VlcAdvancedOptions.networkCaching(10000),
-          ]),
           http: VlcHttpOptions([
             VlcHttpOptions.httpReconnect(true),
           ]),
@@ -97,7 +94,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   seekBack() async {
     Duration currentPosition = await _videoPlayerController.getPosition();
     Duration targetPosition = Duration(
-      seconds: currentPosition.inSeconds - 10,
+      seconds: currentPosition.inSeconds - (currentPosition.inSeconds < 10 ? currentPosition.inSeconds : 10),
     );
     await _videoPlayerController.seekTo(targetPosition);
   }
@@ -197,7 +194,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
             controller: _videoPlayerController,
             aspectRatio: MediaQuery.of(context).size.width / MediaQuery.of(context).size.height,
             placeholder: Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).primaryColor,
+                ),
+              ),
             ),
           ),
         ),
@@ -342,7 +343,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
               _showControls = true;
             });
             Future.delayed(const Duration(seconds: 5), () {
-              if (_isPlaying) {
+              if (mounted && _isPlaying) {
                 setState(() {
                   _showControls = false;
                 });

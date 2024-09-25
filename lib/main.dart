@@ -2,60 +2,67 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:semo/firebase_options.dart';
 import 'package:semo/splash.dart';
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Handling a background message: ${message.messageId}');
+void main() async {
+  if (kReleaseMode) debugPrint = (String? message, {int? wrapWidth}) {};
+
+  if (kIsWeb) usePathUrlStrategy();
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeFirebase();
+
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
+    runApp(Semo());
+  });
 }
 
-void main() async {
-  usePathUrlStrategy();
-  if (kIsWeb) {
-    WidgetsFlutterBinding.ensureInitialized();
+initializeFirebase() async {
+  FirebaseApp app = await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instanceFor(app: app);
 
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+  await remoteConfig.setConfigSettings(
+    RemoteConfigSettings(
+      fetchTimeout: const Duration(minutes: 1),
+      minimumFetchInterval: const Duration(hours: 1),
+    ),
+  );
 
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  await remoteConfig.setDefaults({
+    'appVersion': packageInfo.version,
+  });
 
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-      runApp(Semo());
+  await remoteConfig.fetchAndActivate();
+
+  if (!kIsWeb) {
+    remoteConfig.onConfigUpdated.listen((event) async {
+      await remoteConfig.activate();
     });
-  } else {
-    runZonedGuarded<Future<void>>(() async {
-      WidgetsFlutterBinding.ensureInitialized();
+  }
 
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-      if (kDebugMode) {
-        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-      } else {
-        await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-      }
-
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-        runApp(Semo());
-      });
-    },
-          (error, stack) => FirebaseCrashlytics.instance.recordError(
+  FirebaseCrashlytics crashlytics = await FirebaseCrashlytics.instance;
+  runZonedGuarded<Future<void>>(() async {
+    if (!kIsWeb) {
+      await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+      FlutterError.onError = crashlytics.recordFlutterFatalError;
+    }
+  }, (error, stack) async {
+    if (!kIsWeb) {
+      await FirebaseCrashlytics.instance.recordError(
         error,
         stack,
         fatal: true,
-      ),
-    );
-  }
+      );
+    }
+  });
 }
 
 class Semo extends StatelessWidget {

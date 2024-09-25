@@ -15,10 +15,9 @@ dependencies:
   firebase_auth: ^5.1.0
   firebase_core: ^3.1.0
   firebase_crashlytics: ^4.0.1
-  firebase_messaging: ^15.0.1
+  firebase_remote_config: ^5.1.0
   flick_video_player: ^0.8.0
   flutter_fgbg: ^0.3.0
-  flutter_local_notifications: ^17.1.2
   flutter_vlc_player: ^7.4.2
   font_awesome_flutter: ^10.7.0
   google_sign_in: ^6.2.1

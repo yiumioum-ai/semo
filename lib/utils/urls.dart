@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
+
 class Urls {
-  static const String movieSearch = 'https://api.themoviedb.org/3/search/movie';
+  static const String search = 'https://api.themoviedb.org/3/search';
   static const String imageBase_w45 = 'https://image.tmdb.org/t/p/w45';
   static const String imageBase_w92 = 'https://image.tmdb.org/t/p/w92';
   static const String imageBase_w154 = 'https://image.tmdb.org/t/p/w154';
@@ -11,29 +13,36 @@ class Urls {
   static const String imageBase_w780 = 'https://image.tmdb.org/t/p/w780';
   static const String imageBase_w1280 = 'https://image.tmdb.org/t/p/w1280';
   static const String imageBase_original = 'https://image.tmdb.org/t/p/original';
+  static const String youtubeStream = 'https://api.cobalt.tools';
 
-  static createUri({required String url, Map<String, dynamic>? queryParameters}) {
-    var isHttp = false;
-    if (url.startsWith('https://') || (isHttp = url.startsWith('http://'))) {
-      var authority = url.substring((isHttp ? 'http://' : 'https://').length);
-      String path;
-      final index = authority.indexOf('/');
+  static String getMovieVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
+  static String getTvShowVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
 
-      if (-1 == index) {
-        path = '';
-      } else {
-        path = authority.substring(index);
-        authority = authority.substring(0, authority.length - path.length);
-      }
+  static String getBestImageUrl(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
 
-      if (isHttp) {
-        return Uri.http(authority, path, queryParameters);
-      } else {
-        return Uri.https(authority, path, queryParameters);
-      }
-    } else if (url.startsWith('localhost')) {
-      return createUri(url: 'http://$url', queryParameters: queryParameters);
+    if (screenWidth <= 45) {
+      return imageBase_w45;
+    } else if (screenWidth <= 92) {
+      return imageBase_w92;
+    } else if (screenWidth <= 154) {
+      return imageBase_w154;
+    } else if (screenWidth <= 185) {
+      return imageBase_w185;
+    } else if (screenWidth <= 300) {
+      return imageBase_w300;
+    } else if (screenWidth <= 342) {
+      return imageBase_w342;
+    } else if (screenWidth <= 500) {
+      return imageBase_w500;
+    } else if (screenWidth <= 632) {
+      return imageBase_w632;
+    } else if (screenWidth <= 780) {
+      return imageBase_w780;
+    } else if (screenWidth <= 1280) {
+      return imageBase_w1280;
+    } else {
+      return imageBase_original;
     }
-    throw Exception('Unsupported scheme');
   }
 }

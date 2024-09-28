@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class Landing extends StatefulWidget {
 class _LandingState extends State<Landing> {
   VideoPlayerController? _controller;
   bool _visible = false;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   initializeVideo() {
     _controller = VideoPlayerController.asset('assets/cover.mp4');
@@ -32,8 +34,6 @@ class _LandingState extends State<Landing> {
   }
 
   googleAuthentication() async {
-    print('Google Auth');
-
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
@@ -43,11 +43,27 @@ class _LandingState extends State<Landing> {
     );
 
     try {
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      FirebaseAuth auth = FirebaseAuth.instance;
+      await auth.signInWithCredential(credential);
 
-      navigate(
-        destination: Fragments(),
+      String uid = auth.currentUser!.uid;
+
+      final user = _firestore.collection('users').doc(uid);
+      await user.get().then((DocumentSnapshot doc) async {
+          bool isRegistered = doc.exists;
+
+          if (!isRegistered) {
+            await user.set({
+              'email': auth.currentUser!.email,
+              'favorite_movies': [],
+              'favorite_tv_shows': [],
+            });
+          }
+        },
+        onError: (e) => print("Error getting user: $e"),
       );
+
+      navigate(destination: Fragments());
     } catch (e) {
       print(e);
     }
@@ -79,6 +95,7 @@ class _LandingState extends State<Landing> {
   void dispose() {
     super.dispose();
     if (_controller != null) {
+      _controller!.pause();
       _controller!.dispose();
       _controller = null;
     }
@@ -177,41 +194,33 @@ class _LandingState extends State<Landing> {
           child: Column(
             children: [
               Padding(
-                padding: EdgeInsets.only(
-                  top: 36,
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                child: Text(
-                  'Welcome!',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.left,
+                padding: EdgeInsets.only(top: 36),
+                child: Container(
+                  width: double.infinity,
+                  child: Text(
+                    'Welcome!',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.left,
+                  ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(
-                  top: 8,
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                child: Text(
-                  'Discover a vast library of entertainment, from blockbuster hits to indie gems, all tailored to your tastes. Enjoy unlimited streaming on any device, create your personalized watchlist, and get ready for an unparalleled viewing experience.',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left,
+                padding: EdgeInsets.only(top: 8),
+                child: Container(
+                  width: double.infinity,
+                  child: Text(
+                    'Discover a vast library of entertainment, from blockbuster hits to indie gems, all tailored to your tastes. Enjoy unlimited streaming on any device, create your personalized watchlist, and get ready for an unparalleled viewing experience.',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left,
+                  ),
                 ),
               ),
               Padding(
                 padding: EdgeInsets.only(
                   top: 30,
-                ),
-              ),
-              ContinueWithGoogle(),
-              Padding(
-                padding: EdgeInsets.only(
                   bottom: 12,
                 ),
+                child: ContinueWithGoogle(),
               ),
             ],
           ),
@@ -223,14 +232,15 @@ class _LandingState extends State<Landing> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ThemeData().scaffoldBackgroundColor,
-      body: Stack(
-        children: <Widget>[
-          VideoBackground(),
-          BackgroundTint(),
-          Content(),
-        ],
-      ),
+      body: _controller != null ? SafeArea(
+        child: Stack(
+          children: [
+            VideoBackground(),
+            BackgroundTint(),
+            Content(),
+          ],
+        ),
+      ) : Container(),
     );
   }
 }

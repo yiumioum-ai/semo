@@ -89,9 +89,7 @@ class _FragmentsState extends State<Fragments> {
   }
 
   _onNavigationTileTapped(int index) {
-    setState(() {
-      _selectedPageIndex = index;
-    });
+    setState(() => _selectedPageIndex = index);
     Navigator.pop(context);
   }
 
@@ -124,15 +122,9 @@ class _FragmentsState extends State<Fragments> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: Text(
-            _navigationPages[_selectedPageIndex].title,
-          style: Theme.of(context).textTheme.titleSmall!.copyWith(
-            color: Colors.white,
-          ),
-        ),
+        title: Text(_navigationPages[_selectedPageIndex].title),
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -140,14 +132,12 @@ class _FragmentsState extends State<Fragments> {
                 Icons.menu,
                 color: Colors.white,
               ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
+              onPressed: () => Scaffold.of(context).openDrawer(),
             );
           },
         ),
         actions: [
-          _selectedPageIndex != 3 ? IconButton(
+          _selectedPageIndex < 1 ? IconButton(
             icon: Icon(
               Icons.search,
               color: Colors.white,

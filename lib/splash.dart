@@ -41,17 +41,15 @@ class _SplashState extends State<Splash> {
 
   checkUserSession() {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      Widget destination;
+
       if (user == null) {
-        print('Not logged in');
-        navigate(
-          destination: Landing(),
-        );
+        destination = Landing();
       } else {
-        print('Logged in');
-        navigate(
-          destination: Fragments(),
-        );
+        destination = Fragments();
       }
+
+      navigate(destination: destination);
     });
   }
 

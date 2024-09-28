@@ -6,28 +6,36 @@ import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
 
+//ignore: must_be_immutable
 class Player extends StatefulWidget {
+  String title, streamUrl;
+
+  Player({
+    required this.title,
+    required this.streamUrl,
+  });
+
   @override
   _PlayerState createState() => _PlayerState();
 }
 
 class _PlayerState extends State<Player> with TickerProviderStateMixin {
-  late VlcPlayerController _videoPlayerController;
+  String? _title, _streamUrl;
+  VlcPlayerController? _videoPlayerController;
   DurationState _durationState = DurationState(
     progress: Duration.zero,
     buffered: Duration.zero,
     total: Duration.zero,
   );
-  bool _isPlaying = true;
-  bool _showControls = true;
-  late AnimationController _scaleVideoAnimationController;
+  bool _isPlaying = true, _showControls = true;
+  AnimationController? _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
   double _lastZoomGestureScale = 1.0;
 
   initializePlayer() {
     setState(() {
       _videoPlayerController = VlcPlayerController.network(
-        'https://ewal.v44381c4b81.site/_v2-ekbz/9a701df34ea7e4ae16c25b01dd7fefae771974c45e1c81b9948778fe4fcd06741ae3e719f0ef63837c6cf62e8daaecb28d7ff9aa0d734593957b6d8b83565f6c2fa332d13fc9abac36c2e822d50a918d06c160eaf2e98f5ec3340eb8e9c7f9e5727599/h/list;9d705ee448b4e4e553dc06568f6feda3345b239e1c12c6.m3u8',
+        _streamUrl!,
         hwAcc: HwAcc.auto,
         autoPlay: true,
         autoInitialize: true,
@@ -39,21 +47,19 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       );
     });
 
-    _videoPlayerController.addOnInitListener(() {
+    _videoPlayerController!.addOnInitListener(() {
       streamUpdates();
       Future.delayed(Duration(seconds: 5), () {
-        setState(() {
-          _showControls = false;
-        });
+        setState(() => _showControls = false);
       });
     });
   }
 
   streamUpdates() async {
-    Duration progress = await _videoPlayerController.getPosition();
-    Duration total = await _videoPlayerController.getDuration();
+    Duration progress = await _videoPlayerController!.getPosition();
+    Duration total = await _videoPlayerController!.getDuration();
     Duration buffered = Duration(
-      seconds: ((_videoPlayerController.value.bufferPercent * total.inSeconds) / 100).round(),
+      seconds: ((_videoPlayerController!.value.bufferPercent * total.inSeconds) / 100).round(),
     );
 
     setState(() {
@@ -66,17 +72,21 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
     if (total.inSeconds == 0 || progress != total) {
       streamUpdates();
+    } else {
+      _videoPlayerController!.dispose();
+      _videoPlayerController = null;
+      Navigator.of(context).pop();
     }
   }
 
   playPause() async {
     if (_isPlaying) {
-      await _videoPlayerController.pause();
+      await _videoPlayerController!.pause();
     } else {
-      await _videoPlayerController.play();
+      await _videoPlayerController!.play();
     }
 
-    bool? isPlaying = await _videoPlayerController.isPlaying();
+    bool? isPlaying = await _videoPlayerController!.isPlaying();
     setState(() {
       _isPlaying = isPlaying!;
       _showControls = !isPlaying;
@@ -84,28 +94,24 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   seekForward() async {
-    Duration currentPosition = await _videoPlayerController.getPosition();
-    Duration targetPosition = Duration(
-      seconds: currentPosition.inSeconds + 10,
-    );
-    await _videoPlayerController.seekTo(targetPosition);
+    Duration currentPosition = await _videoPlayerController!.getPosition();
+    Duration targetPosition = Duration(seconds: currentPosition.inSeconds + 10);
+    await _videoPlayerController!.seekTo(targetPosition);
   }
 
   seekBack() async {
-    Duration currentPosition = await _videoPlayerController.getPosition();
+    Duration currentPosition = await _videoPlayerController!.getPosition();
     Duration targetPosition = Duration(
       seconds: currentPosition.inSeconds - (currentPosition.inSeconds < 10 ? currentPosition.inSeconds : 10),
     );
-    await _videoPlayerController.seekTo(targetPosition);
+    await _videoPlayerController!.seekTo(targetPosition);
   }
 
-  seek(Duration target) async {
-    await _videoPlayerController.seekTo(target);
-  }
+  seek(Duration target) async => await _videoPlayerController!.seekTo(target);
 
   initializeScaling() {
     Size screenSize = MediaQuery.of(context).size;
-    Size videoSize = _videoPlayerController.value.size;
+    Size videoSize = _videoPlayerController!.value.size;
     double targetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
 
     _scaleVideoAnimation = Tween<double>(
@@ -113,7 +119,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       end: targetScale,
     ).animate(
       CurvedAnimation(
-        parent: _scaleVideoAnimationController,
+        parent: _scaleVideoAnimationController!,
         curve: Curves.easeInOut,
       ),
     );
@@ -128,9 +134,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   forcePortrait() async {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
@@ -159,11 +163,13 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    _title = widget.title;
+    _streamUrl = widget.streamUrl;
     super.initState();
     forceLandscape();
 
     _scaleVideoAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 125),
+      duration: Duration(milliseconds: 125),
       vsync: this,
     );
 
@@ -180,8 +186,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   void dispose() async {
     super.dispose();
     forcePortrait();
-    _videoPlayerController.removeOnInitListener(() {});
-    await _videoPlayerController.dispose();
+
+    if (_isPlaying) await _videoPlayerController!.pause();
+    _videoPlayerController!.removeOnInitListener(() {});
+    await _videoPlayerController!.dispose();
   }
 
   Widget VideoPlayer() {
@@ -191,14 +199,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         child: AspectRatio(
           aspectRatio: 16 / 9,
           child: VlcPlayer(
-            controller: _videoPlayerController,
+            controller: _videoPlayerController!,
             aspectRatio: MediaQuery.of(context).size.width / MediaQuery.of(context).size.height,
             placeholder: Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).primaryColor,
-                ),
-              ),
+              child: CircularProgressIndicator(),
             ),
           ),
         ),
@@ -223,14 +227,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                 alignment: Alignment.topCenter,
                 child: AppBar(
                   backgroundColor: Colors.transparent,
-                  leading: BackButton(
-                    color: Colors.white,
-                  ),
+                  leading: BackButton(color: Colors.white),
                   title: Text(
-                    'Dune: Part Two',
-                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                      color: Colors.white,
-                    ),
+                    _title!,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
                   actions: [
                     IconButton(
@@ -260,9 +260,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () {
-                        seekBack();
-                      },
+                      onPressed: () => seekBack(),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -274,9 +272,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                           color: Colors.white,
                           size: 42,
                         ),
-                        onPressed: () {
-                          playPause();
-                        },
+                        onPressed: () => playPause(),
                       ),
                     ),
                     IconButton(
@@ -285,9 +281,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () {
-                        seekForward();
-                      },
+                      onPressed: () => seekForward(),
                     ),
                   ],
                 ),
@@ -313,9 +307,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     thumbColor: Theme.of(context).primaryColor,
                     timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
                     timeLabelPadding: 10,
-                    onSeek: (target) {
-                      seek(target);
-                    },
+                    onSeek: (target) => seek(target),
                   ),
                 ),
               ),
@@ -328,25 +320,18 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    initializeScaling();
+    if (_videoPlayerController != null) initializeScaling();
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: GestureDetector(
+      body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
           if (_showControls) {
-            setState(() {
-              _showControls = false;
-            });
+            setState(() => _showControls = false);
           } else {
-            setState(() {
-              _showControls = true;
-            });
+            setState(() => _showControls = true);
             Future.delayed(const Duration(seconds: 5), () {
               if (mounted && _isPlaying) {
-                setState(() {
-                  _showControls = false;
-                });
+                setState(() => _showControls = false);
               }
             });
           }
@@ -356,28 +341,20 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         },
         onScaleEnd: (details) {
           if (_lastZoomGestureScale > 1.0) {
-            setState(() {
-              // Zoom in
-              _scaleVideoAnimationController.forward();
-            });
+            setState(() => _scaleVideoAnimationController!.forward());
           } else if (_lastZoomGestureScale < 1.0) {
-            setState(() {
-              // Zoom out
-              _scaleVideoAnimationController.reverse();
-            });
+            setState(() => _scaleVideoAnimationController!.reverse());
           }
           _lastZoomGestureScale = 1.0;
         },
         child: Stack(
           children: [
-            Container(
-              color: Colors.black,
-            ),
+            Container(color: Colors.black),
             VideoPlayer(),
             Controls(),
           ],
         ),
-      ),
+      ) : Container(),
     );
   }
 }

@@ -74,7 +74,8 @@ class Semo extends StatelessWidget {
       title: 'Semo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(0xFFBD0000),
+          useMaterial3: true,
+        primaryColor: Color(0xFFAB261D),
         scaffoldBackgroundColor: Color(0xFF121212),
         dialogBackgroundColor: Color(0xFF212121),
         cardColor: Color(0xFF212121),
@@ -98,7 +99,16 @@ class Semo extends StatelessWidget {
               color: Colors.white,
           ),
         ),
-        useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          scrolledUnderElevation: 0,
+          backgroundColor: Color(0xFF121212),
+          titleTextStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
       ),
       home: Splash(),
     );

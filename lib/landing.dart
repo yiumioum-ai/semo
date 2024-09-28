@@ -54,7 +54,6 @@ class _LandingState extends State<Landing> {
 
           if (!isRegistered) {
             await user.set({
-              'email': auth.currentUser!.email,
               'favorite_movies': [],
               'favorite_tv_shows': [],
             });

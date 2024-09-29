@@ -11,7 +11,9 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/movie.dart';
-import 'package:semo/models/media.dart' as model;
+import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
 

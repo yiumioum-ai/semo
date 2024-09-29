@@ -85,6 +85,11 @@ class Semo extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.white,
           ),
+          titleMedium: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
           titleSmall: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

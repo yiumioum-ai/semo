@@ -16,7 +16,11 @@ class Urls {
   static const String youtubeStream = 'https://api.cobalt.tools';
 
   static String getMovieVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
-  static String getTvShowVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
+  static String getTvShowVideosUrl(int id) => 'https://api.themoviedb.org/3/tv/$id/videos';
+  static String getMovieStreamUrl(int id) => 'https://semo-vidsrc.vercel.app/$id';
+  static String getEpisodeStreamUrl(int tvShowId, int season, int episode) => 'https://semo-vidsrc.vercel.app/$tvShowId/$season/$episode';
+  static String getMovieCast(int id) => 'https://api.themoviedb.org/3/movie/$id/credits';
+  static String getTvShowCast(int id) => 'https://api.themoviedb.org/3/tv/$id/aggregate_credits';
 
   static String getBestImageUrl(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;

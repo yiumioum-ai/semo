@@ -1,6 +1,7 @@
 //Auto play trailer on top
 //Below, there is play button and download button
 //Below, other info like synopsis, cast, recommended, similar etc
+//When a person from cast is selected, it should show the person's movies/shows
 //Like netflix
 import 'dart:convert';
 import 'dart:io';
@@ -14,7 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/models/media.dart' as model;
+import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/person.dart' as model;
 import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/spinner.dart';
@@ -41,26 +43,36 @@ class _MovieState extends State<Movie> {
   late Spinner _spinner;
 
   navigate({required Widget destination, bool replace = false}) async {
+    PageTransition pageTransition = PageTransition(
+      type: PageTransitionType.rightToLeft,
+      child: destination,
+    );
+
     if (replace) {
       await Navigator.pushReplacement(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     } else {
       await Navigator.push(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     }
   }
 
-  isFavorite() async {
+  getMovieDetails() async {
+    _spinner.show();
+    await Future.wait([
+      isFavorite(),
+      getTrailerUrl(),
+      getMovieStreamUrl(),
+      getMovieCast(),
+    ]);
+    _spinner.dismiss();
+  }
+
+  Future<void> isFavorite() async {
     final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -138,8 +150,7 @@ class _MovieState extends State<Movie> {
     return streamUrl;
   }
 
-  getTrailerUrl() async {
-    _spinner.show();
+  Future<void> getTrailerUrl() async {
     String youtubeId = '';
 
     Map<String, String> headers = {
@@ -152,8 +163,6 @@ class _MovieState extends State<Movie> {
       uri,
       headers: headers,
     );
-
-    _spinner.dismiss();
 
     String response = request.body;
     if (!kReleaseMode) print(response);
@@ -170,8 +179,52 @@ class _MovieState extends State<Movie> {
     }
 
     String streamUrl = await getYoutubeStreamUrl(youtubeId);
+    setState(() => _movie!.trailerUrl = streamUrl);
+  }
 
-    return streamUrl;
+  Future<void> getMovieStreamUrl() async {
+    Uri uri = Uri.parse(Urls.getMovieStreamUrl(_movie!.id));
+
+    Response request = await http.get(uri);
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    late String streamUrl;
+    if (response.isNotEmpty) {
+      Map<String, dynamic> data = json.decode(response)[0] as Map<String, dynamic>;
+      streamUrl = data['stream'];
+    } else {
+      print('Failed to get movie stream url');
+    }
+
+    setState(() => _movie!.streamUrl = streamUrl);
+  }
+
+  Future<void> getMovieCast() async {
+    Map<String, String> headers = {
+      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    };
+
+    Uri uri = Uri.parse(Urls.getMovieCast(_movie!.id)).replace();
+
+    Response request = await http.get(
+      uri,
+      headers: headers,
+    );
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    if (response.isNotEmpty) {
+      List data = json.decode(response)['cast'] as List;
+      List<model.Person> allCast = data.map((json) => model.Person.fromJson(json)).toList();
+      List<model.Person> cast = allCast.where((model.Person person) => person.department == 'Acting').toList();
+
+      setState(() => _movie!.cast = cast);
+    } else {
+      print('Failed to get movie cast');
+    }
   }
 
   @override
@@ -183,8 +236,151 @@ class _MovieState extends State<Movie> {
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Movie - ${_movie!.title}',
       );
-      await isFavorite();
+      await getMovieDetails();
     });
+  }
+
+  Widget TrailerPoster() {
+    return CachedNetworkImage(
+      imageUrl: Urls.getBestImageUrl(context) + _movie!.backdropPath,
+      placeholder: (context, url) {
+        return Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.width * 0.4,
+          child: Align(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
+      imageBuilder: (context, image) {
+        return Container(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.25,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: image,
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            color: Theme.of(context).primaryColor.withOpacity(0.5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: IconButton(
+                    icon: Icon(Icons.play_arrow),
+                    color: Colors.white,
+                    onPressed: () {
+                      navigate(
+                        destination: Player(
+                          streamUrl: _movie!.trailerUrl!,
+                          title: '${_movie!.title} - Trailer',
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 10),
+                  child: Text(
+                    'Play trailer',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      errorWidget: (context, url, error) => Icon(Icons.error),
+    );
+  }
+
+  Widget MovieTitle() {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 20),
+      child: Text(
+        _movie!.title,
+        style: Theme.of(context).textTheme.titleMedium,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget MovieReleaseYear() {
+    String releaseYear = _movie!.releaseDate.split('-')[0];
+    return Container(
+      width: double.infinity,
+      child: Text(
+        releaseYear,
+        style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget PlayMovie() {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      margin: EdgeInsets.only(top: 20),
+      child: ElevatedButton(
+        child: Container(
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                margin: EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 25,
+                ),
+              ),
+              Text(
+                'Play',
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: () {
+          navigate(
+            destination: Player(
+              streamUrl: _movie!.streamUrl!,
+              title: _movie!.title,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget MovieOverview() {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 20),
+      child: Text(
+        _movie!.overview,
+        style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+        textAlign: TextAlign.justify,
+      ),
+    );
   }
 
   @override
@@ -209,64 +405,17 @@ class _MovieState extends State<Movie> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              CachedNetworkImage(
-                imageUrl: Urls.getBestImageUrl(context) + _movie!.backdropPath,
-                placeholder: (context, url) {
-                  return Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.width * 0.4,
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                },
-                imageBuilder: (context, image) {
-                  return Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.25,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: image,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Container(
-                      color: Theme.of(context).primaryColor.withOpacity(0.5),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor: Theme.of(context).primaryColor,
-                            child: IconButton(
-                              icon: Icon(Icons.play_arrow),
-                              color: Colors.white,
-                              onPressed: () async {
-                                String trailerUrl = await getTrailerUrl();
-                                await navigate(
-                                  destination: Player(
-                                    streamUrl: trailerUrl,
-                                    title: '${_movie!.title} - Trailer',
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(top: 10),
-                            child: Text(
-                              'Play Trailer',
-                              style: Theme.of(context).textTheme.displayMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                errorWidget: (context, url, error) => Icon(Icons.error),
+              TrailerPoster(),
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 18),
+                child: Column(
+                  children: [
+                    MovieTitle(),
+                    MovieReleaseYear(),
+                    PlayMovie(),
+                    MovieOverview(),
+                  ],
+                ),
               ),
             ],
           ),

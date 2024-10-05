@@ -15,9 +15,11 @@ class Movie {
   bool video;
   double voteAverage;
   int voteCount;
-  List<Person>? cast;
   String? trailerUrl;
   String? streamUrl;
+  List<Person>? cast;
+  List<Movie>? recommendations;
+  List<Movie>? similar;
 
   Movie({
     required this.adult,
@@ -34,9 +36,11 @@ class Movie {
     required this.video,
     required this.voteAverage,
     required this.voteCount,
-    this.cast,
     this.trailerUrl,
     this.streamUrl,
+    this.cast,
+    this.recommendations,
+    this.similar,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -48,12 +52,12 @@ class Movie {
       originalLanguage: json['original_language'],
       originalTitle: json['original_title'],
       overview: json['overview'],
-      popularity: json['popularity'].toDouble() ?? 0.0,
+      popularity: double.parse((json['popularity'].toDouble() ?? 0.0).toStringAsFixed(1)),
       posterPath: json['poster_path'] ?? '',
       releaseDate: json['release_date'],
       title: json['title'],
       video: json['video'],
-      voteAverage: json['vote_average'].toDouble() ?? 0.0,
+      voteAverage: double.parse((json['vote_average'].toDouble() ?? 0.0).toStringAsFixed(1)),
       voteCount: json['vote_count'] ?? 0,
     );
   }

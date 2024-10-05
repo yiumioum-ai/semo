@@ -13,14 +13,17 @@ class Urls {
   static const String imageBase_w780 = 'https://image.tmdb.org/t/p/w780';
   static const String imageBase_w1280 = 'https://image.tmdb.org/t/p/w1280';
   static const String imageBase_original = 'https://image.tmdb.org/t/p/original';
-  static const String youtubeStream = 'https://api.cobalt.tools';
 
   static String getMovieVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
   static String getTvShowVideosUrl(int id) => 'https://api.themoviedb.org/3/tv/$id/videos';
-  static String getMovieStreamUrl(int id) => 'https://semo-vidsrc.vercel.app/$id';
-  static String getEpisodeStreamUrl(int tvShowId, int season, int episode) => 'https://semo-vidsrc.vercel.app/$tvShowId/$season/$episode';
+  static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';
+  static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://dev.examnet.net/semo/?id=$id&type=tv&season=$season&episode=$episode';
   static String getMovieCast(int id) => 'https://api.themoviedb.org/3/movie/$id/credits';
   static String getTvShowCast(int id) => 'https://api.themoviedb.org/3/tv/$id/aggregate_credits';
+  static String getMovieRecommendations(int id) => 'https://api.themoviedb.org/3/movie/$id/recommendations';
+  static String getTvShowRecommendations(int id) => 'https://api.themoviedb.org/3/tv/$id/recommendations';
+  static String getMovieSimilar(int id) => 'https://api.themoviedb.org/3/movie/$id/similar';
+  static String getTvShowSimilar(int id) => 'https://api.themoviedb.org/3/tv/$id/similar';
 
   static String getBestImageUrl(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;

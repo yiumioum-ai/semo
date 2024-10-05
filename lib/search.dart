@@ -216,16 +216,16 @@ class _SearchState extends State<Search> {
           child: CachedNetworkImage(
             imageUrl: posterUrl,
             placeholder: (context, url) {
-              return Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(),
-                  ),
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
                 ),
               );
             },
@@ -240,6 +240,9 @@ class _SearchState extends State<Search> {
                   ),
                 ),
                 child: InkWell(
+                  customBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Column(
                     children: [
                       Row(
@@ -282,7 +285,7 @@ class _SearchState extends State<Search> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error),
+            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
           ),
         ),
         Container(
@@ -311,38 +314,25 @@ class _SearchState extends State<Search> {
   }
 
   Widget SearchResults() {
-    SliverGridDelegate gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1/2,
-    );
-
-    late PagedGridView grid;
-    if (_pageType == PageType.movies) {
-      grid = PagedGridView<int, model.Movie>(
-        pagingController: _moviesPagingController,
-        builderDelegate: PagedChildBuilderDelegate<model.Movie>(
-          itemBuilder: (context, movie, index) {
-            return ResultCard(movie: movie);
-          },
-        ),
-        gridDelegate: gridDelegate,
-      );
-    } else {
-      grid = PagedGridView<int, model.TvShow>(
-        pagingController: _tvShowsPagingController,
-        builderDelegate: PagedChildBuilderDelegate<model.TvShow>(
-          itemBuilder: (context, tvShow, index) {
-            return ResultCard(tvShow: tvShow);
-          },
-        ),
-        gridDelegate: gridDelegate,
-      );
-    }
-
     if (_isFirstSearch) return Container();
 
-    return grid;
+    return PagedGridView(
+      pagingController: _moviesPagingController,
+      builderDelegate: PagedChildBuilderDelegate(
+        itemBuilder: (context, media, index) {
+          if (_pageType == PageType.movies) {
+            return ResultCard(movie: media as model.Movie);
+          } else {
+            return ResultCard(tvShow: media as model.TvShow);
+          }
+        },
+      ),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1/2,
+      ),
+    );
   }
 
   @override

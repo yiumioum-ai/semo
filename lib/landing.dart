@@ -54,6 +54,8 @@ class _LandingState extends State<Landing> {
 
           if (!isRegistered) {
             await user.set({
+              'recently_watched_movies': [],
+              'recently_watched_tv_shows': [],
               'favorite_movies': [],
               'favorite_tv_shows': [],
             });

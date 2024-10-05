@@ -21,6 +21,8 @@ import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:semo/web_player.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 //ignore: must_be_immutable
 class Movie extends StatefulWidget {
@@ -68,6 +70,8 @@ class _MovieState extends State<Movie> {
       getTrailerUrl(),
       getMovieStreamUrl(),
       getMovieCast(),
+      getRecommendations(),
+      getSimilar(),
     ]);
     _spinner.dismiss();
   }
@@ -82,8 +86,7 @@ class _MovieState extends State<Movie> {
           _isFavorite = favoriteMovies.contains(_movie!.id);
           setState(() => _favoriteMovies = favoriteMovies);
         }
-      },
-      onError: (e) => print("Error getting user: $e"),
+      }, onError: (e) => print("Error getting user: $e"),
     );
   }
 
@@ -117,39 +120,6 @@ class _MovieState extends State<Movie> {
     });
   }
 
-  getYoutubeStreamUrl(String youtubeId) async {
-    Map<String, String> headers = {
-      HttpHeaders.acceptHeader: 'application/json',
-      HttpHeaders.contentTypeHeader: 'application/json',
-    };
-
-    Map<String, dynamic> body = {
-      'url': 'https://www.youtube.com/watch?v=$youtubeId',
-      'videoQuality': '720',
-    };
-
-    Uri uri = Uri.parse(Urls.youtubeStream);
-
-    Response request = await http.post(
-      uri,
-      headers: headers,
-      body: json.encode(body),
-    );
-
-    String response = request.body;
-    if (!kReleaseMode) print(response);
-
-    late String streamUrl;
-    if (response.isNotEmpty) {
-      Map<String, dynamic> data = json.decode(response) as Map<String, dynamic>;
-      streamUrl = data['url'];
-    } else {
-      print('Failed to get trailer stream url');
-    }
-
-    return streamUrl;
-  }
-
   Future<void> getTrailerUrl() async {
     String youtubeId = '';
 
@@ -178,26 +148,12 @@ class _MovieState extends State<Movie> {
       print('Failed to get trailer youtube url');
     }
 
-    String streamUrl = await getYoutubeStreamUrl(youtubeId);
-    setState(() => _movie!.trailerUrl = streamUrl);
+    String youtubeUrl = 'https://www.youtube.com/watch?v=$youtubeId';
+    setState(() => _movie!.trailerUrl = youtubeUrl);
   }
 
   Future<void> getMovieStreamUrl() async {
-    Uri uri = Uri.parse(Urls.getMovieStreamUrl(_movie!.id));
-
-    Response request = await http.get(uri);
-
-    String response = request.body;
-    if (!kReleaseMode) print(response);
-
-    late String streamUrl;
-    if (response.isNotEmpty) {
-      Map<String, dynamic> data = json.decode(response)[0] as Map<String, dynamic>;
-      streamUrl = data['stream'];
-    } else {
-      print('Failed to get movie stream url');
-    }
-
+    String streamUrl = Urls.getMovieStreamUrl(_movie!.id);
     setState(() => _movie!.streamUrl = streamUrl);
   }
 
@@ -224,6 +180,54 @@ class _MovieState extends State<Movie> {
       setState(() => _movie!.cast = cast);
     } else {
       print('Failed to get movie cast');
+    }
+  }
+
+  Future<void> getRecommendations() async {
+    Map<String, String> headers = {
+      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    };
+
+    Uri uri = Uri.parse(Urls.getMovieRecommendations(_movie!.id)).replace();
+
+    Response request = await http.get(
+      uri,
+      headers: headers,
+    );
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    if (response.isNotEmpty) {
+      List data = json.decode(response)['results'] as List;
+      List<model.Movie> recommendations = data.map((json) => model.Movie.fromJson(json)).toList();
+      setState(() => _movie!.recommendations = recommendations);
+    } else {
+      print('Failed to get movie recommendations');
+    }
+  }
+
+  Future<void> getSimilar() async {
+    Map<String, String> headers = {
+      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    };
+
+    Uri uri = Uri.parse(Urls.getMovieSimilar(_movie!.id)).replace();
+
+    Response request = await http.get(
+      uri,
+      headers: headers,
+    );
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    if (response.isNotEmpty) {
+      List data = json.decode(response)['results'] as List;
+      List<model.Movie> similar = data.map((json) => model.Movie.fromJson(json)).toList();
+      setState(() => _movie!.similar = similar);
+    } else {
+      print('Failed to get similar movie');
     }
   }
 
@@ -275,12 +279,9 @@ class _MovieState extends State<Movie> {
                   child: IconButton(
                     icon: Icon(Icons.play_arrow),
                     color: Colors.white,
-                    onPressed: () {
-                      navigate(
-                        destination: Player(
-                          streamUrl: _movie!.trailerUrl!,
-                          title: '${_movie!.title} - Trailer',
-                        ),
+                    onPressed: () async {
+                      await launchUrl(
+                        Uri.parse(_movie!.trailerUrl!),
                       );
                     },
                   ),
@@ -301,7 +302,7 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget MovieTitle() {
+  Widget Title() {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 20),
@@ -313,7 +314,7 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget MovieReleaseYear() {
+  Widget ReleaseYear() {
     String releaseYear = _movie!.releaseDate.split('-')[0];
     return Container(
       width: double.infinity,
@@ -325,7 +326,7 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget PlayMovie() {
+  Widget Play() {
     return Container(
       width: double.infinity,
       height: 50,
@@ -359,11 +360,12 @@ class _MovieState extends State<Movie> {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        onPressed: () {
+        onPressed: () async {
           navigate(
-            destination: Player(
-              streamUrl: _movie!.streamUrl!,
+            destination: WebPlayer(
+              id: _movie!.id,
               title: _movie!.title,
+              streamUrl: _movie!.streamUrl!,
             ),
           );
         },
@@ -371,7 +373,7 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget MovieOverview() {
+  Widget Overview() {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 20),
@@ -380,6 +382,290 @@ class _MovieState extends State<Movie> {
         style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
         textAlign: TextAlign.justify,
       ),
+    );
+  }
+
+  Widget Cast() {
+    List<model.Person>? cast = _movie!.cast != null ? _movie!.cast!.length > 10 ? _movie!.cast!.sublist(0, 10) : _movie!.cast : [];
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 30),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Cast',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              GestureDetector(
+                child: Text(
+                  'View all',
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+                ),
+                onTap: () {
+                  //Go to cast screen
+                  //Pass full cast object as param
+                },
+              ),
+            ],
+          ),
+          if (_movie!.cast != null) Container(
+            height: MediaQuery.of(context).size.height * 0.25,
+            margin: EdgeInsets.only(top: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: cast!.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: (index + 1) != cast.length ? 18 : 0),
+                  child: PersonCard(_movie!.cast![index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget PersonCard(model.Person person) {
+    return Column(
+      children: [
+        Expanded(
+          child: CachedNetworkImage(
+            imageUrl: '${Urls.imageBase_w185}${person.profilePath}',
+            placeholder: (context, url) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            },
+            imageBuilder: (context, image) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: image,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: InkWell(
+                  customBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Container(),
+                  onTap: () {
+                    //Go to person
+                    //Pass person as param
+                  },
+                ),
+              );
+            },
+            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.4,
+          margin: EdgeInsets.only(top: 10),
+          child: Text(
+            person.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.displayMedium,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget Recommendations() {
+    List<model.Movie>? recommendations = _movie!.recommendations != null ? _movie!.recommendations!.length > 10 ? _movie!.recommendations!.sublist(0, 10) : _movie!.recommendations : [];
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 30),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recommendations',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              GestureDetector(
+                child: Text(
+                  'View all',
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+                ),
+                onTap: () {
+                  //Go to recommendations screen
+                  //Pass full recommendations object as param
+                },
+              ),
+            ],
+          ),
+          if (_movie!.recommendations != null) Container(
+            height: MediaQuery.of(context).size.height * 0.25,
+            margin: EdgeInsets.only(top: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: recommendations!.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: (index + 1) != recommendations.length ? 18 : 0),
+                  child: MovieCard(_movie!.recommendations![index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget Similar() {
+    List<model.Movie>? similar = _movie!.similar != null ? _movie!.similar!.length > 10 ? _movie!.similar!.sublist(0, 10) : _movie!.similar : [];
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 30),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Similar',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              GestureDetector(
+                child: Text(
+                  'View all',
+                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+                ),
+                onTap: () {
+                  //Go to similar screen
+                  //Pass full similar object as param
+                },
+              ),
+            ],
+          ),
+          if (_movie!.similar != null) Container(
+            height: MediaQuery.of(context).size.height * 0.25,
+            margin: EdgeInsets.only(top: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: similar!.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: (index + 1) != similar.length ? 18 : 0),
+                  child: MovieCard(_movie!.similar![index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget MovieCard(model.Movie movie) {
+    return Column(
+      children: [
+        Expanded(
+          child: CachedNetworkImage(
+            imageUrl: '${Urls.imageBase_w185}${movie.posterPath}',
+            placeholder: (context, url) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            },
+            imageBuilder: (context, image) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: image,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: InkWell(
+                  customBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 5,
+                              horizontal: 8,
+                            ),
+                            margin: EdgeInsets.only(
+                              top: 5,
+                              right: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            child: Text(
+                              '${_movie!.voteAverage}',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Spacer(),
+                    ],
+                  ),
+                  onTap: () => navigate(destination: Movie(movie: movie)),
+                ),
+              );
+            },
+            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.4,
+          margin: EdgeInsets.only(top: 10),
+          child: Text(
+            movie.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.displayMedium,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
   }
 
@@ -410,10 +696,13 @@ class _MovieState extends State<Movie> {
                 margin: EdgeInsets.symmetric(horizontal: 18),
                 child: Column(
                   children: [
-                    MovieTitle(),
-                    MovieReleaseYear(),
-                    PlayMovie(),
-                    MovieOverview(),
+                    Title(),
+                    ReleaseYear(),
+                    Play(),
+                    Overview(),
+                    Cast(),
+                    Recommendations(),
+                    Similar(),
                   ],
                 ),
               ),

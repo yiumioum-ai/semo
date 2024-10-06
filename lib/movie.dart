@@ -1,8 +1,3 @@
-//Auto play trailer on top
-//Below, there is play button and download button
-//Below, other info like synopsis, cast, recommended, similar etc
-//When a person from cast is selected, it should show the person's movies/shows
-//Like netflix
 import 'dart:convert';
 import 'dart:io';
 
@@ -43,6 +38,7 @@ class _MovieState extends State<Movie> {
   bool _isFavorite = false;
   List<int> _favoriteMovies = [];
   late Spinner _spinner;
+  bool _isLoading = true;
 
   navigate({required Widget destination, bool replace = false}) async {
     PageTransition pageTransition = PageTransition(
@@ -63,8 +59,8 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  getMovieDetails() async {
-    _spinner.show();
+  getMovieDetails({bool reload = false}) async {
+    if (!reload) _spinner.show();
     await Future.wait([
       isFavorite(),
       getTrailerUrl(),
@@ -73,7 +69,8 @@ class _MovieState extends State<Movie> {
       getRecommendations(),
       getSimilar(),
     ]);
-    _spinner.dismiss();
+    if (!reload) _spinner.dismiss();
+    setState(() => _isLoading = false);
   }
 
   Future<void> isFavorite() async {
@@ -143,7 +140,7 @@ class _MovieState extends State<Movie> {
         return video['site'] == 'YouTube' && video['type'] == 'Trailer' && video['official'] == true;
       }).toList();
       youtubeVideos.sort((a, b) => b['size'].compareTo(a['size']));
-      youtubeId = youtubeVideos[0]['key'];
+      youtubeId = youtubeVideos[0]['key'] ?? '';
     } else {
       print('Failed to get trailer youtube url');
     }
@@ -188,8 +185,7 @@ class _MovieState extends State<Movie> {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getMovieRecommendations(_movie!.id)).replace();
-
+    Uri uri = Uri.parse(Urls.getMovieRecommendations(_movie!.id));
     Response request = await http.get(
       uri,
       headers: headers,
@@ -212,8 +208,7 @@ class _MovieState extends State<Movie> {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getMovieSimilar(_movie!.id)).replace();
-
+    Uri uri = Uri.parse(Urls.getMovieSimilar(_movie!.id));
     Response request = await http.get(
       uri,
       headers: headers,
@@ -305,7 +300,6 @@ class _MovieState extends State<Movie> {
   Widget Title() {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(top: 20),
       child: Text(
         _movie!.title,
         style: Theme.of(context).textTheme.titleMedium,
@@ -585,6 +579,9 @@ class _MovieState extends State<Movie> {
   }
 
   Widget MovieCard(model.Movie movie) {
+    List<String> releaseDateContent = movie.releaseDate.split('-');
+    String releaseYear = releaseDateContent[0];
+
     return Column(
       children: [
         Expanded(
@@ -592,7 +589,7 @@ class _MovieState extends State<Movie> {
             imageUrl: '${Urls.imageBase_w185}${movie.posterPath}',
             placeholder: (context, url) {
               return Container(
-                width: MediaQuery.of(context).size.width * 0.4,
+                width: MediaQuery.of(context).size.width * 0.3,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
@@ -606,7 +603,7 @@ class _MovieState extends State<Movie> {
             },
             imageBuilder: (context, image) {
               return Container(
-                width: MediaQuery.of(context).size.width * 0.4,
+                width: MediaQuery.of(context).size.width * 0.3,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
@@ -638,7 +635,7 @@ class _MovieState extends State<Movie> {
                               color: Theme.of(context).primaryColor,
                             ),
                             child: Text(
-                              '${_movie!.voteAverage}',
+                              '${movie.voteAverage}',
                               style: Theme.of(context).textTheme.displaySmall,
                             ),
                           ),
@@ -655,14 +652,25 @@ class _MovieState extends State<Movie> {
           ),
         ),
         Container(
-          width: MediaQuery.of(context).size.width * 0.4,
+          width: MediaQuery.of(context).size.width * 0.3,
           margin: EdgeInsets.only(top: 10),
           child: Text(
             movie.title,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.displayMedium,
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.left,
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.3,
+          margin: EdgeInsets.only(top: 10),
+          child: Text(
+            releaseYear,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+            textAlign: TextAlign.left,
           ),
         ),
       ],
@@ -688,26 +696,41 @@ class _MovieState extends State<Movie> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              TrailerPoster(),
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 18),
-                child: Column(
-                  children: [
-                    Title(),
-                    ReleaseYear(),
-                    Play(),
-                    Overview(),
-                    Cast(),
-                    Recommendations(),
-                    Similar(),
-                  ],
+        child: RefreshIndicator(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          onRefresh: () {
+            setState(() {
+              _isLoading = true;
+              _isFavorite = false;
+              _movie!.trailerUrl = null;
+              _movie!.streamUrl = null;
+              _movie!.cast = null;
+              _movie!.recommendations = null;
+              _movie!.similar = null;
+            });
+            return getMovieDetails(reload: true);
+          },
+          child: !_isLoading ? SingleChildScrollView(
+            child: Column(
+              children: [
+                TrailerPoster(),
+                Container(
+                  margin: EdgeInsets.all(18),
+                  child: Column(
+                    children: [
+                      Title(),
+                      ReleaseYear(),
+                      Play(),
+                      Overview(),
+                      Cast(),
+                      if (_movie!.recommendations!.isNotEmpty) Recommendations(),
+                      if (_movie!.similar!.isNotEmpty) Similar(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ) : Container(),
         ),
       ),
     );

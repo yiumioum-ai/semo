@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Urls {
-  static const String search = 'https://api.themoviedb.org/3/search';
+  static const String tmdbBase = 'https://api.themoviedb.org/3';
+  static const String search = '$tmdbBase/search';
   static const String imageBase_w45 = 'https://image.tmdb.org/t/p/w45';
   static const String imageBase_w92 = 'https://image.tmdb.org/t/p/w92';
   static const String imageBase_w154 = 'https://image.tmdb.org/t/p/w154';
@@ -13,17 +14,23 @@ class Urls {
   static const String imageBase_w780 = 'https://image.tmdb.org/t/p/w780';
   static const String imageBase_w1280 = 'https://image.tmdb.org/t/p/w1280';
   static const String imageBase_original = 'https://image.tmdb.org/t/p/original';
+  static const String nowPlayingMovies = '$tmdbBase/movie/now_playing';
+  static const String trendingMovies = '$tmdbBase/trending/movie/week';
+  static const String popularMovies = '$tmdbBase/movie/popular';
+  static const String topRatedMovies = '$tmdbBase/movie/top_rated';
+  static const String movieGenres = '$tmdbBase/genre/movie/list';
 
-  static String getMovieVideosUrl(int id) => 'https://api.themoviedb.org/3/movie/$id/videos';
-  static String getTvShowVideosUrl(int id) => 'https://api.themoviedb.org/3/tv/$id/videos';
+  static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
+  static String getMovieVideosUrl(int id) => '$tmdbBase/movie/$id/videos';
+  static String getTvShowVideosUrl(int id) => '$tmdbBase/tv/$id/videos';
   static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';
   static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://dev.examnet.net/semo/?id=$id&type=tv&season=$season&episode=$episode';
-  static String getMovieCast(int id) => 'https://api.themoviedb.org/3/movie/$id/credits';
-  static String getTvShowCast(int id) => 'https://api.themoviedb.org/3/tv/$id/aggregate_credits';
-  static String getMovieRecommendations(int id) => 'https://api.themoviedb.org/3/movie/$id/recommendations';
-  static String getTvShowRecommendations(int id) => 'https://api.themoviedb.org/3/tv/$id/recommendations';
-  static String getMovieSimilar(int id) => 'https://api.themoviedb.org/3/movie/$id/similar';
-  static String getTvShowSimilar(int id) => 'https://api.themoviedb.org/3/tv/$id/similar';
+  static String getMovieCast(int id) => '$tmdbBase/movie/$id/credits';
+  static String getTvShowCast(int id) => '$tmdbBase/tv/$id/aggregate_credits';
+  static String getMovieRecommendations(int id) => '$tmdbBase/movie/$id/recommendations';
+  static String getTvShowRecommendations(int id) => '$tmdbBase/tv/$id/recommendations';
+  static String getMovieSimilar(int id) => '$tmdbBase/movie/$id/similar';
+  static String getTvShowSimilar(int id) => '$tmdbBase/tv/$id/similar';
 
   static String getBestImageUrl(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;

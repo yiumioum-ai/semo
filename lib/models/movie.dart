@@ -1,9 +1,12 @@
 import 'package:semo/models/person.dart';
 
+import 'genre.dart';
+
 class Movie {
   bool adult;
   String backdropPath;
-  List<int> genreIds;
+  List<int>? genreIds;
+  List<Genre>? genres;
   int id;
   String originalLanguage;
   String originalTitle;
@@ -24,7 +27,8 @@ class Movie {
   Movie({
     required this.adult,
     required this.backdropPath,
-    required this.genreIds,
+    this.genreIds,
+    this.genres,
     required this.id,
     required this.originalLanguage,
     required this.originalTitle,
@@ -47,7 +51,8 @@ class Movie {
     return Movie(
       adult: json['adult'],
       backdropPath: json['backdrop_path'] ?? '',
-      genreIds: List<int>.from(json['genre_ids']),
+      genreIds: json['genre_ids'] != null ? List<int>.from(json['genre_ids']) : null,
+      genres: json['genres'] != null ? List<Genre>.from(json['genres'].map((json) => Genre.fromJson(json)).toList()) : null,
       id: json['id'],
       originalLanguage: json['original_language'],
       originalTitle: json['original_title'],

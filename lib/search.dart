@@ -70,8 +70,6 @@ class _SearchState extends State<Search> {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    print(pageKey == 0 ? '1' : '${_searchResults.page + 1}');
-
     String url = Urls.search;
 
     if (_pageType == PageType.movies) {
@@ -208,8 +206,6 @@ class _SearchState extends State<Search> {
     List<String> releaseDateContent = releaseDate.split('-');
     releaseDate = releaseDateContent[0];
 
-    voteAverage = double.parse(voteAverage.toStringAsFixed(1));
-
     return Column(
       children: [
         Expanded(
@@ -273,13 +269,9 @@ class _SearchState extends State<Search> {
                   ),
                   onTap: () {
                     if (_pageType == PageType.movies) {
-                      navigate(
-                        destination: Movie(movie: movie!),
-                      );
+                      navigate(destination: Movie(movie: movie!));
                     } else {
-                      /*navigate(
-                        destination: TvShow(tvShow: tvShow),
-                      );*/
+                      /*navigate(destination: TvShow(tvShow: tvShow));*/
                     }
                   },
                 ),
@@ -293,7 +285,7 @@ class _SearchState extends State<Search> {
           margin: EdgeInsets.only(top: 10),
           child: Text(
             title,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.displayMedium,
           ),
@@ -306,6 +298,8 @@ class _SearchState extends State<Search> {
           ),
           child: Text(
             releaseDate,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
           ),
         ),

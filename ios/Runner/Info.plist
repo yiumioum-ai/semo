@@ -56,5 +56,18 @@
     <array>
       <string>_googlecast._tcp</string>
     </array>
+     <!-- Google Sign-in Section -->
+     <key>CFBundleURLTypes</key>
+     <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84</string>
+            </array>
+        </dict>
+     </array>
+     <!-- End of the Google Sign-in Section -->
 </dict>
 </plist>

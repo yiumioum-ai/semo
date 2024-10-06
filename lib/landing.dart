@@ -34,7 +34,9 @@ class _LandingState extends State<Landing> {
   }
 
   googleAuthentication() async {
-    GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    GoogleSignInAccount? googleUser = await GoogleSignIn(
+      clientId: '373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84.apps.googleusercontent.com',
+    ).signIn();
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
     var credential = GoogleAuthProvider.credential(

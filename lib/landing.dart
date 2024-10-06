@@ -216,12 +216,15 @@ class _LandingState extends State<Landing> {
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(
-                  top: 30,
-                  bottom: 12,
+              SafeArea(
+                top: false,
+                left: false,
+                right: false,
+                bottom: true,
+                child: Padding(
+                  padding: EdgeInsets.only(top: 30),
+                  child: ContinueWithGoogle(),
                 ),
-                child: ContinueWithGoogle(),
               ),
             ],
           ),
@@ -233,14 +236,12 @@ class _LandingState extends State<Landing> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _controller != null ? SafeArea(
-        child: Stack(
-          children: [
-            VideoBackground(),
-            BackgroundTint(),
-            Content(),
-          ],
-        ),
+      body: _controller != null ? Stack(
+        children: [
+          VideoBackground(),
+          BackgroundTint(),
+          Content(),
+        ],
       ) : Container(),
     );
   }

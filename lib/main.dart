@@ -81,9 +81,9 @@ class Semo extends StatelessWidget {
         cardColor: Color(0xFF212121),
         textTheme: TextTheme(
           titleLarge: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
           titleMedium: TextStyle(
             fontSize: 26,

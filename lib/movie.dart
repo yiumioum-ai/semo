@@ -430,7 +430,7 @@ class _MovieState extends State<Movie> {
       children: [
         Expanded(
           child: CachedNetworkImage(
-            imageUrl: '${Urls.imageBase_w185}${person.profilePath}',
+            imageUrl: '${Urls.imageBase_w300}${person.profilePath}',
             placeholder: (context, url) {
               return Container(
                 width: MediaQuery.of(context).size.width * 0.4,

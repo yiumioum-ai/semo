@@ -154,6 +154,10 @@ class _FragmentsState extends State<Fragments> {
       ),
       body: _navigationPages[_selectedPageIndex].widget,
       drawer: SafeArea(
+        top: true,
+        left: true,
+        right: true,
+        bottom: false,
         child: Drawer(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           child: ListView(

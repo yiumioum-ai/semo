@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -8,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/fragments.dart';
+import 'package:semo/utils/spinner.dart';
 import 'package:video_player/video_player.dart';
 
 class Landing extends StatefulWidget {
@@ -18,6 +20,7 @@ class Landing extends StatefulWidget {
 class _LandingState extends State<Landing> {
   VideoPlayerController? _controller;
   bool _visible = false;
+  Spinner? _spinner;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   initializeVideo() {
@@ -34,9 +37,16 @@ class _LandingState extends State<Landing> {
   }
 
   googleAuthentication() async {
-    GoogleSignInAccount? googleUser = await GoogleSignIn(
-      clientId: '373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84.apps.googleusercontent.com',
-    ).signIn();
+    _spinner!.show();
+
+    late GoogleSignIn instance;
+    if (Platform.isIOS) {
+      instance = GoogleSignIn(clientId: '373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84.apps.googleusercontent.com');
+    } else {
+      instance = GoogleSignIn();
+    }
+
+    GoogleSignInAccount? googleUser = await instance.signIn();
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
     var credential = GoogleAuthProvider.credential(
@@ -66,6 +76,8 @@ class _LandingState extends State<Landing> {
         onError: (e) => print("Error getting user: $e"),
       );
 
+      _spinner!.dismiss();
+
       navigate(destination: Fragments());
     } catch (e) {
       print(e);
@@ -86,10 +98,10 @@ class _LandingState extends State<Landing> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _spinner = Spinner(context);
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Landing',
       );
-
       initializeVideo();
     });
   }

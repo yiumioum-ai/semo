@@ -18,6 +18,7 @@ import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/movie.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -29,6 +30,7 @@ class Movies extends StatefulWidget {
 
 class _MoviesState extends State<Movies> {
   List<model.Movie> _nowPlaying = [], _recentlyWatched = [];
+  List<Map<String, dynamic>>? _recentlyWatchedObject;
   CarouselSliderController _nowPlayingController = CarouselSliderController();
   int _currentNowPlayingIndex = 0;
   List<model.Genre> _genres = [];
@@ -154,14 +156,15 @@ class _MoviesState extends State<Movies> {
     final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<Map<String, dynamic>> recentlyWatched = (data['recently_watched_movies'] as List<dynamic>).cast<Map<String, dynamic>>();
-        recentlyWatched.sort((a, b) {
+        List<Map<String, dynamic>> recentlyWatchedObject = (data['recently_watched_movies'] as List<dynamic>).cast<Map<String, dynamic>>();
+        recentlyWatchedObject.sort((a, b) {
           int timeA = a['timestamp'];
           int timeB = b['timestamp'];
           return timeB.compareTo(timeA);
         });
 
-        for (Map<String, dynamic> movie in recentlyWatched) {
+        setState(() => _recentlyWatchedObject = recentlyWatchedObject);
+        for (Map<String, dynamic> movie in recentlyWatchedObject) {
           getMovieDetails(movie['id']);
         }
       }, onError: (e) => print("Error getting user: $e"),
@@ -214,6 +217,21 @@ class _MoviesState extends State<Movies> {
     } else {
       print('Failed to get genres');
     }
+  }
+
+  removeFromRecentlyWatched(model.Movie movie) async {
+    List<Map<String, dynamic>> recentlyWatchedObject = _recentlyWatchedObject!;
+    recentlyWatchedObject.removeWhere((object) => object['id'] == movie.id);
+
+    final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
+    await user.set({
+      'recently_watched_movies': recentlyWatchedObject,
+    }, SetOptions(merge: true));
+
+    setState(() {
+      _recentlyWatched.remove(movie);
+      _recentlyWatchedObject = recentlyWatchedObject;
+    });
   }
 
   @override
@@ -394,7 +412,7 @@ class _MoviesState extends State<Movies> {
         itemBuilder: (context, index) {
           return Container(
             margin: EdgeInsets.only(right: (index + 1) != movies.length ? 18 : 0),
-            child: MovieCard(movies[index]),
+            child: MovieCard(movies[index], recentlyWatched: true),
           );
         },
       );
@@ -415,7 +433,7 @@ class _MoviesState extends State<Movies> {
     );
   }
 
-  Widget MovieCard(model.Movie movie) {
+  Widget MovieCard(model.Movie movie, {bool recentlyWatched = false}) {
     List<String> releaseDateContent = movie.releaseDate.split('-');
     String releaseYear = releaseDateContent[0];
 
@@ -449,39 +467,55 @@ class _MoviesState extends State<Movies> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: InkWell(
-                  customBorder: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 5,
-                              horizontal: 8,
-                            ),
-                            margin: EdgeInsets.only(
-                              top: 5,
-                              right: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            child: Text(
-                              '${movie.voteAverage}',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
+                child: PopupMenuContainer<String>(
+                  items: recentlyWatched ? [
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        'Remove',
+                        style: Theme.of(context).textTheme.displaySmall,
                       ),
-                      Spacer(),
-                    ],
+                    ),
+                  ] : null,
+                  onItemSelected: (action) async {
+                    if (action != null) {
+                      if (action == 'delete' ) removeFromRecentlyWatched(movie);
+                    }
+                  },
+                  child: InkWell(
+                    customBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onTap: () => navigate(destination: Movie(movie: movie)),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Spacer(),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 8,
+                              ),
+                              margin: EdgeInsets.only(
+                                top: 5,
+                                right: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              child: Text(
+                                '${movie.voteAverage}',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Spacer(),
+                      ],
+                    ),
                   ),
-                  onTap: () => navigate(destination: Movie(movie: movie)),
                 ),
               );
             },

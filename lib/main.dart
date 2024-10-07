@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -18,6 +19,8 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
+
+  PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
     runApp(Semo());
@@ -42,11 +45,7 @@ initializeFirebase() async {
 
   await remoteConfig.fetchAndActivate();
 
-  if (!kIsWeb) {
-    remoteConfig.onConfigUpdated.listen((event) async {
-      await remoteConfig.activate();
-    });
-  }
+  if (!kIsWeb) remoteConfig.onConfigUpdated.listen((event) async => await remoteConfig.activate());
 
   FirebaseCrashlytics crashlytics = await FirebaseCrashlytics.instance;
   runZonedGuarded<Future<void>>(() async {
@@ -55,13 +54,7 @@ initializeFirebase() async {
       FlutterError.onError = crashlytics.recordFlutterFatalError;
     }
   }, (error, stack) async {
-    if (!kIsWeb) {
-      await FirebaseCrashlytics.instance.recordError(
-        error,
-        stack,
-        fatal: true,
-      );
-    }
+    if (!kIsWeb) await FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
   });
 }
 

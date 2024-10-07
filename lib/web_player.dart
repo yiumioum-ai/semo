@@ -27,10 +27,8 @@ class _WebPlayerState extends State<WebPlayer> {
   final GlobalKey _webViewKey = GlobalKey();
   InAppWebViewController? _webViewController;
   InAppWebViewSettings _webViewSettings = InAppWebViewSettings(
-    isInspectable: kDebugMode,
     mediaPlaybackRequiresUserGesture: false,
     allowsInlineMediaPlayback: true,
-    iframeAllow: "",
     iframeAllowFullscreen: false,
     supportZoom: false,
   );
@@ -166,7 +164,9 @@ class _WebPlayerState extends State<WebPlayer> {
                 initialUrlRequest: URLRequest(url: WebUri(_streamUrl!)),
                 initialSettings: _webViewSettings,
                 onWebViewCreated: (controller) => _webViewController = controller,
-                shouldOverrideUrlLoading: (controller, navigationAction) async => NavigationActionPolicy.CANCEL,
+                shouldOverrideUrlLoading: (controller, navigationAction) async {
+                  return NavigationActionPolicy.ALLOW;
+                },
                 onLoadStop: (controller, url) async => setState(() {
                   _isLoading = false;
                   _showControls = false;

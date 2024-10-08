@@ -9,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/fragments.dart';
+import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:video_player/video_player.dart';
 
@@ -60,16 +61,16 @@ class _LandingState extends State<Landing> {
 
       String uid = auth.currentUser!.uid;
 
-      final user = _firestore.collection('users').doc(uid);
+      final user = _firestore.collection(DB.users).doc(uid);
       await user.get().then((DocumentSnapshot doc) async {
           bool isRegistered = doc.exists;
 
           if (!isRegistered) {
             await user.set({
-              'recently_watched_movies': [],
-              'recently_watched_tv_shows': [],
-              'favorite_movies': [],
-              'favorite_tv_shows': [],
+              DB.recentlyWatchedMovies: [],
+              DB.recentlyWatchedTvShows: [],
+              DB.favoriteMovies: [],
+              DB.favoriteTvShows: [],
             });
           }
         },

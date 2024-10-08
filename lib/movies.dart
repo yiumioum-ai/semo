@@ -1,3 +1,6 @@
+//add pagination
+//remove view all buttons
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,6 +20,7 @@ import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/movie.dart';
 import 'package:semo/utils/api_keys.dart';
+import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
@@ -153,10 +157,10 @@ class _MoviesState extends State<Movies> {
   }
 
   Future<void> getRecentlyWatched() async {
-    final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<Map<String, dynamic>> recentlyWatchedObject = (data['recently_watched_movies'] as List<dynamic>).cast<Map<String, dynamic>>();
+        List<Map<String, dynamic>> recentlyWatchedObject = (data[DB.recentlyWatchedMovies] as List<dynamic>).cast<Map<String, dynamic>>();
         recentlyWatchedObject.sort((a, b) {
           int timeA = a['timestamp'];
           int timeB = b['timestamp'];
@@ -223,9 +227,9 @@ class _MoviesState extends State<Movies> {
     List<Map<String, dynamic>> recentlyWatchedObject = _recentlyWatchedObject!;
     recentlyWatchedObject.removeWhere((object) => object['id'] == movie.id);
 
-    final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
     await user.set({
-      'recently_watched_movies': recentlyWatchedObject,
+      DB.recentlyWatchedMovies: recentlyWatchedObject,
     }, SetOptions(merge: true));
 
     setState(() {

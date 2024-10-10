@@ -52,10 +52,10 @@ class _FavoriteMoviesState extends State<FavoriteMovies> {
 
   Future<void> getMovies() async {
     _spinner!.show();
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      List<int> rawMovies = (data[DB.favoriteMovies] as List<dynamic>).cast<int>();
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      List<int> rawMovies = ((data['movies'] ?? []) as List<dynamic>).cast<int>();
       setState(() => _rawMovies = rawMovies);
       for (int movieId in rawMovies) getMovieDetails(movieId);
     }, onError: (e) => print("Error getting user: $e"));
@@ -90,9 +90,9 @@ class _FavoriteMoviesState extends State<FavoriteMovies> {
     List<int> rawMovies = _rawMovies;
     rawMovies.removeWhere((id) => id == movie.id);
 
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.set({
-      DB.favoriteMovies: rawMovies,
+      'movies': rawMovies,
     }, SetOptions(merge: true));
 
     setState(() {

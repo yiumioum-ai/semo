@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/fragments.dart';
-import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:video_player/video_player.dart';
 
@@ -22,7 +20,6 @@ class _LandingState extends State<Landing> {
   VideoPlayerController? _controller;
   bool _visible = false;
   Spinner? _spinner;
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   initializeVideo() {
     _controller = VideoPlayerController.asset('assets/cover.mp4');
@@ -58,24 +55,6 @@ class _LandingState extends State<Landing> {
     try {
       FirebaseAuth auth = FirebaseAuth.instance;
       await auth.signInWithCredential(credential);
-
-      String uid = auth.currentUser!.uid;
-
-      final user = _firestore.collection(DB.users).doc(uid);
-      await user.get().then((DocumentSnapshot doc) async {
-          bool isRegistered = doc.exists;
-
-          if (!isRegistered) {
-            await user.set({
-              DB.recentlyWatchedMovies: [],
-              DB.recentlyWatchedTvShows: [],
-              DB.favoriteMovies: [],
-              DB.favoriteTvShows: [],
-            });
-          }
-        },
-        onError: (e) => print("Error getting user: $e"),
-      );
 
       _spinner!.dismiss();
 

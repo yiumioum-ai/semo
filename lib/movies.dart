@@ -155,22 +155,19 @@ class _MoviesState extends State<Movies> {
   }
 
   Future<void> getRecentlyWatched() async {
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<Map<String, dynamic>> rawRecentlyWatched = (data[DB.recentlyWatchedMovies] as List<dynamic>).cast<Map<String, dynamic>>();
-        rawRecentlyWatched.sort((a, b) {
-          int timeA = a['timestamp'];
-          int timeB = b['timestamp'];
-          return timeB.compareTo(timeA);
-        });
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      List<Map<String, dynamic>> rawRecentlyWatched = ((data['movies'] ?? []) as List<dynamic>).cast<Map<String, dynamic>>();
+      rawRecentlyWatched.sort((a, b) {
+        int timeA = a['timestamp'];
+        int timeB = b['timestamp'];
+        return timeB.compareTo(timeA);
+      });
 
-        setState(() => _rawRecentlyWatched = rawRecentlyWatched);
-        for (Map<String, dynamic> movie in rawRecentlyWatched) {
-          getMovieDetails(movie['id']);
-        }
-      }, onError: (e) => print("Error getting user: $e"),
-    );
+      for (Map<String, dynamic> movie in rawRecentlyWatched) getMovieDetails(movie['id']);
+      setState(() => _rawRecentlyWatched = rawRecentlyWatched);
+    }, onError: (e) => print("Error getting user: $e"));
   }
 
   Future<void> getMovieDetails(int id) async {
@@ -225,9 +222,9 @@ class _MoviesState extends State<Movies> {
     List<Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
     rawRecentlyWatched.removeWhere((object) => object['id'] == movie.id);
 
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.set({
-      DB.recentlyWatchedMovies: rawRecentlyWatched,
+      'movies': rawRecentlyWatched,
     }, SetOptions(merge: true));
 
     setState(() {

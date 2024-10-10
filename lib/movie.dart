@@ -79,10 +79,10 @@ class _MovieState extends State<Movie> {
   }
 
   Future<void> isFavorite() async {
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<int> favoriteMovies = (data[DB.favoriteMovies] as List<dynamic>).cast<int>();
+        Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+        List<int> favoriteMovies = ((data['movies'] ?? []) as List<dynamic>).cast<int>();
 
         if (favoriteMovies.isNotEmpty) {
           _isFavorite = favoriteMovies.contains(_movie!.id);
@@ -96,9 +96,9 @@ class _MovieState extends State<Movie> {
     List<int> favoriteMovies = _favoriteMovies;
     favoriteMovies.add(_movie!.id);
 
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.set({
-      DB.favoriteMovies: favoriteMovies,
+      'movies': favoriteMovies,
     }, SetOptions(merge: true));
 
     setState(() {
@@ -111,9 +111,9 @@ class _MovieState extends State<Movie> {
     List<int> favoriteMovies = _favoriteMovies;
     favoriteMovies.remove(_movie!.id);
 
-    final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.set({
-      DB.favoriteMovies: favoriteMovies,
+      'movies': favoriteMovies,
     }, SetOptions(merge: true));
 
     setState(() {

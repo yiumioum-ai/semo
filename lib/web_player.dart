@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -165,7 +167,8 @@ class _WebPlayerState extends State<WebPlayer> {
                 initialSettings: _webViewSettings,
                 onWebViewCreated: (controller) => _webViewController = controller,
                 shouldOverrideUrlLoading: (controller, navigationAction) async {
-                  return NavigationActionPolicy.ALLOW;
+                  if (Platform.isIOS) return NavigationActionPolicy.ALLOW;
+                  return NavigationActionPolicy.CANCEL;
                 },
                 onLoadStop: (controller, url) async => setState(() {
                   _isLoading = false;

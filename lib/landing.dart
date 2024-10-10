@@ -236,8 +236,11 @@ class _LandingState extends State<Landing> {
                 left: false,
                 right: false,
                 bottom: true,
-                child: Padding(
-                  padding: EdgeInsets.only(top: 30),
+                child: Container(
+                  margin: EdgeInsets.only(
+                    top: 30,
+                    bottom: 18,
+                  ),
                   child: ContinueWithGoogle(),
                 ),
               ),

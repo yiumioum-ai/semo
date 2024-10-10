@@ -2,12 +2,12 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 
-class Favorites extends StatefulWidget {
+class FavoriteTvShows extends StatefulWidget {
   @override
-  _FavoritesState createState() => _FavoritesState();
+  _FavoriteTvShowsState createState() => _FavoriteTvShowsState();
 }
 
-class _FavoritesState extends State<Favorites> {
+class _FavoriteTvShowsState extends State<FavoriteTvShows> {
 
   navigate({required Widget destination, bool replace = false}) async {
     if (replace) {
@@ -34,7 +34,7 @@ class _FavoritesState extends State<Favorites> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Favorites',
+        screenName: 'Favorite TV Shows',
       );
     });
   }
@@ -42,10 +42,9 @@ class _FavoritesState extends State<Favorites> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Text(
-          'Favorites',
+          'Favorites - TV Shows',
           style: Theme.of(context).textTheme.displayMedium,
         ),
       ),

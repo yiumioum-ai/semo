@@ -19,12 +19,16 @@ class Urls {
   static const String popularMovies = '$tmdbBase/movie/popular';
   static const String topRatedMovies = '$tmdbBase/movie/top_rated';
   static const String movieGenres = '$tmdbBase/genre/movie/list';
+  static const String discoverMovie = '$tmdbBase/discover/movie';
+  static const String discoverTvShow = '$tmdbBase/discover/tv';
 
   static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
   static String getMovieVideosUrl(int id) => '$tmdbBase/movie/$id/videos';
   static String getTvShowVideosUrl(int id) => '$tmdbBase/tv/$id/videos';
-  static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';
-  static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://dev.examnet.net/semo/?id=$id&type=tv&season=$season&episode=$episode';
+  //static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';
+  //static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://dev.examnet.net/semo/?id=$id&type=tv&season=$season&episode=$episode';
+  static String getMovieStreamUrl(int id) => 'https://vidsrc.xyz/embed/movie/$id';
+  static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://vidsrc.xyz/embed/tv/$id/$season-$episode';
   static String getMovieCast(int id) => '$tmdbBase/movie/$id/credits';
   static String getTvShowCast(int id) => '$tmdbBase/tv/$id/aggregate_credits';
   static String getMovieRecommendations(int id) => '$tmdbBase/movie/$id/recommendations';

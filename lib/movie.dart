@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:semo/fragments.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/player.dart';
@@ -23,9 +24,11 @@ import 'package:url_launcher/url_launcher.dart';
 //ignore: must_be_immutable
 class Movie extends StatefulWidget {
   model.Movie movie;
+  bool fromFavorites;
 
   Movie({
     required this.movie,
+    this.fromFavorites = false,
   });
 
   @override
@@ -34,6 +37,7 @@ class Movie extends StatefulWidget {
 
 class _MovieState extends State<Movie> {
   model.Movie? _movie;
+  bool? _fromFavorites;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
@@ -41,9 +45,9 @@ class _MovieState extends State<Movie> {
   late Spinner _spinner;
   bool _isLoading = true;
 
-  navigate({required Widget destination, bool replace = false}) async {
+  navigate({required Widget destination, bool replace = false, bool goingBack = false}) async {
     PageTransition pageTransition = PageTransition(
-      type: PageTransitionType.rightToLeft,
+      type: !goingBack ? PageTransitionType.rightToLeft : PageTransitionType.leftToRight,
       child: destination,
     );
 
@@ -230,6 +234,7 @@ class _MovieState extends State<Movie> {
   @override
   void initState() {
     _movie = widget.movie;
+    _fromFavorites = widget.fromFavorites;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
@@ -388,24 +393,12 @@ class _MovieState extends State<Movie> {
       margin: EdgeInsets.only(top: 30),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Cast',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              GestureDetector(
-                child: Text(
-                  'View all',
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-                ),
-                onTap: () {
-                  //Go to cast screen
-                  //Pass full cast object as param
-                },
-              ),
-            ],
+          Container(
+            width: double.infinity,
+            child: Text(
+              'Cast',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
           if (_movie!.cast != null) Container(
             height: MediaQuery.of(context).size.height * 0.25,
@@ -457,16 +450,6 @@ class _MovieState extends State<Movie> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: InkWell(
-                  customBorder: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Container(),
-                  onTap: () {
-                    //Go to person
-                    //Pass person as param
-                  },
-                ),
               );
             },
             errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
@@ -495,24 +478,12 @@ class _MovieState extends State<Movie> {
       margin: EdgeInsets.only(top: 30),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recommendations',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              GestureDetector(
-                child: Text(
-                  'View all',
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-                ),
-                onTap: () {
-                  //Go to recommendations screen
-                  //Pass full recommendations object as param
-                },
-              ),
-            ],
+          Container(
+            width: double.infinity,
+            child: Text(
+              'Recommendations',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
           if (_movie!.recommendations != null) Container(
             height: MediaQuery.of(context).size.height * 0.25,
@@ -541,24 +512,12 @@ class _MovieState extends State<Movie> {
       margin: EdgeInsets.only(top: 30),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Similar',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              GestureDetector(
-                child: Text(
-                  'View all',
-                  style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-                ),
-                onTap: () {
-                  //Go to similar screen
-                  //Pass full similar object as param
-                },
-              ),
-            ],
+          Container(
+            width: double.infinity,
+            child: Text(
+              'Similar',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
           if (_movie!.similar != null) Container(
             height: MediaQuery.of(context).size.height * 0.25,
@@ -682,6 +641,15 @@ class _MovieState extends State<Movie> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            if (_fromFavorites! && !_isFavorite) {
+              navigate(destination: Fragments(initialPageIndex: 2), goingBack: true);
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),

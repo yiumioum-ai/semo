@@ -1,6 +1,3 @@
-//add pagination
-//remove view all buttons
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,6 +16,7 @@ import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/movie.dart';
+import 'package:semo/movie_genre.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
@@ -34,7 +32,7 @@ class Movies extends StatefulWidget {
 
 class _MoviesState extends State<Movies> {
   List<model.Movie> _nowPlaying = [], _recentlyWatched = [];
-  List<Map<String, dynamic>>? _recentlyWatchedObject;
+  List<Map<String, dynamic>>? _rawRecentlyWatched;
   CarouselSliderController _nowPlayingController = CarouselSliderController();
   int _currentNowPlayingIndex = 0;
   List<model.Genre> _genres = [];
@@ -160,15 +158,15 @@ class _MoviesState extends State<Movies> {
     final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<Map<String, dynamic>> recentlyWatchedObject = (data[DB.recentlyWatchedMovies] as List<dynamic>).cast<Map<String, dynamic>>();
-        recentlyWatchedObject.sort((a, b) {
+        List<Map<String, dynamic>> rawRecentlyWatched = (data[DB.recentlyWatchedMovies] as List<dynamic>).cast<Map<String, dynamic>>();
+        rawRecentlyWatched.sort((a, b) {
           int timeA = a['timestamp'];
           int timeB = b['timestamp'];
           return timeB.compareTo(timeA);
         });
 
-        setState(() => _recentlyWatchedObject = recentlyWatchedObject);
-        for (Map<String, dynamic> movie in recentlyWatchedObject) {
+        setState(() => _rawRecentlyWatched = rawRecentlyWatched);
+        for (Map<String, dynamic> movie in rawRecentlyWatched) {
           getMovieDetails(movie['id']);
         }
       }, onError: (e) => print("Error getting user: $e"),
@@ -224,17 +222,17 @@ class _MoviesState extends State<Movies> {
   }
 
   removeFromRecentlyWatched(model.Movie movie) async {
-    List<Map<String, dynamic>> recentlyWatchedObject = _recentlyWatchedObject!;
-    recentlyWatchedObject.removeWhere((object) => object['id'] == movie.id);
+    List<Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
+    rawRecentlyWatched.removeWhere((object) => object['id'] == movie.id);
 
     final user = _firestore.collection(DB.users).doc(_auth.currentUser!.uid);
     await user.set({
-      DB.recentlyWatchedMovies: recentlyWatchedObject,
+      DB.recentlyWatchedMovies: rawRecentlyWatched,
     }, SetOptions(merge: true));
 
     setState(() {
       _recentlyWatched.remove(movie);
-      _recentlyWatchedObject = recentlyWatchedObject;
+      _rawRecentlyWatched = rawRecentlyWatched;
     });
   }
 
@@ -271,97 +269,7 @@ class _MoviesState extends State<Movies> {
               enlargeCenterPage: true,
               onPageChanged: (int index, CarouselPageChangedReason reason) => setState(() => _currentNowPlayingIndex = index),
             ),
-            itemBuilder: (context, index, realIndex) {
-              String backdropUrl = '${Urls.getBestImageUrl(context)}${movies[index].backdropPath}';
-              String title = movies[index].originalTitle;
-
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Container(
-                        child: CachedNetworkImage(
-                          imageUrl: backdropUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) {
-                            return Container(
-                              decoration: BoxDecoration(color: Theme.of(context).cardColor),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          },
-                          errorWidget: (context, url, error) {
-                            return Container(
-                              decoration: BoxDecoration(color: Theme.of(context).cardColor),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.error,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).primaryColor,
-                              Colors.transparent,
-                              Theme.of(context).primaryColor.withOpacity(.1),
-                            ],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Spacer(),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.only(
-                                left: 14,
-                                bottom: 8,
-                              ),
-                              child: Text(
-                                '$title',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            navigate(destination: Movie(movie: movies[index]));
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+            itemBuilder: (context, index, realIndex) => MoviePoster(movies[index]),
           ),
         ),
         Container(
@@ -383,7 +291,92 @@ class _MoviesState extends State<Movies> {
   }
 
   Widget MoviePoster(model.Movie movie) {
-    return Container();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              child: CachedNetworkImage(
+                imageUrl: '${Urls.getBestImageUrl(context)}${movie.backdropPath}',
+                fit: BoxFit.cover,
+                placeholder: (context, url) {
+                  return Container(
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
+                errorWidget: (context, url, error) {
+                  return Container(
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.error,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            top: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Colors.transparent,
+                    Theme.of(context).primaryColor.withOpacity(.1),
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Spacer(),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.only(
+                      left: 14,
+                      bottom: 8,
+                    ),
+                    child: Text(
+                      movie.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  navigate(destination: Movie(movie: movie));
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget Category(String title, {PagingController? pagingController, List<model.Movie>? movies}) {
@@ -474,7 +467,7 @@ class _MoviesState extends State<Movies> {
                 child: PopupMenuContainer<String>(
                   items: recentlyWatched ? [
                     PopupMenuItem(
-                      value: 'delete',
+                      value: 'remove',
                       child: Text(
                         'Remove',
                         style: Theme.of(context).textTheme.displaySmall,
@@ -483,7 +476,7 @@ class _MoviesState extends State<Movies> {
                   ] : null,
                   onItemSelected: (action) async {
                     if (action != null) {
-                      if (action == 'delete' ) removeFromRecentlyWatched(movie);
+                      if (action == 'remove') removeFromRecentlyWatched(movie);
                     }
                   },
                   child: InkWell(
@@ -598,9 +591,7 @@ class _MoviesState extends State<Movies> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Container(),
-                onTap: () {
-                  //Go to genre
-                },
+                onTap: () => navigate(destination: MovieGenre(genre: genre)),
               ),
             ),
           ),

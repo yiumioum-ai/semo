@@ -67,7 +67,8 @@ class Semo extends StatelessWidget {
       title: 'Semo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-          useMaterial3: true,
+        useMaterial3: true,
+        brightness: Brightness.dark,
         primaryColor: Color(0xFFAB261D),
         scaffoldBackgroundColor: Color(0xFF121212),
         dialogBackgroundColor: Color(0xFF212121),

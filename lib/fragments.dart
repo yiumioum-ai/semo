@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/favorites.dart';
+import 'package:semo/favorite_movies.dart';
+import 'package:semo/favorite_tv_shows.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
 import 'package:semo/movies.dart';
@@ -10,14 +11,23 @@ import 'package:semo/settings.dart';
 import 'package:semo/tv_shows.dart';
 import 'package:semo/utils/enums.dart';
 
+//ignore: must_be_immutable
 class Fragments extends StatefulWidget {
+  int initialPageIndex, initialFavoritesTabIndex;
+
+  Fragments({
+    this.initialPageIndex = 0,
+    this.initialFavoritesTabIndex = 0,
+  });
+
   @override
   _FragmentsState createState() => _FragmentsState();
 }
 
-class _FragmentsState extends State<Fragments> {
-  int _selectedPageIndex = 0;
+class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
+  late int _selectedPageIndex;
   List<NavigationPage> _navigationPages = [];
+  late TabController _tabController;
 
   checkUserSession() async {
     await FirebaseAuth.instance.authStateChanges().listen((User? user) {
@@ -31,6 +41,8 @@ class _FragmentsState extends State<Fragments> {
   }
 
   populatePages() {
+    _selectedPageIndex = widget.initialPageIndex;
+    _tabController = TabController(length: 2, initialIndex: widget.initialFavoritesTabIndex, vsync: this);
     setState(() {
       _navigationPages = [
         NavigationPage(
@@ -48,7 +60,13 @@ class _FragmentsState extends State<Fragments> {
         NavigationPage(
           icon: Icons.favorite,
           title: 'Favorites',
-          widget: Favorites(),
+          widget: TabBarView(
+            controller: _tabController,
+            children: [
+              FavoriteMovies(),
+              FavoriteTvShows(),
+            ],
+          ),
           pageType: PageType.favorites,
         ),
         NavigationPage(
@@ -88,11 +106,6 @@ class _FragmentsState extends State<Fragments> {
     populatePages();
   }
 
-  _onNavigationTileTapped(int index) {
-    setState(() => _selectedPageIndex = index);
-    Navigator.pop(context);
-  }
-
   Widget NavigationTile(int index) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -106,14 +119,13 @@ class _FragmentsState extends State<Fragments> {
         titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
           fontWeight: _selectedPageIndex == index ? FontWeight.bold : FontWeight.normal,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         selected: _selectedPageIndex == index,
         leading: Icon(_navigationPages[index].icon),
         title: Text(_navigationPages[index].title),
         onTap: () {
-          _onNavigationTileTapped(index);
+          setState(() => _selectedPageIndex = index);
+          Navigator.pop(context);
         },
       ),
     );
@@ -126,27 +138,36 @@ class _FragmentsState extends State<Fragments> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(_navigationPages[_selectedPageIndex].title),
         leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: Icon(
-                Icons.menu,
-                color: Colors.white,
-              ),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
+          builder: (context) => IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: Colors.white,
+            ),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
+        bottom: _selectedPageIndex == 2 ? TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(
+              icon: Icon(Icons.movie),
+              text: 'Movies',
+            ),
+            Tab(
+              icon: Icon(Icons.video_library),
+              text: 'TV Shows',
+            ),
+          ],
+        ) : null,
         actions: [
-          _selectedPageIndex < 1 ? IconButton(
+          _selectedPageIndex <= 1 ? IconButton(
             icon: Icon(
               Icons.search,
               color: Colors.white,
             ),
             onPressed: () {
               navigate(
-                destination: Search(
-                  pageType: _navigationPages[_selectedPageIndex].pageType,
-                ),
+                destination: Search(pageType: _navigationPages[_selectedPageIndex].pageType),
               );
             },
           ) : Container(),

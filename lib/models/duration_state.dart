@@ -1,11 +1,11 @@
 class DurationState {
   Duration progress;
-  Duration buffered;
   Duration total;
+  bool isBuffering;
 
   DurationState({
     required this.progress,
-    required this.buffered,
     required this.total,
+    required this.isBuffering,
   });
 }

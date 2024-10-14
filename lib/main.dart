@@ -61,7 +61,6 @@ class Semo extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark,
         primaryColor: Color(0xFFAB261D),
         scaffoldBackgroundColor: Color(0xFF121212),
         dialogBackgroundColor: Color(0xFF212121),
@@ -101,6 +100,7 @@ class Semo extends StatelessWidget {
           ),
           iconTheme: IconThemeData(color: Colors.white),
         ),
+        progressIndicatorTheme: ProgressIndicatorThemeData(color: Color(0xFFAB261D)),
       ),
       home: Splash(),
     );

@@ -612,6 +612,7 @@ class _TvShowsState extends State<TvShows> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: RefreshIndicator(
+      color: Theme.of(context).primaryColor,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         onRefresh: () {
           _trendingPagingController.dispose();

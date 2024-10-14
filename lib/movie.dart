@@ -670,6 +670,7 @@ class _MovieState extends State<Movie> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
+          color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           onRefresh: () {
             setState(() {

@@ -39,8 +39,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   VlcPlayerController? _videoPlayerController;
   DurationState _durationState = DurationState(
     progress: Duration.zero,
-    buffered: Duration.zero,
     total: Duration.zero,
+    isBuffering: true,
   );
   bool _isPlaying = true;
   bool _showControls = true;
@@ -160,14 +160,12 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   streamUpdates({bool initial = false}) async {
     Duration progress = await _videoPlayerController!.getPosition();
     Duration total = await _videoPlayerController!.getDuration();
-    Duration buffered = Duration(
-      seconds: ((_videoPlayerController!.value.bufferPercent * total.inSeconds) / 100).round(),
-    );
+    bool isBuffering = _videoPlayerController!.value.isBuffering;
 
     setState(() {
       _durationState = DurationState(
         progress: progress,
-        buffered: buffered,
+        isBuffering: isBuffering,
         total: total,
       );
     });
@@ -331,8 +329,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                 child: AppBar(
                   backgroundColor: Colors.transparent,
                   leading: BackButton(
-                    onPressed: () {
-                      updateRecentlyWatched();
+                    onPressed: () async {
+                      await updateRecentlyWatched();
                       Navigator.of(context).pop();
                     },
                   ),
@@ -349,6 +347,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     IconButton(
                       icon: Icon(_lastZoomGestureScale > 1.0 ? Icons.zoom_in_map : Icons.zoom_out_map),
                       onPressed: () {
+                        //fix this logic
                         if (_lastZoomGestureScale > 1.0) {
                           setState(() => _scaleVideoAnimationController!.reverse());
                         } else if (_lastZoomGestureScale < 1.0) {
@@ -373,20 +372,20 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () => seekBack(),
+                      onPressed: () => !_durationState.isBuffering ? seekBack() : null,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 30,
                       ),
-                      child: IconButton(
+                      child: !_durationState.isBuffering ? IconButton(
                         icon: Icon(
                           _isPlaying ? Icons.pause : Icons.play_arrow,
                           color: Colors.white,
                           size: 42,
                         ),
                         onPressed: () => playPause(),
-                      ),
+                      ) : CircularProgressIndicator(),
                     ),
                     IconButton(
                       icon: Icon(
@@ -394,7 +393,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () => seekForward(),
+                      onPressed: () => !_durationState.isBuffering ? seekForward() : null,
                     ),
                   ],
                 ),
@@ -412,7 +411,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                   ),
                   child: ProgressBar(
                     progress: _durationState.progress,
-                    buffered: _durationState.buffered,
                     total: _durationState.total,
                     progressBarColor: Theme.of(context).primaryColor,
                     baseBarColor: Theme.of(context).primaryColor.withOpacity(.2),
@@ -420,7 +418,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     thumbColor: Theme.of(context).primaryColor,
                     timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
                     timeLabelPadding: 10,
-                    onSeek: (target) => seek(target),
+                    onSeek: (target) => !_durationState.isBuffering ? seek(target) : null,
                   ),
                 ),
               ),

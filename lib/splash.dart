@@ -42,13 +42,11 @@ class _SplashState extends State<Splash> {
   checkUserSession() {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       Widget destination;
-
       if (user == null) {
         destination = Landing();
       } else {
         destination = Fragments();
       }
-
       navigate(destination: destination);
     });
   }
@@ -57,12 +55,10 @@ class _SplashState extends State<Splash> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      getAppVersion();
-
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Splash',
       );
-
+      getAppVersion();
       checkUserSession();
     });
   }

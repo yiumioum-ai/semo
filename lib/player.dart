@@ -1,18 +1,29 @@
+import 'dart:async';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
+import 'package:semo/utils/db_names.dart';
+import 'package:semo/utils/enums.dart';
 
 //ignore: must_be_immutable
 class Player extends StatefulWidget {
+  int id;
+  int? episodeId;
   String title, streamUrl;
+  PageType pageType;
 
   Player({
+    required this.id,
+    this.episodeId,
     required this.title,
     required this.streamUrl,
+    required this.pageType,
   });
 
   @override
@@ -20,25 +31,100 @@ class Player extends StatefulWidget {
 }
 
 class _PlayerState extends State<Player> with TickerProviderStateMixin {
+  int? _id, _episodeId;
   String? _title, _streamUrl;
+  PageType? _pageType;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth _auth = FirebaseAuth.instance;
   VlcPlayerController? _videoPlayerController;
   DurationState _durationState = DurationState(
     progress: Duration.zero,
     buffered: Duration.zero,
     total: Duration.zero,
   );
-  bool _isPlaying = true, _showControls = true;
+  bool _isPlaying = true;
+  bool _showControls = true;
   AnimationController? _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
   double _lastZoomGestureScale = 1.0;
 
-  initializePlayer() {
+  updateRecentlyWatched() async {
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
+    await user.get().then((DocumentSnapshot doc) {
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      var recentlyWatched;
+
+      if (_pageType == PageType.movies) {
+        recentlyWatched = ((data['movies'] ?? []) as List<dynamic>).cast<Map<String, dynamic>>();
+        bool isInRecentlyWatched = recentlyWatched.any((movie) => movie['id'] == _id);
+
+        if (recentlyWatched.isNotEmpty && isInRecentlyWatched) {
+          for (Map<String, dynamic> movie in recentlyWatched) {
+            if (movie['id'] == _id) {
+              if (_videoPlayerController != null) movie['progress'] = _durationState.progress.inSeconds;
+              movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+
+              if (movie['progress'] != null && movie['progress'] != 0) {
+                setState(() => _durationState.progress = Duration(seconds: movie['progress']));
+              }
+              break;
+            }
+          }
+        } else {
+          recentlyWatched.add({
+            'id': _id,
+            if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          });
+        }
+      } else {
+        recentlyWatched = ((data['tv_shows'] ?? {}) as Map<int, dynamic>);
+
+        if (recentlyWatched.containsKey(_id)) {
+          List<dynamic> episodes = recentlyWatched[_id] as List<dynamic>;
+          bool isEpisodeInRecentlyWatched = episodes.any((episode) => episode['episode_id'] == _episodeId);
+
+          if (episodes.isNotEmpty && isEpisodeInRecentlyWatched) {
+            for (Map<String, dynamic> episode in episodes) {
+              if (episode['episode_id'] == _episodeId) {
+                if (_videoPlayerController != null) episode['progress'] = _durationState.progress.inSeconds;
+                episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+
+                if (episode['progress'] != null && episode['progress'] != 0) {
+                  setState(() => _durationState.progress = Duration(seconds: episode['progress']));
+                }
+                break;
+              }
+            }
+          } else {
+            episodes.add({
+              'episode_id': _episodeId,
+              if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            });
+          }
+        } else {
+          recentlyWatched[_id] = [{
+            'episode_id': _episodeId,
+            if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          }];
+        }
+      }
+
+      user.set({
+        _pageType!.name: recentlyWatched,
+      }, SetOptions(merge: true));
+    }, onError: (e) => print("Error getting user: $e"));
+  }
+
+  initializePlayer() async {
     setState(() {
       _videoPlayerController = VlcPlayerController.network(
         _streamUrl!,
         hwAcc: HwAcc.auto,
-        autoPlay: true,
         autoInitialize: true,
+        autoPlay: true,
         options: VlcPlayerOptions(
           http: VlcHttpOptions([
             VlcHttpOptions.httpReconnect(true),
@@ -47,15 +133,31 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       );
     });
 
-    _videoPlayerController!.addOnInitListener(() {
+    _videoPlayerController!.addOnInitListener(() async {
+      int currentPosition = 0;
+
+      while (currentPosition == 0) {
+        currentPosition = (await _videoPlayerController!.getPosition()).inSeconds;
+        await Future.delayed(Duration(milliseconds: 100));
+      }
+
+      if (_durationState.progress.inSeconds != 0 && _videoPlayerController!.value.isPlaying && !_videoPlayerController!.value.isBuffering) {
+        await seek(_durationState.progress);
+      }
+
       streamUpdates();
-      Future.delayed(Duration(seconds: 5), () {
+
+      Future.delayed(Duration(seconds: 5), () async {
         setState(() => _showControls = false);
+      });
+
+      Timer.periodic(Duration(seconds: 30), (timer) {
+        if (mounted) updateRecentlyWatched();
       });
     });
   }
 
-  streamUpdates() async {
+  streamUpdates({bool initial = false}) async {
     Duration progress = await _videoPlayerController!.getPosition();
     Duration total = await _videoPlayerController!.getDuration();
     Duration buffered = Duration(
@@ -71,8 +173,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     });
 
     if (total.inSeconds == 0 || progress != total) {
-      streamUpdates();
+      if (mounted) streamUpdates();
     } else {
+      updateRecentlyWatched();
       _videoPlayerController!.dispose();
       _videoPlayerController = null;
       Navigator.of(context).pop();
@@ -163,8 +266,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    _id = widget.id;
+    _episodeId = widget.episodeId;
     _title = widget.title;
     _streamUrl = widget.streamUrl;
+    _pageType = widget.pageType;
     super.initState();
     forceLandscape();
 
@@ -174,10 +280,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Player',
-      );
-
+      await updateRecentlyWatched();
       initializePlayer();
     });
   }
@@ -227,21 +330,31 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                 alignment: Alignment.topCenter,
                 child: AppBar(
                   backgroundColor: Colors.transparent,
-                  leading: BackButton(color: Colors.white),
-                  title: Text(
-                    _title!,
-                    style: Theme.of(context).textTheme.titleSmall,
+                  leading: BackButton(
+                    onPressed: () {
+                      updateRecentlyWatched();
+                      Navigator.of(context).pop();
+                    },
                   ),
+                  title: Text(_title!),
                   actions: [
                     IconButton(
-                      icon: Icon(
-                        Icons.closed_caption_off,
-                        color: Colors.white,
-                      ),
+                      icon: Icon(Icons.closed_caption_off),
                       onPressed: () {
                         //Show captions selection dialog
                         //Pause media when open
                         //Play media when close
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(_lastZoomGestureScale > 1.0 ? Icons.zoom_in_map : Icons.zoom_out_map),
+                      onPressed: () {
+                        if (_lastZoomGestureScale > 1.0) {
+                          setState(() => _scaleVideoAnimationController!.reverse());
+                        } else if (_lastZoomGestureScale < 1.0) {
+                          setState(() => _scaleVideoAnimationController!.forward());
+                        }
+                        _lastZoomGestureScale = 1.0;
                       },
                     ),
                   ],

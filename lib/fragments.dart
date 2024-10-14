@@ -139,10 +139,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         title: Text(_navigationPages[_selectedPageIndex].title),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(
-              Icons.menu,
-              color: Colors.white,
-            ),
+            icon: Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),

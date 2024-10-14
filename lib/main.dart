@@ -13,18 +13,11 @@ import 'package:semo/firebase_options.dart';
 import 'package:semo/splash.dart';
 
 void main() async {
-  if (kReleaseMode) debugPrint = (String? message, {int? wrapWidth}) {};
-
   if (kIsWeb) usePathUrlStrategy();
-
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeFirebase();
-
   PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
-
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-    runApp(Semo());
-  });
+  await initializeFirebase();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) => runApp(Semo()));
 }
 
 initializeFirebase() async {

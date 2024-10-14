@@ -12,27 +12,31 @@ import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/movie.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
 
 //ignore: must_be_immutable
-class MovieGenre extends StatefulWidget {
+class Genre extends StatefulWidget {
   model.Genre genre;
+  PageType pageType;
 
-  MovieGenre({
+  Genre({
     required this.genre,
+    required this.pageType,
   });
 
   @override
-  _MovieGenreState createState() => _MovieGenreState();
+  _GenreState createState() => _GenreState();
 }
 
-class _MovieGenreState extends State<MovieGenre> {
+class _GenreState extends State<Genre> {
   model.Genre? _genre;
+  PageType? _pageType;
   model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  PagingController<int, model.Movie> _pagingController = PagingController(firstPageKey: 0);
+  PagingController _pagingController = PagingController(firstPageKey: 0);
 
   navigate({required Widget destination, bool replace = false}) async {
     if (replace) {
@@ -63,7 +67,8 @@ class _MovieGenreState extends State<MovieGenre> {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.discoverMovie).replace(queryParameters: parameters);
+    String url = _pageType! == PageType.movies ? Urls.discoverMovie : Urls.discoverTvShow;
+    Uri uri = Uri.parse(url).replace(queryParameters: parameters);
 
     Response request = await http.get(
       uri,
@@ -75,17 +80,26 @@ class _MovieGenreState extends State<MovieGenre> {
 
     if (response.isNotEmpty) {
       model.SearchResults searchResults = model.SearchResults.fromJson(
-        PageType.movies,
+        _pageType!,
         json.decode(response),
       );
 
       bool isLastPage = pageKey == searchResults.totalResults;
 
-      if (isLastPage) {
-        _pagingController.appendLastPage(searchResults.movies!);
+      if (_pageType == PageType.movies) {
+        if (isLastPage) {
+          _pagingController.appendLastPage(searchResults.movies!);
+        } else {
+          int nextPageKey = pageKey + searchResults.movies!.length;
+          _pagingController.appendPage(searchResults.movies!, nextPageKey);
+        }
       } else {
-        int nextPageKey = pageKey + searchResults.movies!.length;
-        _pagingController.appendPage(searchResults.movies!, nextPageKey);
+        if (isLastPage) {
+          _pagingController.appendLastPage(searchResults.tvShows!);
+        } else {
+          int nextPageKey = pageKey + searchResults.tvShows!.length;
+          _pagingController.appendPage(searchResults.tvShows!, nextPageKey);
+        }
       }
 
       setState(() => _searchResults = searchResults);
@@ -100,7 +114,7 @@ class _MovieGenreState extends State<MovieGenre> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Movie Genre - ${_genre!.name}',
+        screenName: 'Genre - ${_genre!.id}',
       );
     });
     _pagingController.addPageRequestListener((pageKey) => getMovies(pageKey));
@@ -112,15 +126,30 @@ class _MovieGenreState extends State<MovieGenre> {
     super.dispose();
   }
 
-  Widget MovieCard(model.Movie movie) {
-    List<String> releaseDateContent = movie.releaseDate.split('-');
-    String releaseYear = releaseDateContent[0];
+  Widget ResultCard({model.Movie? movie, model.TvShow? tvShow}) {
+    String posterUrl, title, releaseDate;
+    double voteAverage;
+
+    if (_pageType == PageType.movies) {
+      posterUrl = '${Urls.imageBase_w185}${movie!.posterPath}';
+      title = movie.title;
+      releaseDate = movie.releaseDate;
+      voteAverage = movie.voteAverage;
+    } else {
+      posterUrl = '${Urls.imageBase_w185}${tvShow!.posterPath}';
+      title = tvShow.name;
+      releaseDate = tvShow.firstAirDate;
+      voteAverage = tvShow.voteAverage;
+    }
+
+    List<String> releaseDateContent = releaseDate.split('-');
+    releaseDate = releaseDateContent[0];
 
     return Column(
       children: [
         Expanded(
           child: CachedNetworkImage(
-            imageUrl: '${Urls.imageBase_w185}${movie.posterPath}',
+            imageUrl: posterUrl,
             placeholder: (context, url) {
               return Container(
                 width: double.infinity,
@@ -168,7 +197,7 @@ class _MovieGenreState extends State<MovieGenre> {
                               color: Theme.of(context).primaryColor,
                             ),
                             child: Text(
-                              '${movie.voteAverage}',
+                              '$voteAverage',
                               style: Theme.of(context).textTheme.displaySmall,
                             ),
                           ),
@@ -177,7 +206,13 @@ class _MovieGenreState extends State<MovieGenre> {
                       Spacer(),
                     ],
                   ),
-                  onTap: () => navigate(destination: Movie(movie: movie)),
+                  onTap: () {
+                    if (_pageType == PageType.movies) {
+                      navigate(destination: Movie(movie: movie!));
+                    } else {
+                      /*navigate(destination: TvShow(tvShow: tvShow));*/
+                    }
+                  },
                 ),
               );
             },
@@ -188,7 +223,7 @@ class _MovieGenreState extends State<MovieGenre> {
           width: double.infinity,
           margin: EdgeInsets.only(top: 10),
           child: Text(
-            movie.title,
+            title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.displayMedium,
@@ -201,7 +236,7 @@ class _MovieGenreState extends State<MovieGenre> {
             bottom: 10,
           ),
           child: Text(
-            releaseYear,
+            releaseDate,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
@@ -221,7 +256,13 @@ class _MovieGenreState extends State<MovieGenre> {
           child: PagedGridView(
             pagingController: _pagingController,
             builderDelegate: PagedChildBuilderDelegate(
-              itemBuilder: (context, movie, index) => MovieCard(movie as model.Movie),
+              itemBuilder: (context, media, index) {
+                if (_pageType == PageType.movies) {
+                  return ResultCard(movie: media as model.Movie);
+                } else {
+                  return ResultCard(tvShow: media as model.TvShow);
+                }
+              },
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,

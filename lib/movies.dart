@@ -16,7 +16,7 @@ import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/movie.dart';
-import 'package:semo/movie_genre.dart';
+import 'package:semo/genre.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
@@ -588,7 +588,9 @@ class _MoviesState extends State<Movies> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Container(),
-                onTap: () => navigate(destination: MovieGenre(genre: genre)),
+                onTap: () => navigate(
+                  destination: Genre(genre: genre, pageType: PageType.movies),
+                ),
               ),
             ),
           ),

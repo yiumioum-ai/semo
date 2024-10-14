@@ -16,6 +16,8 @@ import 'package:semo/models/person.dart' as model;
 import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
+import 'package:semo/utils/enums.dart';
+import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:semo/web_player.dart';
@@ -155,7 +157,8 @@ class _MovieState extends State<Movie> {
   }
 
   Future<void> getMovieStreamUrl() async {
-    String streamUrl = Urls.getMovieStreamUrl(_movie!.id);
+    Extractor extractor = Extractor(movie: _movie);
+    String? streamUrl = await extractor.getStream();
     setState(() => _movie!.streamUrl = streamUrl);
   }
 
@@ -362,10 +365,11 @@ class _MovieState extends State<Movie> {
         ),
         onPressed: () async {
           navigate(
-            destination: WebPlayer(
+            destination: Player(
               id: _movie!.id,
               title: _movie!.title,
               streamUrl: _movie!.streamUrl!,
+              pageType: PageType.movies,
             ),
           );
         },

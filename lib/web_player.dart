@@ -3,20 +3,25 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:semo/utils/db_names.dart';
+import 'package:semo/utils/enums.dart';
 
 //ignore: must_be_immutable
 class WebPlayer extends StatefulWidget {
   int id;
+  int? episodeId;
   String title, streamUrl;
+  PageType pageType;
 
   WebPlayer({
     required this.id,
+    this.episodeId,
     required this.title,
     required this.streamUrl,
+    required this.pageType,
   });
 
   @override
@@ -24,8 +29,9 @@ class WebPlayer extends StatefulWidget {
 }
 
 class _WebPlayerState extends State<WebPlayer> {
-  int? _id;
+  int? _id, _episodeId;
   String? _title, _streamUrl;
+  PageType? _pageType;
   final GlobalKey _webViewKey = GlobalKey();
   InAppWebViewController? _webViewController;
   InAppWebViewSettings _webViewSettings = InAppWebViewSettings(
@@ -40,28 +46,58 @@ class _WebPlayerState extends State<WebPlayer> {
   bool _showControls = true;
 
   addToRecentlyWatched() async {
-    final user = _firestore.collection('users').doc(_auth.currentUser!.uid);
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<Map<String, dynamic>> recentlyWatched = (data['recently_watched_movies'] as List<dynamic>).cast<Map<String, dynamic>>();
-        bool isInRecentlyWatched = recentlyWatched.any((movie) => movie['id'] == _id);
+        Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+        var recentlyWatched;
 
-        if (recentlyWatched.isNotEmpty && isInRecentlyWatched) {
-          for (Map<String, dynamic> movie in recentlyWatched) {
-            if (movie['id'] == _id) {
-              movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
-              break;
+        if (_pageType == PageType.movies) {
+          recentlyWatched = ((data['movies'] ?? []) as List<dynamic>).cast<Map<String, dynamic>>();
+          bool isInRecentlyWatched = recentlyWatched.any((movie) => movie['id'] == _id);
+
+          if (recentlyWatched.isNotEmpty && isInRecentlyWatched) {
+            for (Map<String, dynamic> movie in recentlyWatched) {
+              if (movie['id'] == _id) {
+                movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+                break;
+              }
             }
+          } else {
+            recentlyWatched.add({
+              'id': _id,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            });
           }
         } else {
-          recentlyWatched.add({
-            'id': _id,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          });
+          recentlyWatched = ((data['tv_shows'] ?? {}) as Map<int, dynamic>);
+
+          if (recentlyWatched.containsKey(_id)) {
+            List<dynamic> episodes = recentlyWatched[_id] as List<dynamic>;
+            bool isEpisodeInRecentlyWatched = episodes.any((episode) => episode['episode_id'] == _episodeId);
+
+            if (episodes.isNotEmpty && isEpisodeInRecentlyWatched) {
+              for (Map<String, dynamic> episode in episodes) {
+                if (episode['episode_id'] == _episodeId) {
+                  episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+                  break;
+                }
+              }
+            } else {
+              episodes.add({
+                'episode_id': _episodeId,
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              });
+            }
+          } else {
+            recentlyWatched[_id] = [{
+              'episode_id': _episodeId,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            }];
+          }
         }
 
         user.set({
-          'recently_watched_movies': recentlyWatched,
+          _pageType!.name: recentlyWatched,
         }, SetOptions(merge: true));
       }, onError: (e) => print("Error getting user: $e"),
     );
@@ -86,8 +122,10 @@ class _WebPlayerState extends State<WebPlayer> {
   @override
   void initState() {
     _id = widget.id;
+    _episodeId = widget.episodeId;
     _title = widget.title;
     _streamUrl = widget.streamUrl;
+    _pageType = widget.pageType;
     super.initState();
     forceLandscape();
     WidgetsBinding.instance.addPostFrameCallback((_) async {

@@ -36,9 +36,7 @@ class _SearchState extends State<Search> {
     totalPages: 0,
     totalResults: 0
   );
-  PagingController<int, model.Movie> _moviesPagingController = PagingController(firstPageKey: 0);
-  PagingController<int, model.TvShow> _tvShowsPagingController = PagingController(firstPageKey: 0);
-  String? oldQuery;
+  PagingController _pagingController = PagingController(firstPageKey: 0);
 
   navigate({required Widget destination, bool replace = false}) async {
     if (replace) {
@@ -102,25 +100,21 @@ class _SearchState extends State<Search> {
 
       if (_pageType == PageType.movies) {
         if (isLastPage) {
-          _moviesPagingController.appendLastPage(searchResults.movies!);
+          _pagingController.appendLastPage(searchResults.movies!);
         } else {
           int nextPageKey = pageKey + searchResults.movies!.length;
-          _moviesPagingController.appendPage(searchResults.movies!, nextPageKey);
+          _pagingController.appendPage(searchResults.movies!, nextPageKey);
         }
       } else {
         if (isLastPage) {
-          _tvShowsPagingController.appendLastPage(searchResults.tvShows!);
+          _pagingController.appendLastPage(searchResults.tvShows!);
         } else {
           int nextPageKey = pageKey + searchResults.tvShows!.length;
-          _tvShowsPagingController.appendPage(searchResults.tvShows!, nextPageKey);
+          _pagingController.appendPage(searchResults.tvShows!, nextPageKey);
         }
       }
     } else {
-      if (_pageType == PageType.movies) {
-        _moviesPagingController.error = 'error';
-      } else {
-        _tvShowsPagingController.error = 'error';
-      }
+      _pagingController.error = 'error';
     }
   }
 
@@ -140,8 +134,7 @@ class _SearchState extends State<Search> {
 
   @override
   void dispose() {
-    _moviesPagingController.dispose();
-    _tvShowsPagingController.dispose();
+    _pagingController.dispose();
     super.dispose();
   }
 
@@ -166,21 +159,12 @@ class _SearchState extends State<Search> {
 
             if (_isFirstSearch) setState(() => _isFirstSearch = false);
 
-            if (_pageType == PageType.movies) {
-              _moviesPagingController.addPageRequestListener((pageKey) {
-                search(
-                  query: query,
-                  pageKey: pageKey,
-                );
-              });
-            } else {
-              _tvShowsPagingController.addPageRequestListener((pageKey) {
-                search(
-                  query: query,
-                  pageKey: pageKey,
-                );
-              });
-            }
+            _pagingController.addPageRequestListener((pageKey) {
+              search(
+                query: query,
+                pageKey: pageKey,
+              );
+            });
           }
         },
       )
@@ -311,7 +295,7 @@ class _SearchState extends State<Search> {
     if (_isFirstSearch) return Container();
 
     return PagedGridView(
-      pagingController: _moviesPagingController,
+      pagingController: _pagingController,
       builderDelegate: PagedChildBuilderDelegate(
         itemBuilder: (context, media, index) {
           if (_pageType == PageType.movies) {

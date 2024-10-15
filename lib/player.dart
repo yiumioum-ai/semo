@@ -47,6 +47,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   AnimationController? _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
   double _lastZoomGestureScale = 1.0;
+  bool _isZoomedIn = false;
 
   updateRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
@@ -65,7 +66,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
               movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
               if (movie['progress'] != null && movie['progress'] != 0) {
-                setState(() => _durationState.progress = Duration(seconds: movie['progress']));
+                if (mounted) setState(() => _durationState.progress = Duration(seconds: movie['progress']));
               }
               break;
             }
@@ -91,7 +92,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                 episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
                 if (episode['progress'] != null && episode['progress'] != 0) {
-                  setState(() => _durationState.progress = Duration(seconds: episode['progress']));
+                  if (mounted) setState(() => _durationState.progress = Duration(seconds: episode['progress']));
                 }
                 break;
               }
@@ -157,17 +158,28 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     });
   }
 
-  streamUpdates({bool initial = false}) async {
+  streamUpdates() async {
     Duration progress = await _videoPlayerController!.getPosition();
     Duration total = await _videoPlayerController!.getDuration();
-    bool isBuffering = _videoPlayerController!.value.isBuffering;
+    bool isBuffering = false;
+    bool isPlaying = await _videoPlayerController!.isPlaying() ?? false;
+
+    if (_videoPlayerController!.value.isBuffering) {
+      isBuffering = true;
+    } else {
+      if (isPlaying && (progress == _durationState.progress)) {
+        isBuffering = true;
+      }
+    }
 
     setState(() {
       _durationState = DurationState(
         progress: progress,
-        isBuffering: isBuffering,
         total: total,
+        isBuffering: isBuffering,
       );
+      _isPlaying = isPlaying;
+      _showControls = !isPlaying;
     });
 
     if (total.inSeconds == 0 || progress != total) {
@@ -186,12 +198,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     } else {
       await _videoPlayerController!.play();
     }
-
-    bool? isPlaying = await _videoPlayerController!.isPlaying();
-    setState(() {
-      _isPlaying = isPlaying!;
-      _showControls = !isPlaying;
-    });
   }
 
   seekForward() async {
@@ -211,19 +217,21 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   seek(Duration target) async => await _videoPlayerController!.seekTo(target);
 
   initializeScaling() {
-    Size screenSize = MediaQuery.of(context).size;
-    Size videoSize = _videoPlayerController!.value.size;
-    double targetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
+    if (_videoPlayerController != null && _videoPlayerController!.value.isInitialized) {
+      Size screenSize = MediaQuery.of(context).size;
+      Size videoSize = _videoPlayerController!.value.size;
+      double targetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
 
-    _scaleVideoAnimation = Tween<double>(
-      begin: 1.0,
-      end: targetScale,
-    ).animate(
-      CurvedAnimation(
-        parent: _scaleVideoAnimationController!,
-        curve: Curves.easeInOut,
-      ),
-    );
+      _scaleVideoAnimation = Tween<double>(
+        begin: 1.0,
+        end: targetScale,
+      ).animate(
+        CurvedAnimation(
+          parent: _scaleVideoAnimationController!,
+          curve: Curves.easeInOut,
+        ),
+      );
+    }
   }
 
   forceLandscape() async {
@@ -279,32 +287,34 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await updateRecentlyWatched();
-      initializePlayer();
+      await initializePlayer();
+      initializeScaling();
     });
   }
 
   @override
   void dispose() async {
-    super.dispose();
     forcePortrait();
 
     if (_isPlaying) await _videoPlayerController!.pause();
-    _videoPlayerController!.removeOnInitListener(() {});
-    await _videoPlayerController!.dispose();
+    _videoPlayerController!.dispose();
+    _videoPlayerController = null;
+    super.dispose();
   }
 
   Widget VideoPlayer() {
+    double aspectRatio = _isZoomedIn
+        ? MediaQuery.of(context).size.width / MediaQuery.of(context).size.height
+        : _videoPlayerController!.value.aspectRatio;
     return Center(
       child: ScaleTransition(
         scale: _scaleVideoAnimation,
         child: AspectRatio(
-          aspectRatio: 16 / 9,
+          aspectRatio: aspectRatio,
           child: VlcPlayer(
             controller: _videoPlayerController!,
-            aspectRatio: MediaQuery.of(context).size.width / MediaQuery.of(context).size.height,
-            placeholder: Center(
-              child: CircularProgressIndicator(),
-            ),
+            aspectRatio: aspectRatio,
+            placeholder: Center(child: CircularProgressIndicator()),
           ),
         ),
       ),
@@ -345,15 +355,16 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                       },
                     ),
                     IconButton(
-                      icon: Icon(_lastZoomGestureScale > 1.0 ? Icons.zoom_in_map : Icons.zoom_out_map),
+                      icon: Icon(_isZoomedIn ? Icons.zoom_out_map : Icons.zoom_in_map),
                       onPressed: () {
-                        //fix this logic
-                        if (_lastZoomGestureScale > 1.0) {
-                          setState(() => _scaleVideoAnimationController!.reverse());
-                        } else if (_lastZoomGestureScale < 1.0) {
-                          setState(() => _scaleVideoAnimationController!.forward());
-                        }
-                        _lastZoomGestureScale = 1.0;
+                        setState(() {
+                          if (_isZoomedIn) {
+                            _scaleVideoAnimationController!.reverse();
+                          } else {
+                            _scaleVideoAnimationController!.forward();
+                          }
+                          _isZoomedIn = !_isZoomedIn;
+                        });
                       },
                     ),
                   ],
@@ -431,39 +442,45 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if (_videoPlayerController != null) initializeScaling();
-
     return Scaffold(
-      body: _videoPlayerController != null ? GestureDetector(
-        onTap: () {
-          if (_showControls) {
-            setState(() => _showControls = false);
-          } else {
-            setState(() => _showControls = true);
-            Future.delayed(const Duration(seconds: 5), () {
-              if (mounted && _isPlaying) {
-                setState(() => _showControls = false);
-              }
-            });
-          }
-        },
-        onScaleUpdate: (details) {
-          _lastZoomGestureScale = details.scale;
-        },
-        onScaleEnd: (details) {
-          if (_lastZoomGestureScale > 1.0) {
-            setState(() => _scaleVideoAnimationController!.forward());
-          } else if (_lastZoomGestureScale < 1.0) {
-            setState(() => _scaleVideoAnimationController!.reverse());
-          }
-          _lastZoomGestureScale = 1.0;
-        },
-        child: Stack(
-          children: [
-            Container(color: Colors.black),
-            VideoPlayer(),
-            Controls(),
-          ],
+      body: _videoPlayerController != null ? SafeArea(
+        child: GestureDetector(
+          onTap: () {
+            if (_showControls) {
+              setState(() => _showControls = false);
+            } else {
+              setState(() => _showControls = true);
+              Future.delayed(const Duration(seconds: 5), () {
+                if (mounted && _isPlaying) {
+                  setState(() => _showControls = false);
+                }
+              });
+            }
+          },
+          onScaleUpdate: (details) {
+            _lastZoomGestureScale = details.scale;
+          },
+          onScaleEnd: (details) {
+            if (_lastZoomGestureScale < 1.0) {
+              setState(() {
+                _scaleVideoAnimationController!.forward();
+                _isZoomedIn = true;
+              });
+            } else if (_lastZoomGestureScale > 1.0) {
+              setState(() {
+                _scaleVideoAnimationController!.reverse();
+                _isZoomedIn = false;
+              });
+            }
+            _lastZoomGestureScale = 1.0;
+          },
+          child: Stack(
+            children: [
+              Container(color: Colors.black),
+              VideoPlayer(),
+              Controls(),
+            ],
+          ),
         ),
       ) : Container(),
     );

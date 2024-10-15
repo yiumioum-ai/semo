@@ -39,6 +39,7 @@ class Extractor {
       streamUrl = await extractor.extract(parameters);
     }
 
+    print('Stream URL: $streamUrl');
     return streamUrl;
   }
 }

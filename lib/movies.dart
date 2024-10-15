@@ -366,7 +366,7 @@ class _MoviesState extends State<Movies> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  navigate(destination: Movie(movie: movie));
+                  navigate(destination: Movie(movie));
                 },
               ),
             ),
@@ -480,7 +480,21 @@ class _MoviesState extends State<Movies> {
                     customBorder: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    onTap: () => navigate(destination: Movie(movie: movie)),
+                    onTap: () {
+                      late int watchedProgress;
+
+                      if (recentlyWatched) {
+                        watchedProgress = _rawRecentlyWatched!.firstWhere((data) => data['id'] == movie.id)['progress'];
+                      }
+
+                      navigate(
+                        destination: Movie(
+                          movie,
+                          fromRecentlyWatched: recentlyWatched,
+                          watchedProgress: recentlyWatched ? watchedProgress : null,
+                        ),
+                      );
+                    },
                     child: Column(
                       children: [
                         Row(

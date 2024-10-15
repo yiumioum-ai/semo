@@ -23,6 +23,8 @@ class Urls {
   static const String discoverMovie = '$tmdbBase/discover/movie';
   static const String discoverTvShow = '$tmdbBase/discover/tv';
 
+  static const String cobalt = 'https://api.cobalt.tools';
+
   static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
   static String getMovieVideosUrl(int id) => '$tmdbBase/movie/$id/videos';
   static String getTvShowVideosUrl(int id) => '$tmdbBase/tv/$id/videos';

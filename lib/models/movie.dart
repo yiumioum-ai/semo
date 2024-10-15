@@ -18,6 +18,7 @@ class Movie {
   bool video;
   double voteAverage;
   int voteCount;
+  int? duration;
   String? trailerUrl;
   String? streamUrl;
   List<Person>? cast;
@@ -40,6 +41,7 @@ class Movie {
     required this.video,
     required this.voteAverage,
     required this.voteCount,
+    this.duration,
     this.trailerUrl,
     this.streamUrl,
     this.cast,

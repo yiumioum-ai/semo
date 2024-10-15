@@ -253,7 +253,7 @@ class _SearchState extends State<Search> {
                   ),
                   onTap: () {
                     if (_pageType == PageType.movies) {
-                      navigate(destination: Movie(movie: movie!));
+                      navigate(destination: Movie(movie!));
                     } else {
                       /*navigate(destination: TvShow(tvShow: tvShow));*/
                     }

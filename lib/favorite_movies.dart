@@ -193,7 +193,7 @@ class _FavoriteMoviesState extends State<FavoriteMovies> {
                         Spacer(),
                       ],
                     ),
-                    onTap: () => navigate(destination: Movie(movie: movie, fromFavorites: true)),
+                    onTap: () => navigate(destination: Movie(movie, fromFavorites: true)),
                   ),
                 );
               },

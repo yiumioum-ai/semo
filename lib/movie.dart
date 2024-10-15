@@ -20,16 +20,17 @@ import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
-import 'package:semo/web_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 //ignore: must_be_immutable
 class Movie extends StatefulWidget {
   model.Movie movie;
-  bool fromFavorites;
+  bool fromRecentlyWatched, fromFavorites;
+  int? watchedProgress;
 
-  Movie({
-    required this.movie,
+  Movie(this.movie, {
+    this.fromRecentlyWatched = false,
+    this.watchedProgress,
     this.fromFavorites = false,
   });
 
@@ -39,7 +40,8 @@ class Movie extends StatefulWidget {
 
 class _MovieState extends State<Movie> {
   model.Movie? _movie;
-  bool? _fromFavorites;
+  bool? _fromRecentlyWatched, _fromFavorites;
+  int? _watchedProgress;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
@@ -71,6 +73,7 @@ class _MovieState extends State<Movie> {
     await Future.wait([
       isFavorite(),
       getTrailerUrl(),
+      getMovieDuration(),
       getMovieStreamUrl(),
       getMovieCast(),
       getRecommendations(),
@@ -156,6 +159,30 @@ class _MovieState extends State<Movie> {
     setState(() => _movie!.trailerUrl = youtubeUrl);
   }
 
+  Future<void> getMovieDuration() async {
+    Map<String, String> headers = {
+      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    };
+
+    Uri uri = Uri.parse(Urls.getMovieDetails(_movie!.id));
+
+    Response request = await http.get(
+      uri,
+      headers: headers,
+    );
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    if (response.isNotEmpty) {
+      Map<String, dynamic> details = json.decode(response) as Map<String, dynamic>;
+      int duration = details['runtime'];
+      setState(() => _movie!.duration = duration);
+    } else {
+      print('Failed to get movie duration');
+    }
+  }
+
   Future<void> getMovieStreamUrl() async {
     Extractor extractor = Extractor(movie: _movie);
     String? streamUrl = await extractor.getStream();
@@ -237,6 +264,8 @@ class _MovieState extends State<Movie> {
   @override
   void initState() {
     _movie = widget.movie;
+    _fromRecentlyWatched = widget.fromRecentlyWatched;
+    _watchedProgress = widget.watchedProgress;
     _fromFavorites = widget.fromFavorites;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -325,6 +354,21 @@ class _MovieState extends State<Movie> {
         releaseYear,
         style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget WatchedProgress() {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 20),
+      child: ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        child: LinearProgressIndicator(
+          value: _watchedProgress! / (_movie!.duration! * 60),
+          valueColor: AlwaysStoppedAnimation(Theme.of(context).primaryColor),
+          backgroundColor: Theme.of(context).primaryColor.withOpacity(.2),
+        ),
       ),
     );
   }
@@ -608,7 +652,7 @@ class _MovieState extends State<Movie> {
                       Spacer(),
                     ],
                   ),
-                  onTap: () => navigate(destination: Movie(movie: movie)),
+                  onTap: () => navigate(destination: Movie(movie)),
                 ),
               );
             },
@@ -694,6 +738,7 @@ class _MovieState extends State<Movie> {
                     children: [
                       Title(),
                       ReleaseYear(),
+                      if (_fromRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
                       Cast(),

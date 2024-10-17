@@ -25,12 +25,9 @@ import 'package:url_launcher/url_launcher.dart';
 //ignore: must_be_immutable
 class Movie extends StatefulWidget {
   model.Movie movie;
-  bool fromRecentlyWatched, fromFavorites;
-  int? watchedProgress;
+  bool fromFavorites;
 
   Movie(this.movie, {
-    this.fromRecentlyWatched = false,
-    this.watchedProgress,
     this.fromFavorites = false,
   });
 
@@ -40,7 +37,7 @@ class Movie extends StatefulWidget {
 
 class _MovieState extends State<Movie> {
   model.Movie? _movie;
-  bool? _fromRecentlyWatched, _fromFavorites;
+  bool? _isRecentlyWatched, _fromFavorites;
   int? _watchedProgress;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
@@ -72,6 +69,7 @@ class _MovieState extends State<Movie> {
     if (!reload) _spinner.show();
     await Future.wait([
       isFavorite(),
+      isRecentlyWatched(),
       getTrailerUrl(),
       getMovieDuration(),
       getMovieStreamUrl(),
@@ -86,15 +84,16 @@ class _MovieState extends State<Movie> {
   Future<void> isFavorite() async {
     final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
-        Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
-        List<int> favoriteMovies = ((data['movies'] ?? []) as List<dynamic>).cast<int>();
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      List<int> favoriteMovies = ((data['movies'] ?? []) as List<dynamic>).cast<int>();
 
-        if (favoriteMovies.isNotEmpty) {
+      if (favoriteMovies.isNotEmpty) {
+        setState(() {
           _isFavorite = favoriteMovies.contains(_movie!.id);
-          setState(() => _favoriteMovies = favoriteMovies);
-        }
-      }, onError: (e) => print("Error getting user: $e"),
-    );
+          _favoriteMovies = favoriteMovies;
+        });
+      }
+    }, onError: (e) => print("Error getting user: $e"));
   }
 
   addToFavorites() async {
@@ -125,6 +124,26 @@ class _MovieState extends State<Movie> {
       _favoriteMovies = favoriteMovies;
       _isFavorite = false;
     });
+  }
+
+  Future<void> isRecentlyWatched() async {
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
+    await user.get().then((DocumentSnapshot doc) {
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      Map<String, Map<String, dynamic>> recentlyWatched = ((data['movies'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+        return MapEntry(key, Map<String, dynamic>.from(value));
+      });
+
+      if (recentlyWatched.isNotEmpty) {
+        bool isRecentlyWatched = recentlyWatched.keys.contains('${_movie!.id}');
+        int? watchedProgress = recentlyWatched['${_movie!.id}']?['progress'];
+
+        setState(() {
+          _isRecentlyWatched = isRecentlyWatched;
+          _watchedProgress = watchedProgress;
+        });
+      }
+    }, onError: (e) => print("Error getting user: $e"));
   }
 
   Future<void> getTrailerUrl() async {
@@ -264,8 +283,6 @@ class _MovieState extends State<Movie> {
   @override
   void initState() {
     _movie = widget.movie;
-    _fromRecentlyWatched = widget.fromRecentlyWatched;
-    _watchedProgress = widget.watchedProgress;
     _fromFavorites = widget.fromFavorites;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -518,8 +535,8 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget Recommendations() {
-    List<model.Movie>? recommendations = _movie!.recommendations != null ? _movie!.recommendations!.length > 10 ? _movie!.recommendations!.sublist(0, 10) : _movie!.recommendations : [];
+  Widget Category(String title, {required List<model.Movie> movies}) {
+    movies = movies.length > 10 ? movies.sublist(0, 10) : movies;
 
     return Container(
       width: double.infinity,
@@ -529,54 +546,20 @@ class _MovieState extends State<Movie> {
           Container(
             width: double.infinity,
             child: Text(
-              'Recommendations',
+              title,
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
-          if (_movie!.recommendations != null) Container(
-            height: MediaQuery.of(context).size.height * 0.25,
-            margin: EdgeInsets.only(top: 10),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: recommendations!.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != recommendations.length ? 18 : 0),
-                  child: MovieCard(_movie!.recommendations![index]),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget Similar() {
-    List<model.Movie>? similar = _movie!.similar != null ? _movie!.similar!.length > 10 ? _movie!.similar!.sublist(0, 10) : _movie!.similar : [];
-
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.only(top: 30),
-      child: Column(
-        children: [
           Container(
-            width: double.infinity,
-            child: Text(
-              'Similar',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-          ),
-          if (_movie!.similar != null) Container(
             height: MediaQuery.of(context).size.height * 0.25,
             margin: EdgeInsets.only(top: 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: similar!.length,
+              itemCount: movies.length,
               itemBuilder: (context, index) {
                 return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != similar.length ? 18 : 0),
-                  child: MovieCard(_movie!.similar![index]),
+                  margin: EdgeInsets.only(right: (index + 1) != movies ? 18 : 0),
+                  child: MovieCard(movies[index]),
                 );
               },
             ),
@@ -738,12 +721,12 @@ class _MovieState extends State<Movie> {
                     children: [
                       Title(),
                       ReleaseYear(),
-                      if (_fromRecentlyWatched!) WatchedProgress(),
+                      if (_isRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
                       Cast(),
-                      if (_movie!.recommendations!.isNotEmpty) Recommendations(),
-                      if (_movie!.similar!.isNotEmpty) Similar(),
+                      if (_movie!.recommendations!.isNotEmpty) Category('Recommendations', movies: _movie!.recommendations!),
+                      if (_movie!.similar!.isNotEmpty) Category('Similar', movies: _movie!.similar!),
                     ],
                   ),
                 ),

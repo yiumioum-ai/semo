@@ -14,7 +14,7 @@ import 'package:semo/utils/enums.dart';
 //ignore: must_be_immutable
 class Player extends StatefulWidget {
   int id;
-  int? episodeId;
+  int? seasonId, episodeId;
   String title, streamUrl;
   PageType pageType;
 
@@ -31,7 +31,7 @@ class Player extends StatefulWidget {
 }
 
 class _PlayerState extends State<Player> with TickerProviderStateMixin {
-  int? _id, _episodeId;
+  int? _id, _seasonId, _episodeId;
   String? _title, _streamUrl;
   PageType? _pageType;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -56,60 +56,68 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       var recentlyWatched;
 
       if (_pageType == PageType.movies) {
-        recentlyWatched = ((data['movies'] ?? []) as List<dynamic>).cast<Map<String, dynamic>>();
-        bool isInRecentlyWatched = recentlyWatched.any((movie) => movie['id'] == _id);
+        recentlyWatched = ((data['movies'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+          return MapEntry(key, Map<String, dynamic>.from(value));
+        });
+        bool isInRecentlyWatched = recentlyWatched.keys.contains('$_id');
 
         if (recentlyWatched.isNotEmpty && isInRecentlyWatched) {
-          for (Map<String, dynamic> movie in recentlyWatched) {
-            if (movie['id'] == _id) {
-              if (_videoPlayerController != null) movie['progress'] = _durationState.progress.inSeconds;
-              movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+          Map<String, dynamic> movie = recentlyWatched['$_id']!;
 
-              if (movie['progress'] != null && movie['progress'] != 0) {
-                if (mounted) setState(() => _durationState.progress = Duration(seconds: movie['progress']));
-              }
-              break;
-            }
+          if (_videoPlayerController != null) movie['progress'] = _durationState.progress.inSeconds;
+          movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+
+          if (movie['progress'] != null && movie['progress'] != 0) {
+            setState(() => _durationState.progress = Duration(seconds: movie['progress']));
           }
         } else {
-          recentlyWatched.add({
+          recentlyWatched['$_id'] = {
             'id': _id,
             if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
             'timestamp': DateTime.now().millisecondsSinceEpoch,
-          });
+          };
         }
       } else {
-        recentlyWatched = ((data['tv_shows'] ?? {}) as Map<int, dynamic>);
+        recentlyWatched = (data['tv_shows'] ?? {}) as Map<String, dynamic>;
 
-        if (recentlyWatched.containsKey(_id)) {
-          List<dynamic> episodes = recentlyWatched[_id] as List<dynamic>;
-          bool isEpisodeInRecentlyWatched = episodes.any((episode) => episode['episode_id'] == _episodeId);
+        if (recentlyWatched.keys.contains('$_id')) {
+          Map<String, dynamic> seasons = recentlyWatched['$_id'] as Map<String, dynamic>;
 
-          if (episodes.isNotEmpty && isEpisodeInRecentlyWatched) {
-            for (Map<String, dynamic> episode in episodes) {
-              if (episode['episode_id'] == _episodeId) {
-                if (_videoPlayerController != null) episode['progress'] = _durationState.progress.inSeconds;
-                episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+          if (seasons.containsKey('$_seasonId')) {
+            Map<String, dynamic> episodes = seasons['$_seasonId'] as Map<String, dynamic>;
 
-                if (episode['progress'] != null && episode['progress'] != 0) {
-                  if (mounted) setState(() => _durationState.progress = Duration(seconds: episode['progress']));
-                }
-                break;
+            if (episodes.keys.contains('$_episodeId')) {
+              Map<String, dynamic> episode = episodes['$_episodeId'] as Map<String, dynamic>;
+
+              if (_videoPlayerController != null) episode['progress'] = _durationState.progress.inSeconds;
+              episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
+
+              if (episode['progress'] != null && episode['progress'] != 0) {
+                setState(() => _durationState.progress = Duration(seconds: episode['progress']));
               }
+            } else {
+              episodes['$_episodeId'] = {
+                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              };
             }
           } else {
-            episodes.add({
-              'episode_id': _episodeId,
-              if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            });
+            seasons['$_seasonId'] = {
+              '$_episodeId': {
+                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              },
+            };
           }
         } else {
-          recentlyWatched[_id] = [{
-            'episode_id': _episodeId,
-            if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }];
+          recentlyWatched['$_id'] = {
+            '$_seasonId': {
+              '$_episodeId': {
+                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+              },
+            },
+          };
         }
       }
 
@@ -148,7 +156,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
       streamUpdates();
 
-      Future.delayed(Duration(seconds: 5), () async {
+      Future.delayed(Duration(seconds: 5), () {
         setState(() => _showControls = false);
       });
 
@@ -179,7 +187,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         isBuffering: isBuffering,
       );
       _isPlaying = isPlaying;
-      _showControls = !isPlaying;
     });
 
     if (total.inSeconds == 0 || progress != total) {
@@ -273,6 +280,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   @override
   void initState() {
     _id = widget.id;
+    _seasonId = widget.seasonId;
     _episodeId = widget.episodeId;
     _title = widget.title;
     _streamUrl = widget.streamUrl;

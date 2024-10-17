@@ -32,7 +32,7 @@ class Movies extends StatefulWidget {
 
 class _MoviesState extends State<Movies> {
   List<model.Movie> _nowPlaying = [], _recentlyWatched = [];
-  List<Map<String, dynamic>>? _rawRecentlyWatched;
+  Map<String, Map<String, dynamic>>? _rawRecentlyWatched;
   CarouselSliderController _nowPlayingController = CarouselSliderController();
   int _currentNowPlayingIndex = 0;
   List<model.Genre> _genres = [];
@@ -154,18 +154,30 @@ class _MoviesState extends State<Movies> {
     }
   }
 
+  Map<String, Map<String, dynamic>> sortRecentlyWatched(Map<String, Map<String, dynamic>> rawRecentlyWatched) {
+    List<MapEntry<String, Map<String, dynamic>>> entries = rawRecentlyWatched.entries.toList();
+
+    entries.sort((a, b) {
+      int timestampA = a.value['timestamp'] ?? 0;
+      int timestampB = b.value['timestamp'] ?? 0;
+      return timestampB.compareTo(timestampA);
+    });
+
+    Map<String, Map<String, dynamic>> sortedRecentlyWatched = Map.fromEntries(entries);
+
+    return sortedRecentlyWatched;
+  }
+
   Future<void> getRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
       Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
-      List<Map<String, dynamic>> rawRecentlyWatched = ((data['movies'] ?? []) as List<dynamic>).cast<Map<String, dynamic>>();
-      rawRecentlyWatched.sort((a, b) {
-        int timeA = a['timestamp'];
-        int timeB = b['timestamp'];
-        return timeB.compareTo(timeA);
+      Map<String, Map<String, dynamic>> rawRecentlyWatched = ((data['movies'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+        return MapEntry(key, Map<String, dynamic>.from(value));
       });
+      rawRecentlyWatched = sortRecentlyWatched(rawRecentlyWatched);
 
-      for (Map<String, dynamic> movie in rawRecentlyWatched) getMovieDetails(movie['id']);
+      for (String id in rawRecentlyWatched.keys) getMovieDetails(int.parse(id));
       setState(() => _rawRecentlyWatched = rawRecentlyWatched);
     }, onError: (e) => print("Error getting user: $e"));
   }
@@ -219,8 +231,8 @@ class _MoviesState extends State<Movies> {
   }
 
   removeFromRecentlyWatched(model.Movie movie) async {
-    List<Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
-    rawRecentlyWatched.removeWhere((object) => object['id'] == movie.id);
+    Map<String, Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
+    rawRecentlyWatched.removeWhere((id, value) => id == movie.id);
 
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.set({
@@ -480,21 +492,7 @@ class _MoviesState extends State<Movies> {
                     customBorder: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    onTap: () {
-                      late int watchedProgress;
-
-                      if (recentlyWatched) {
-                        watchedProgress = _rawRecentlyWatched!.firstWhere((data) => data['id'] == movie.id)['progress'];
-                      }
-
-                      navigate(
-                        destination: Movie(
-                          movie,
-                          fromRecentlyWatched: recentlyWatched,
-                          watchedProgress: recentlyWatched ? watchedProgress : null,
-                        ),
-                      );
-                    },
+                    onTap: () => navigate(destination: Movie(movie)),
                     child: Column(
                       children: [
                         Row(

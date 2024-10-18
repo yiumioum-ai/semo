@@ -134,8 +134,8 @@ class _MoviesState extends State<Movies> {
 
     if (response.isNotEmpty) {
       model.SearchResults searchResults = model.SearchResults.fromJson(
-          PageType.movies,
-          json.decode(response)
+        PageType.movies,
+        json.decode(response),
       );
 
       bool isLastPage = pageKey == searchResults.totalResults;
@@ -292,7 +292,6 @@ class _MoviesState extends State<Movies> {
               dotColor: Colors.white30,
               activeDotColor: Theme.of(context).primaryColor,
             ),
-            onDotClicked: (int index) {},
           ),
         ),
       ],

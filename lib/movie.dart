@@ -37,8 +37,7 @@ class Movie extends StatefulWidget {
 
 class _MovieState extends State<Movie> {
   model.Movie? _movie;
-  bool? _isRecentlyWatched, _fromFavorites;
-  int? _watchedProgress;
+  bool? _fromFavorites;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
@@ -139,8 +138,8 @@ class _MovieState extends State<Movie> {
         int? watchedProgress = recentlyWatched['${_movie!.id}']?['progress'];
 
         setState(() {
-          _isRecentlyWatched = isRecentlyWatched;
-          _watchedProgress = watchedProgress;
+          _movie!.isRecentlyWatched = isRecentlyWatched;
+          _movie!.watchedProgress = watchedProgress;
         });
       }
     }, onError: (e) => print("Error getting user: $e"));
@@ -382,7 +381,7 @@ class _MovieState extends State<Movie> {
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(10)),
         child: LinearProgressIndicator(
-          value: _watchedProgress! / (_movie!.duration! * 60),
+          value: _movie!.watchedProgress! / (_movie!.duration! * 60),
           valueColor: AlwaysStoppedAnimation(Theme.of(context).primaryColor),
           backgroundColor: Theme.of(context).primaryColor.withOpacity(.2),
         ),
@@ -721,7 +720,7 @@ class _MovieState extends State<Movie> {
                     children: [
                       Title(),
                       ReleaseYear(),
-                      if (_isRecentlyWatched!) WatchedProgress(),
+                      if (_movie!.isRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
                       Cast(),

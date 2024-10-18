@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class Urls {
   static const String tmdbBase = 'https://api.themoviedb.org/3';
-  static const String search = '$tmdbBase/search';
+  static const String searchMovies = '$tmdbBase/search/movie';
+  static const String searchTvShows = '$tmdbBase/search/tv';
   static const String imageBase_w45 = 'https://image.tmdb.org/t/p/w45';
   static const String imageBase_w92 = 'https://image.tmdb.org/t/p/w92';
   static const String imageBase_w154 = 'https://image.tmdb.org/t/p/w154';
@@ -15,9 +16,12 @@ class Urls {
   static const String imageBase_w1280 = 'https://image.tmdb.org/t/p/w1280';
   static const String imageBase_original = 'https://image.tmdb.org/t/p/original';
   static const String nowPlayingMovies = '$tmdbBase/movie/now_playing';
+  static const String onTheAirTvShows = '$tmdbBase/tv/on_the_air';
   static const String trendingMovies = '$tmdbBase/trending/movie/week';
   static const String popularMovies = '$tmdbBase/movie/popular';
+  static const String popularTvShows = '$tmdbBase/tv/popular';
   static const String topRatedMovies = '$tmdbBase/movie/top_rated';
+  static const String topRatedTvShows = '$tmdbBase/tv/top_rated';
   static const String movieGenres = '$tmdbBase/genre/movie/list';
   static const String tvShowGenres = '$tmdbBase/genre/tv/list';
   static const String discoverMovie = '$tmdbBase/discover/movie';
@@ -26,6 +30,7 @@ class Urls {
   static const String cobalt = 'https://api.cobalt.tools';
 
   static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
+  static String getTvShowDetails(int id) => '$tmdbBase/tv/$id';
   static String getMovieVideosUrl(int id) => '$tmdbBase/movie/$id/videos';
   static String getTvShowVideosUrl(int id) => '$tmdbBase/tv/$id/videos';
   //static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';

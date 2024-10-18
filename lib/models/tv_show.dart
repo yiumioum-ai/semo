@@ -7,7 +7,7 @@ class TvShow {
   List<Genre>? genres;
   int id;
   String originalLanguage;
-  String originalTitle;
+  String originalName;
   String overview;
   double popularity;
   String posterPath;
@@ -24,7 +24,7 @@ class TvShow {
     this.genres,
     required this.id,
     required this.originalLanguage,
-    required this.originalTitle,
+    required this.originalName,
     required this.overview,
     required this.popularity,
     required this.posterPath,
@@ -43,13 +43,13 @@ class TvShow {
       genres: json['genres'] != null ? List<Genre>.from(json['genres'].map((json) => Genre.fromJson(json)).toList()) : null,
       id: json['id'],
       originalLanguage: json['original_language'],
-      originalTitle: json['original_title'],
+      originalName: json['original_name'],
       overview: json['overview'],
-      popularity: json['popularity'].toDouble() ?? 0.0,
+      popularity: double.parse((json['popularity'].toDouble() ?? 0.0).toStringAsFixed(1)),
       posterPath: json['poster_path'] ?? '',
       firstAirDate: json['first_air_date'],
       name: json['name'],
-      voteAverage: json['vote_average'].toDouble() ?? 0.0,
+      voteAverage: double.parse((json['vote_average'].toDouble() ?? 0.0).toStringAsFixed(1)),
       voteCount: json['vote_count'] ?? 0,
       seasons: json['seasons'] != null ? List<Season>.from(json['seasons'].map((json) => Season.fromJson(json)).toList()) : null,
     );
@@ -86,6 +86,7 @@ class Episode {
   String name;
   String overview;
   String stillPath;
+  bool isRecentlyWatched;
 
   Episode({
     required this.id,
@@ -95,6 +96,7 @@ class Episode {
     required this.name,
     required this.overview,
     required this.stillPath,
+    this.isRecentlyWatched = false,
   });
 
   factory Episode.fromJson(Map<String, dynamic> json) {

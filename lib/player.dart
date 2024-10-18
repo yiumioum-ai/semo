@@ -72,7 +72,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           }
         } else {
           recentlyWatched['$_id'] = {
-            'id': _id,
             if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
             'timestamp': DateTime.now().millisecondsSinceEpoch,
           };
@@ -428,16 +427,20 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     right: 18,
                     bottom: 18,
                   ),
-                  child: ProgressBar(
-                    progress: _durationState.progress,
-                    total: _durationState.total,
-                    progressBarColor: Theme.of(context).primaryColor,
-                    baseBarColor: Theme.of(context).primaryColor.withOpacity(.2),
-                    bufferedBarColor: Theme.of(context).primaryColor.withOpacity(.5),
-                    thumbColor: Theme.of(context).primaryColor,
-                    timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
-                    timeLabelPadding: 10,
-                    onSeek: (target) => !_durationState.isBuffering ? seek(target) : null,
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: ProgressBar(
+                      progress: _durationState.progress,
+                      total: _durationState.total,
+                      progressBarColor: Theme.of(context).primaryColor,
+                      baseBarColor: Theme.of(context).primaryColor.withOpacity(.2),
+                      bufferedBarColor: Theme.of(context).primaryColor.withOpacity(.5),
+                      thumbColor: Theme.of(context).primaryColor,
+                      timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
+                      timeLabelPadding: 10,
+                      onSeek: (target) => !_durationState.isBuffering ? seek(target) : null,
+                    ),
                   ),
                 ),
               ),
@@ -451,44 +454,42 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _videoPlayerController != null ? SafeArea(
-        child: GestureDetector(
-          onTap: () {
-            if (_showControls) {
-              setState(() => _showControls = false);
-            } else {
-              setState(() => _showControls = true);
-              Future.delayed(const Duration(seconds: 5), () {
-                if (mounted && _isPlaying) {
-                  setState(() => _showControls = false);
-                }
-              });
-            }
-          },
-          onScaleUpdate: (details) {
-            _lastZoomGestureScale = details.scale;
-          },
-          onScaleEnd: (details) {
-            if (_lastZoomGestureScale < 1.0) {
-              setState(() {
-                _scaleVideoAnimationController!.forward();
-                _isZoomedIn = true;
-              });
-            } else if (_lastZoomGestureScale > 1.0) {
-              setState(() {
-                _scaleVideoAnimationController!.reverse();
-                _isZoomedIn = false;
-              });
-            }
-            _lastZoomGestureScale = 1.0;
-          },
-          child: Stack(
-            children: [
-              Container(color: Colors.black),
-              VideoPlayer(),
-              Controls(),
-            ],
-          ),
+      body: _videoPlayerController != null ? GestureDetector(
+        onTap: () {
+          if (_showControls) {
+            setState(() => _showControls = false);
+          } else {
+            setState(() => _showControls = true);
+            Future.delayed(const Duration(seconds: 5), () {
+              if (mounted && _isPlaying) {
+                setState(() => _showControls = false);
+              }
+            });
+          }
+        },
+        onScaleUpdate: (details) {
+          _lastZoomGestureScale = details.scale;
+        },
+        onScaleEnd: (details) {
+          if (_lastZoomGestureScale < 1.0) {
+            setState(() {
+              _scaleVideoAnimationController!.forward();
+              _isZoomedIn = true;
+            });
+          } else if (_lastZoomGestureScale > 1.0) {
+            setState(() {
+              _scaleVideoAnimationController!.reverse();
+              _isZoomedIn = false;
+            });
+          }
+          _lastZoomGestureScale = 1.0;
+        },
+        child: Stack(
+          children: [
+            Container(color: Colors.black),
+            VideoPlayer(),
+            Controls(),
+          ],
         ),
       ) : Container(),
     );

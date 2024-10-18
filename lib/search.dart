@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/movie.dart';
 import 'package:semo/models/movie.dart' as model;
@@ -20,9 +21,11 @@ import 'package:semo/utils/urls.dart';
 //ignore: must_be_immutable
 class Search extends StatefulWidget {
   PageType pageType;
+
   Search({
     required this.pageType,
   });
+
   @override
   _SearchState createState() => _SearchState();
 }
@@ -68,13 +71,7 @@ class _SearchState extends State<Search> {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    String url = Urls.search;
-
-    if (_pageType == PageType.movies) {
-      url += '/movie';
-    } else {
-      url += '/tv';
-    }
+    String url = _pageType == PageType.movies ? Urls.searchMovies : Urls.searchTvShows;
 
     Uri uri = Uri.parse(url).replace(
       queryParameters: parameters,
@@ -255,7 +252,7 @@ class _SearchState extends State<Search> {
                     if (_pageType == PageType.movies) {
                       navigate(destination: Movie(movie!));
                     } else {
-                      /*navigate(destination: TvShow(tvShow: tvShow));*/
+                      navigate(destination: TvShow(tvShow!));
                     }
                   },
                 ),

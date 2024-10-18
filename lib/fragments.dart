@@ -54,7 +54,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         NavigationPage(
           icon: Icons.video_library,
           title: 'TV Shows',
-          widget: TVShows(),
+          widget: TvShows(),
           pageType: PageType.tv_shows,
         ),
         NavigationPage(

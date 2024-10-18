@@ -14,6 +14,7 @@ import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/movie.dart';
+import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
@@ -111,6 +112,7 @@ class _GenreState extends State<Genre> {
   @override
   void initState() {
     _genre = widget.genre;
+    _pageType = widget.pageType;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
@@ -210,7 +212,7 @@ class _GenreState extends State<Genre> {
                     if (_pageType == PageType.movies) {
                       navigate(destination: Movie(movie!));
                     } else {
-                      /*navigate(destination: TvShow(tvShow: tvShow));*/
+                      navigate(destination: TvShow(tvShow!));
                     }
                   },
                 ),

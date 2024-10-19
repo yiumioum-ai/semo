@@ -1,4 +1,5 @@
 import 'package:semo/models/genre.dart';
+import 'package:semo/models/person.dart';
 
 class TvShow {
   bool adult;
@@ -15,7 +16,11 @@ class TvShow {
   String name;
   double voteAverage;
   int voteCount;
+  String? trailerUrl;
   List<Season>? seasons;
+  List<Person>? cast;
+  List<TvShow>? recommendations;
+  List<TvShow>? similar;
 
   TvShow({
     required this.adult,
@@ -32,7 +37,11 @@ class TvShow {
     required this.name,
     required this.voteAverage,
     required this.voteCount,
+    this.trailerUrl,
     this.seasons,
+    this.cast,
+    this.recommendations,
+    this.similar,
   });
 
   factory TvShow.fromJson(Map<String, dynamic> json) {
@@ -60,12 +69,14 @@ class Season {
   int id;
   int number;
   String name;
+  String? airDate;
   List<Episode>? episodes;
 
   Season({
     required this.id,
     required this.number,
     required this.name,
+    required this.airDate,
     this.episodes,
   });
 
@@ -74,6 +85,7 @@ class Season {
       id: json['id'],
       number: json['season_number'],
       name: json['name'],
+      airDate: json['air_date'],
     );
   }
 }
@@ -86,7 +98,9 @@ class Episode {
   String name;
   String overview;
   String stillPath;
+  int duration;
   bool isRecentlyWatched;
+  int? watchedProgress;
 
   Episode({
     required this.id,
@@ -96,7 +110,9 @@ class Episode {
     required this.name,
     required this.overview,
     required this.stillPath,
+    required this.duration,
     this.isRecentlyWatched = false,
+    this.watchedProgress,
   });
 
   factory Episode.fromJson(Map<String, dynamic> json) {
@@ -108,6 +124,7 @@ class Episode {
       name: json['name'],
       overview: json['overview'],
       stillPath: json['still_path'],
+      duration: json['runtime'],
     );
   }
 }

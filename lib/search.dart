@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -15,6 +17,7 @@ import 'package:semo/movie.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
 
@@ -31,15 +34,18 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
-  bool _isFirstSearch = true;
   PageType? _pageType;
-  FocusNode _searchFocusNode = FocusNode();
+  bool _isSearched = false;
+  TextEditingController _searchController = TextEditingController();
   model.SearchResults _searchResults = model.SearchResults(
     page: 0,
     totalPages: 0,
     totalResults: 0
   );
   PagingController _pagingController = PagingController(firstPageKey: 0);
+  List<String> _recentSearches = [];
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
   navigate({required Widget destination, bool replace = false}) async {
     if (replace) {
@@ -59,6 +65,40 @@ class _SearchState extends State<Search> {
         ),
       );
     }
+  }
+
+  getRecentSearches() async {
+    final user = _firestore.collection(DB.recentSearches).doc(_auth.currentUser!.uid);
+    await user.get().then((DocumentSnapshot doc) {
+      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
+      List<String> recentSearches = ((data[_pageType == PageType.movies ? 'movies' : 'tv_shows'] ?? []) as List<dynamic>).cast<String>();
+
+      setState(() => _recentSearches = recentSearches);
+    }, onError: (e) => print("Error getting user: $e"));
+  }
+
+  addToRecentSearches(String query) async {
+    List<String> recentSearches = _recentSearches;
+    recentSearches.add(query);
+
+    final user = _firestore.collection(DB.recentSearches).doc(_auth.currentUser!.uid);
+    await user.set({
+      _pageType == PageType.movies ? 'movies' : 'tv_shows': recentSearches,
+    }, SetOptions(merge: true));
+
+    setState(() => _recentSearches = recentSearches);
+  }
+
+  removeFromRecentSearches(String query) async {
+    List<String> recentSearches = _recentSearches;
+    recentSearches.remove(query);
+
+    final user = _firestore.collection(DB.recentSearches).doc(_auth.currentUser!.uid);
+    await user.set({
+      _pageType == PageType.movies ? 'movies' : 'tv_shows': recentSearches,
+    }, SetOptions(merge: true));
+
+    setState(() => _recentSearches = recentSearches);
   }
 
   search({required String query, required int pageKey}) async {
@@ -115,17 +155,37 @@ class _SearchState extends State<Search> {
     }
   }
 
+  submitSearch(String query, {required bool isRecentSearch}) {
+    if (query.isNotEmpty) {
+      FocusManager.instance.primaryFocus?.unfocus();
+
+      if (!_isSearched) {
+        setState(() {
+          if (isRecentSearch) _searchController.text = query;
+          _isSearched = true;
+        });
+      }
+
+      if (!isRecentSearch) addToRecentSearches(query);
+
+      _pagingController.addPageRequestListener((pageKey) {
+        search(
+          query: query,
+          pageKey: pageKey,
+        );
+      });
+    }
+  }
+
   @override
   void initState() {
+    _pageType = widget.pageType;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      setState(() => _pageType = widget.pageType);
-
-      FocusScope.of(context).requestFocus(_searchFocusNode);
-
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Search',
       );
+      await getRecentSearches();
     });
   }
 
@@ -139,8 +199,8 @@ class _SearchState extends State<Search> {
     return AppBar(
       leading: BackButton(),
       title: TextField(
-        focusNode: _searchFocusNode,
-        readOnly: !_isFirstSearch,
+        controller: _searchController,
+        readOnly: _isSearched,
         textInputAction: TextInputAction.search,
         cursorColor: Colors.white,
         style: Theme.of(context).textTheme.displayMedium,
@@ -150,20 +210,7 @@ class _SearchState extends State<Search> {
           border: InputBorder.none,
         ),
         onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-        onSubmitted: (query) {
-          if (query.isNotEmpty) {
-            FocusManager.instance.primaryFocus?.unfocus();
-
-            if (_isFirstSearch) setState(() => _isFirstSearch = false);
-
-            _pagingController.addPageRequestListener((pageKey) {
-              search(
-                query: query,
-                pageKey: pageKey,
-              );
-            });
-          }
-        },
+        onSubmitted: (query) => submitSearch(query, isRecentSearch: _recentSearches.contains(query)),
       )
     );
   }
@@ -288,9 +335,34 @@ class _SearchState extends State<Search> {
     );
   }
 
-  Widget SearchResults() {
-    if (_isFirstSearch) return Container();
+  Widget RecentSearches() {
+    return ListView.builder(
+      itemCount: _recentSearches.length,
+      itemBuilder: (context, index) {
+        String query = _recentSearches[index];
+        return ListTile(
+          leading: Icon(
+            Icons.history,
+            color: Colors.white54,
+          ),
+          title: Text(
+            query,
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          trailing: IconButton(
+            icon: Icon(
+              Icons.close,
+              color: Colors.white54,
+            ),
+            onPressed: () async => await removeFromRecentSearches(query),
+          ),
+          onTap: () => submitSearch(query, isRecentSearch: true),
+        );
+      },
+    );
+  }
 
+  Widget SearchResults() {
     return PagedGridView(
       pagingController: _pagingController,
       builderDelegate: PagedChildBuilderDelegate(
@@ -318,7 +390,7 @@ class _SearchState extends State<Search> {
       body: SafeArea(
         child: _pageType != null ? Container(
           padding: EdgeInsets.all(18),
-          child: SearchResults(),
+          child: _isSearched ? SearchResults() : RecentSearches(),
         ) : Container(),
       ),
     );

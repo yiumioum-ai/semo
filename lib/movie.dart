@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/fragments.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/player.dart';
@@ -25,11 +24,8 @@ import 'package:url_launcher/url_launcher.dart';
 //ignore: must_be_immutable
 class Movie extends StatefulWidget {
   model.Movie movie;
-  bool fromFavorites;
 
-  Movie(this.movie, {
-    this.fromFavorites = false,
-  });
+  Movie(this.movie);
 
   @override
   _MovieState createState() => _MovieState();
@@ -37,7 +33,6 @@ class Movie extends StatefulWidget {
 
 class _MovieState extends State<Movie> {
   model.Movie? _movie;
-  bool? _fromFavorites;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
@@ -45,9 +40,9 @@ class _MovieState extends State<Movie> {
   late Spinner _spinner;
   bool _isLoading = true;
 
-  navigate({required Widget destination, bool replace = false, bool goingBack = false}) async {
+  navigate({required Widget destination, bool replace = false}) async {
     PageTransition pageTransition = PageTransition(
-      type: !goingBack ? PageTransitionType.rightToLeft : PageTransitionType.leftToRight,
+      type: PageTransitionType.rightToLeft,
       child: destination,
     );
 
@@ -60,7 +55,10 @@ class _MovieState extends State<Movie> {
       await Navigator.push(
         context,
         pageTransition,
-      );
+      ).then((task) async {
+        await Future.delayed(Duration(seconds: 1));
+        if (task != null && task == 'refresh') refresh();
+      });
     }
   }
 
@@ -70,9 +68,9 @@ class _MovieState extends State<Movie> {
       isFavorite(),
       isRecentlyWatched(),
       getTrailerUrl(),
-      getMovieDuration(),
-      getMovieStreamUrl(),
-      getMovieCast(),
+      getDuration(),
+      getStreamUrl(),
+      getCast(),
       getRecommendations(),
       getSimilar(),
     ]);
@@ -177,7 +175,7 @@ class _MovieState extends State<Movie> {
     setState(() => _movie!.trailerUrl = youtubeUrl);
   }
 
-  Future<void> getMovieDuration() async {
+  Future<void> getDuration() async {
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
@@ -201,18 +199,18 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  Future<void> getMovieStreamUrl() async {
+  Future<void> getStreamUrl() async {
     Extractor extractor = Extractor(movie: _movie);
     String? streamUrl = await extractor.getStream();
     setState(() => _movie!.streamUrl = streamUrl);
   }
 
-  Future<void> getMovieCast() async {
+  Future<void> getCast() async {
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getMovieCast(_movie!.id)).replace();
+    Uri uri = Uri.parse(Urls.getMovieCast(_movie!.id));
 
     Response request = await http.get(
       uri,
@@ -275,14 +273,26 @@ class _MovieState extends State<Movie> {
       List<model.Movie> similar = data.map((json) => model.Movie.fromJson(json)).toList();
       setState(() => _movie!.similar = similar);
     } else {
-      print('Failed to get similar movie');
+      print('Failed to get similar movies');
     }
+  }
+
+  refresh() async {
+    setState(() {
+      _isLoading = true;
+      _isFavorite = false;
+      _movie!.trailerUrl = null;
+      _movie!.streamUrl = null;
+      _movie!.cast = null;
+      _movie!.recommendations = null;
+      _movie!.similar = null;
+    });
+    getMovieDetails(reload: true);
   }
 
   @override
   void initState() {
     _movie = widget.movie;
-    _fromFavorites = widget.fromFavorites;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
@@ -331,6 +341,7 @@ class _MovieState extends State<Movie> {
                     onPressed: () async {
                       await launchUrl(
                         Uri.parse(_movie!.trailerUrl!),
+                        mode: LaunchMode.externalNonBrowserApplication,
                       );
                     },
                   ),
@@ -424,14 +435,16 @@ class _MovieState extends State<Movie> {
           ),
         ),
         onPressed: () async {
-          navigate(
-            destination: Player(
-              id: _movie!.id,
-              title: _movie!.title,
-              streamUrl: _movie!.streamUrl!,
-              pageType: PageType.movies,
-            ),
-          );
+          if (_movie!.streamUrl != null) {
+            navigate(
+              destination: Player(
+                id: _movie!.id,
+                title: _movie!.title,
+                streamUrl: _movie!.streamUrl!,
+                pageType: PageType.movies,
+              ),
+            );
+          }
         },
       ),
     );
@@ -672,13 +685,7 @@ class _MovieState extends State<Movie> {
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
-          onPressed: () {
-            if (_fromFavorites! && !_isFavorite) {
-              navigate(destination: Fragments(initialPageIndex: 2), goingBack: true);
-            } else {
-              Navigator.pop(context);
-            }
-          },
+          onPressed: () => Navigator.pop(context, 'refresh'),
         ),
         actions: [
           IconButton(
@@ -698,18 +705,7 @@ class _MovieState extends State<Movie> {
         child: RefreshIndicator(
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          onRefresh: () {
-            setState(() {
-              _isLoading = true;
-              _isFavorite = false;
-              _movie!.trailerUrl = null;
-              _movie!.streamUrl = null;
-              _movie!.cast = null;
-              _movie!.recommendations = null;
-              _movie!.similar = null;
-            });
-            return getMovieDetails(reload: true);
-          },
+          onRefresh: () => refresh(),
           child: !_isLoading ? SingleChildScrollView(
             child: Column(
               children: [

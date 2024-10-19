@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/favorite_movies.dart';
-import 'package:semo/favorite_tv_shows.dart';
+import 'package:semo/favorites.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
 import 'package:semo/movies.dart';
@@ -63,8 +62,8 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           widget: TabBarView(
             controller: _tabController,
             children: [
-              FavoriteMovies(),
-              FavoriteTvShows(),
+              Favorites(pageType: PageType.movies),
+              Favorites(pageType: PageType.tv_shows),
             ],
           ),
           pageType: PageType.favorites,

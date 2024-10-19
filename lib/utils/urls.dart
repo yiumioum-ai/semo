@@ -27,14 +27,11 @@ class Urls {
   static const String discoverMovie = '$tmdbBase/discover/movie';
   static const String discoverTvShow = '$tmdbBase/discover/tv';
 
-  static const String cobalt = 'https://api.cobalt.tools';
-
   static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
   static String getTvShowDetails(int id) => '$tmdbBase/tv/$id';
+  static String getEpisodes(int id, int season) => '$tmdbBase/tv/$id/season/$season';
   static String getMovieVideosUrl(int id) => '$tmdbBase/movie/$id/videos';
   static String getTvShowVideosUrl(int id) => '$tmdbBase/tv/$id/videos';
-  //static String getMovieStreamUrl(int id) => 'https://dev.examnet.net/semo/?id=$id&type=movie';
-  //static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://dev.examnet.net/semo/?id=$id&type=tv&season=$season&episode=$episode';
   static String getMovieStreamUrl(int id) => 'https://vidsrc.cc/v2/embed/movie/$id';
   static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://vidsrc.cc/v2/embed/tv/$id/$season/$episode';
   static String getMovieCast(int id) => '$tmdbBase/movie/$id/credits';

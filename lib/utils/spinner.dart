@@ -68,7 +68,7 @@ class Spinner {
       transitionBuilder: (context, animation, secondaryAnimation, widget) {
         return PopScope(
           canPop: false,
-          onPopInvoked: (didPop) {
+          onPopInvokedWithResult: (didPop, result) {
             return;
           },
           child: Transform.scale(

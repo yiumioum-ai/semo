@@ -20,6 +20,7 @@ class Player extends StatefulWidget {
 
   Player({
     required this.id,
+    this.seasonId,
     this.episodeId,
     required this.title,
     required this.streamUrl,
@@ -48,6 +49,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
   double _lastZoomGestureScale = 1.0;
   bool _isZoomedIn = false;
+  bool _streamingUpdates = true;
 
   updateRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
@@ -141,6 +143,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       );
     });
 
+    //_videoPlayerController!.addSubtitleFromNetwork('url', isSelected: true);
+
     _videoPlayerController!.addOnInitListener(() async {
       int currentPosition = 0;
 
@@ -153,7 +157,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         await seek(_durationState.progress);
       }
 
-      streamUpdates();
+      await streamUpdates();
 
       Future.delayed(Duration(seconds: 5), () {
         setState(() => _showControls = false);
@@ -166,6 +170,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   streamUpdates() async {
+    await Future.delayed(Duration(seconds: 1));
+
     Duration progress = await _videoPlayerController!.getPosition();
     Duration total = await _videoPlayerController!.getDuration();
     bool isBuffering = false;
@@ -174,9 +180,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     if (_videoPlayerController!.value.isBuffering) {
       isBuffering = true;
     } else {
-      if (isPlaying && (progress == _durationState.progress)) {
-        isBuffering = true;
-      }
+      if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
     }
 
     setState(() {
@@ -189,11 +193,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     });
 
     if (total.inSeconds == 0 || progress != total) {
-      if (mounted) streamUpdates();
+      if (mounted && _streamingUpdates) await streamUpdates();
     } else {
-      updateRecentlyWatched();
-      _videoPlayerController!.dispose();
-      _videoPlayerController = null;
+      await updateRecentlyWatched();
+      await _videoPlayerController!.dispose();
       Navigator.of(context).pop();
     }
   }
@@ -301,12 +304,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   void dispose() async {
-    forcePortrait();
-
-    if (_isPlaying) await _videoPlayerController!.pause();
-    _videoPlayerController!.dispose();
-    _videoPlayerController = null;
     super.dispose();
+    if (_isPlaying) await _videoPlayerController!.pause();
+    await _videoPlayerController!.stopRendererScanning();
+    await _videoPlayerController!.dispose();
+    forcePortrait();
   }
 
   Widget VideoPlayer() {
@@ -331,9 +333,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   Widget Controls() {
     return AnimatedOpacity(
       opacity: _showControls ? 1 : 0,
-      duration: Duration(
-        milliseconds: 300,
-      ),
+      duration: Duration(milliseconds: 300),
       child: Container(
         width: double.infinity,
         height: double.infinity,
@@ -348,7 +348,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                   leading: BackButton(
                     onPressed: () async {
                       await updateRecentlyWatched();
-                      Navigator.of(context).pop();
+                      setState(() => _streamingUpdates = false);
+                      Navigator.pop(context, 'refresh');
                     },
                   ),
                   title: Text(_title!),
@@ -439,7 +440,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                       thumbColor: Theme.of(context).primaryColor,
                       timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
                       timeLabelPadding: 10,
-                      onSeek: (target) => !_durationState.isBuffering ? seek(target) : null,
+                      onSeek: (target) => seek(target),
                     ),
                   ),
                 ),

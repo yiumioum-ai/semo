@@ -28,7 +28,7 @@ class PopupMenuContainerState<T> extends State<PopupMenuContainer<T>>{
             T? value = await showMenu<T>(
               context: context,
               items: widget.items!,
-              color: Theme.of(context).scaffoldBackgroundColor,
+              color: Theme.of(context).cardColor,
               position: RelativeRect.fromLTRB(
                 _tapDownPosition.dx,
                 _tapDownPosition.dy,

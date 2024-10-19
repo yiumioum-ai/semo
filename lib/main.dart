@@ -82,6 +82,10 @@ class Semo extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.white,
           ),
+          displayLarge: TextStyle(
+            fontSize: 16,
+            color: Colors.white,
+          ),
           displayMedium: TextStyle(
             fontSize: 14,
             color: Colors.white,

@@ -709,6 +709,7 @@ class _TvShowState extends State<TvShow> {
               ],
             ),
             Container(
+              width: double.infinity,
               margin: EdgeInsets.only(top: 18),
               child: Text(
                 episode.overview,

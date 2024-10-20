@@ -123,8 +123,8 @@ class Episode {
       season: json['season_number'],
       name: json['name'],
       overview: json['overview'],
-      stillPath: json['still_path'],
-      duration: json['runtime'],
+      stillPath: json['still_path'] ?? '',
+      duration: json['runtime'] ?? 0,
     );
   }
 }

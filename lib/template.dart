@@ -10,21 +10,20 @@ class Template extends StatefulWidget {
 class _TemplateState extends State<Template> {
 
   navigate({required Widget destination, bool replace = false}) async {
+    PageTransition pageTransition = PageTransition(
+      type: PageTransitionType.rightToLeft,
+      child: destination,
+    );
+
     if (replace) {
       await Navigator.pushReplacement(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     } else {
       await Navigator.push(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     }
   }

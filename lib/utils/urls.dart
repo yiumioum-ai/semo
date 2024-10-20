@@ -27,6 +27,10 @@ class Urls {
   static const String discoverMovie = '$tmdbBase/discover/movie';
   static const String discoverTvShow = '$tmdbBase/discover/tv';
 
+  static const String subdlBase = 'https://api.subdl.com';
+  static const String subdlDownloadBase = 'https://dl.subdl.com';
+  static const String subtitles = '$subdlBase/api/v1/subtitles';
+
   static String getMovieDetails(int id) => '$tmdbBase/movie/$id';
   static String getTvShowDetails(int id) => '$tmdbBase/tv/$id';
   static String getEpisodes(int id, int season) => '$tmdbBase/tv/$id/season/$season';

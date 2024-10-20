@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -10,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/player.dart';
@@ -55,9 +58,11 @@ class _MovieState extends State<Movie> {
       await Navigator.push(
         context,
         pageTransition,
-      ).then((task) async {
+      ).then((parameters) async {
         await Future.delayed(Duration(seconds: 1));
-        if (task != null && task == 'refresh') refresh();
+        if (parameters != null) {
+          refresh(watchedProgress: parameters['progress']);
+        };
       });
     }
   }
@@ -70,6 +75,7 @@ class _MovieState extends State<Movie> {
       getTrailerUrl(),
       getDuration(),
       getStreamUrl(),
+      getSubtitles(),
       getCast(),
       getRecommendations(),
       getSimilar(),
@@ -133,12 +139,12 @@ class _MovieState extends State<Movie> {
 
       if (recentlyWatched.isNotEmpty) {
         bool isRecentlyWatched = recentlyWatched.keys.contains('${_movie!.id}');
-        int? watchedProgress = recentlyWatched['${_movie!.id}']?['progress'];
+        setState(() => _movie!.isRecentlyWatched = isRecentlyWatched);
 
-        setState(() {
-          _movie!.isRecentlyWatched = isRecentlyWatched;
-          _movie!.watchedProgress = watchedProgress;
-        });
+        if (isRecentlyWatched) {
+          int watchedProgress = recentlyWatched['${_movie!.id}']?['progress'] ?? 0;
+          setState(() => _movie!.watchedProgress = watchedProgress);
+        }
       }
     }, onError: (e) => print("Error getting user: $e"));
   }
@@ -203,6 +209,70 @@ class _MovieState extends State<Movie> {
     Extractor extractor = Extractor(movie: _movie);
     String? streamUrl = await extractor.getStream();
     setState(() => _movie!.streamUrl = streamUrl);
+  }
+
+  Future<void> getSubtitles() async {
+    List<File> srtFiles = [];
+
+    try {
+      Map<String, dynamic> parameters = {
+        'api_key': APIKeys.subdl,
+        'tmdb_id': '${_movie!.id}',
+        'languages': 'EN'
+      };
+
+      Uri uri = Uri.parse(Urls.subtitles).replace(
+        queryParameters: parameters,
+      );
+      final response = await http.get(uri);
+
+      if (!kReleaseMode) print(response.body);
+
+      if (response.statusCode == 200) {
+        final subtitlesData = jsonDecode(response.body);
+
+        List subtitles = subtitlesData['subtitles'];
+
+        Directory directory = await getTemporaryDirectory();
+        String destinationDirectory = directory.path;
+
+        for (var subtitle in subtitles) {
+          String zipUrl = subtitle['url'];
+          String fullZipUrl = Urls.subdlDownloadBase + '$zipUrl';
+
+          final zipResponse = await http.get(Uri.parse(fullZipUrl));
+
+          if (zipResponse.statusCode == 200) {
+            final bytes = zipResponse.bodyBytes;
+            final archive = ZipDecoder().decodeBytes(bytes);
+
+            for (final file in archive) {
+              if (file.isFile) {
+                String fileName = file.name;
+                String extension = path.extension(fileName);
+
+                if (extension == '.srt') {
+                  final data = file.content as List<int>;
+
+                  File srtFile = File('$destinationDirectory/$fileName');
+                  await srtFile.writeAsBytes(data);
+
+                  srtFiles.add(srtFile);
+                }
+              }
+            }
+          } else {
+            print('Failed to download subtitle ZIP: ${zipResponse.statusCode}');
+          }
+        }
+      } else {
+        print('Failed to fetch subtitles from API: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+
+    setState(() => _movie!.subtitles = srtFiles);
   }
 
   Future<void> getCast() async {
@@ -277,17 +347,10 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  refresh() async {
+  refresh({required int watchedProgress}) async {
     setState(() {
-      _isLoading = true;
-      _isFavorite = false;
-      _movie!.trailerUrl = null;
-      _movie!.streamUrl = null;
-      _movie!.cast = null;
-      _movie!.recommendations = null;
-      _movie!.similar = null;
+      _movie!.watchedProgress = watchedProgress;
     });
-    getMovieDetails(reload: true);
   }
 
   @override
@@ -441,6 +504,7 @@ class _MovieState extends State<Movie> {
                 id: _movie!.id,
                 title: _movie!.title,
                 streamUrl: _movie!.streamUrl!,
+                subtitles: _movie!.subtitles,
                 pageType: PageType.movies,
               ),
             );
@@ -705,7 +769,18 @@ class _MovieState extends State<Movie> {
         child: RefreshIndicator(
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          onRefresh: () => refresh(),
+          onRefresh: () async {
+            setState(() {
+              _isLoading = true;
+              _isFavorite = false;
+              _movie!.trailerUrl = null;
+              _movie!.streamUrl = null;
+              _movie!.cast = null;
+              _movie!.recommendations = null;
+              _movie!.similar = null;
+            });
+            getMovieDetails(reload: true);
+          },
           child: !_isLoading ? SingleChildScrollView(
             child: Column(
               children: [
@@ -716,7 +791,7 @@ class _MovieState extends State<Movie> {
                     children: [
                       Title(),
                       ReleaseYear(),
-                      if (_movie!.isRecentlyWatched!) WatchedProgress(),
+                      if (_movie!.isRecentlyWatched != null && _movie!.isRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
                       Cast(),

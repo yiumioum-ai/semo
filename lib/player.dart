@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +17,7 @@ class Player extends StatefulWidget {
   int id;
   int? seasonId, episodeId;
   String title, streamUrl;
+  List<File>? subtitles;
   PageType pageType;
 
   Player({
@@ -24,6 +26,7 @@ class Player extends StatefulWidget {
     this.episodeId,
     required this.title,
     required this.streamUrl,
+    this.subtitles,
     required this.pageType,
   });
 
@@ -34,6 +37,7 @@ class Player extends StatefulWidget {
 class _PlayerState extends State<Player> with TickerProviderStateMixin {
   int? _id, _seasonId, _episodeId;
   String? _title, _streamUrl;
+  List<File>? _subtitles;
   PageType? _pageType;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
@@ -47,9 +51,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   bool _showControls = true;
   AnimationController? _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
+  double? _targetVideoScale;
   double _lastZoomGestureScale = 1.0;
-  bool _isZoomedIn = false;
   bool _streamingUpdates = true;
+  bool _showSubtitles = false;
+  int _selectedSubtitle = 0;
 
   updateRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
@@ -143,61 +149,56 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       );
     });
 
-    //_videoPlayerController!.addSubtitleFromNetwork('url', isSelected: true);
+    _videoPlayerController!.addOnInitListener(playerOnInitListener);
+  }
 
-    _videoPlayerController!.addOnInitListener(() async {
-      int currentPosition = 0;
+  playerOnInitListener() async {
+    if (_durationState.progress.inSeconds != 0 && _videoPlayerController!.value.isPlaying && !_videoPlayerController!.value.isBuffering) {
+      await seek(_durationState.progress);
+    }
 
-      while (currentPosition == 0) {
-        currentPosition = (await _videoPlayerController!.getPosition()).inSeconds;
-        await Future.delayed(Duration(milliseconds: 100));
-      }
+    await streamUpdates();
 
-      if (_durationState.progress.inSeconds != 0 && _videoPlayerController!.value.isPlaying && !_videoPlayerController!.value.isBuffering) {
-        await seek(_durationState.progress);
-      }
+    Future.delayed(Duration(seconds: 5), () {
+      if (mounted) setState(() => _showControls = false);
+    });
 
-      await streamUpdates();
-
-      Future.delayed(Duration(seconds: 5), () {
-        setState(() => _showControls = false);
-      });
-
-      Timer.periodic(Duration(seconds: 30), (timer) {
-        if (mounted) updateRecentlyWatched();
-      });
+    Timer.periodic(Duration(seconds: 30), (timer) {
+      if (mounted) updateRecentlyWatched();
     });
   }
 
   streamUpdates() async {
-    await Future.delayed(Duration(seconds: 1));
+    if (_streamingUpdates) {
+      await Future.delayed(Duration(milliseconds: 500));
 
-    Duration progress = await _videoPlayerController!.getPosition();
-    Duration total = await _videoPlayerController!.getDuration();
-    bool isBuffering = false;
-    bool isPlaying = await _videoPlayerController!.isPlaying() ?? false;
+      Duration progress = await _videoPlayerController!.getPosition();
+      Duration total = await _videoPlayerController!.getDuration();
+      bool isBuffering = false;
+      bool isPlaying = await _videoPlayerController!.isPlaying() ?? false;
 
-    if (_videoPlayerController!.value.isBuffering) {
-      isBuffering = true;
-    } else {
-      if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
-    }
+      if (_videoPlayerController!.value.isBuffering) {
+        isBuffering = true;
+      } else {
+        if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
+      }
 
-    setState(() {
-      _durationState = DurationState(
-        progress: progress,
-        total: total,
-        isBuffering: isBuffering,
-      );
-      _isPlaying = isPlaying;
-    });
+      setState(() {
+        _durationState = DurationState(
+          progress: progress,
+          total: total,
+          isBuffering: isBuffering,
+        );
+        _isPlaying = isPlaying;
+      });
 
-    if (total.inSeconds == 0 || progress != total) {
-      if (mounted && _streamingUpdates) await streamUpdates();
-    } else {
-      await updateRecentlyWatched();
-      await _videoPlayerController!.dispose();
-      Navigator.of(context).pop();
+      if (total.inSeconds == 0 || progress != total) {
+        if (mounted) await streamUpdates();
+      } else {
+        await updateRecentlyWatched();
+        await _videoPlayerController!.dispose();
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -225,22 +226,21 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   seek(Duration target) async => await _videoPlayerController!.seekTo(target);
 
-  initializeScaling() {
-    if (_videoPlayerController != null && _videoPlayerController!.value.isInitialized) {
-      Size screenSize = MediaQuery.of(context).size;
-      Size videoSize = _videoPlayerController!.value.size;
-      double targetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
-
-      _scaleVideoAnimation = Tween<double>(
-        begin: 1.0,
-        end: targetScale,
-      ).animate(
-        CurvedAnimation(
-          parent: _scaleVideoAnimationController!,
-          curve: Curves.easeInOut,
-        ),
-      );
+  setTargetNativeScale(double newValue) {
+    if (!newValue.isFinite) {
+      return;
     }
+    _scaleVideoAnimation = Tween<double>(begin: 1.0, end: newValue).animate(
+      CurvedAnimation(
+        parent: _scaleVideoAnimationController!,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    if (_targetVideoScale == null) {
+      _scaleVideoAnimationController!.forward();
+    }
+    _targetVideoScale = newValue;
   }
 
   forceLandscape() async {
@@ -279,6 +279,40 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     }
   }
 
+  selectSubtitle(int index) async {
+    await _videoPlayerController!.addSubtitleFromFile(_subtitles![index], isSelected: true);
+    _videoPlayerController!.setSpuDelay(500);
+    setState(() => _selectedSubtitle = index);
+  }
+
+  showSubtitleSelector() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select subtitle'),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _subtitles!.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text('English ${index + 1}'),
+                  selected: index == _selectedSubtitle,
+                  onTap: () async {
+                    selectSubtitle(index);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     _id = widget.id;
@@ -286,6 +320,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     _episodeId = widget.episodeId;
     _title = widget.title;
     _streamUrl = widget.streamUrl;
+    _subtitles = widget.subtitles;
     _pageType = widget.pageType;
     super.initState();
     forceLandscape();
@@ -298,31 +333,28 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await updateRecentlyWatched();
       await initializePlayer();
-      initializeScaling();
     });
   }
 
   @override
-  void dispose() async {
-    super.dispose();
-    if (_isPlaying) await _videoPlayerController!.pause();
-    await _videoPlayerController!.stopRendererScanning();
-    await _videoPlayerController!.dispose();
+  void dispose() {
     forcePortrait();
+
+    _videoPlayerController!.removeOnInitListener(playerOnInitListener);
+    _videoPlayerController!.stopRendererScanning();
+    _videoPlayerController!.dispose();
+    super.dispose();
   }
 
-  Widget VideoPlayer() {
-    double aspectRatio = _isZoomedIn
-        ? MediaQuery.of(context).size.width / MediaQuery.of(context).size.height
-        : _videoPlayerController!.value.aspectRatio;
+  Widget VideoPlayer(Size screenSize) {
     return Center(
       child: ScaleTransition(
         scale: _scaleVideoAnimation,
         child: AspectRatio(
-          aspectRatio: aspectRatio,
+          aspectRatio: 16 / 9,
           child: VlcPlayer(
             controller: _videoPlayerController!,
-            aspectRatio: aspectRatio,
+            aspectRatio: screenSize.width / screenSize.height,
             placeholder: Center(child: CircularProgressIndicator()),
           ),
         ),
@@ -343,39 +375,43 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
             Positioned.fill(
               child: Align(
                 alignment: Alignment.topCenter,
-                child: AppBar(
-                  backgroundColor: Colors.transparent,
-                  leading: BackButton(
-                    onPressed: () async {
-                      await updateRecentlyWatched();
-                      setState(() => _streamingUpdates = false);
-                      Navigator.pop(context, 'refresh');
-                    },
-                  ),
-                  title: Text(_title!),
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.closed_caption_off),
-                      onPressed: () {
-                        //Show captions selection dialog
-                        //Pause media when open
-                        //Play media when close
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(_isZoomedIn ? Icons.zoom_out_map : Icons.zoom_in_map),
-                      onPressed: () {
-                        setState(() {
-                          if (_isZoomedIn) {
-                            _scaleVideoAnimationController!.reverse();
-                          } else {
-                            _scaleVideoAnimationController!.forward();
-                          }
-                          _isZoomedIn = !_isZoomedIn;
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: AppBar(
+                    backgroundColor: Colors.transparent,
+                    leading: BackButton(
+                      onPressed: () async {
+                        await updateRecentlyWatched();
+                        setState(() => _streamingUpdates = false);
+                        Navigator.pop(context, {
+                          if (_episodeId != null) 'episodeId': _episodeId,
+                          'progress': _durationState.progress.inSeconds,
                         });
                       },
                     ),
-                  ],
+                    title: Text(_title!),
+                    actions: [
+                      if (_subtitles != null && _subtitles!.isNotEmpty) InkWell(
+                        onTap: () async {
+                          if (_showSubtitles) {
+                            if (_isPlaying) await _videoPlayerController!.pause();
+                            showSubtitleSelector();
+                            await _videoPlayerController!.play();
+                          } else {
+                            selectSubtitle(0);
+                            setState(() => _showSubtitles = true);
+                          }
+                        },
+                        onLongPress: () {
+                          setState(() => _showSubtitles = false);
+                        },
+                        child: Ink(
+                          child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -454,6 +490,15 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    if (_videoPlayerController != null) {
+      final videoSize = _videoPlayerController!.value.size;
+      if (videoSize.width > 0) {
+        final newTargetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
+        setTargetNativeScale(newTargetScale);
+      }
+    }
+
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
@@ -472,15 +517,15 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           _lastZoomGestureScale = details.scale;
         },
         onScaleEnd: (details) {
-          if (_lastZoomGestureScale < 1.0) {
+          if (_lastZoomGestureScale > 1.0) {
             setState(() {
+              // Zoom in
               _scaleVideoAnimationController!.forward();
-              _isZoomedIn = true;
             });
-          } else if (_lastZoomGestureScale > 1.0) {
+          } else if (_lastZoomGestureScale < 1.0) {
             setState(() {
+              // Zoom out
               _scaleVideoAnimationController!.reverse();
-              _isZoomedIn = false;
             });
           }
           _lastZoomGestureScale = 1.0;
@@ -488,7 +533,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         child: Stack(
           children: [
             Container(color: Colors.black),
-            VideoPlayer(),
+            VideoPlayer(screenSize),
             Controls(),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -10,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/player.dart';
@@ -56,9 +59,14 @@ class _TvShowState extends State<TvShow> {
       await Navigator.push(
         context,
         pageTransition,
-      ).then((task) async {
+      ).then((parameters) async {
         await Future.delayed(Duration(seconds: 1));
-        if (task != null && task == 'refresh') refresh();
+        if (parameters != null) {
+          refresh(
+            episodeId: parameters['episodeId'],
+            watchedProgress: parameters['progress'],
+          );
+        };
       });
     }
   }
@@ -138,21 +146,24 @@ class _TvShowState extends State<TvShow> {
 
     if (response.isNotEmpty) {
       List<Map<String, dynamic>> seasonsData = (json.decode(response)['seasons'] as List<dynamic>).cast<Map<String, dynamic>>();
+
       List<model.Season> seasons = [];
 
       for (Map<String, dynamic> seasonData in seasonsData) {
         model.Season season = model.Season.fromJson(seasonData);
 
-        if (season.airDate != null) {
-          if (season.number == 1) {
-            List<model.Episode> episodes = await getEpisodes(season);
-            season.episodes = episodes;
+        if (season.number > 0) {
+          if (season.airDate != null) {
+            if (season.number == (_currentSeason + 1)) {
+              List<model.Episode> episodes = await getEpisodes(season);
+              season.episodes = episodes;
+            }
+
+            seasons.add(season);
           }
 
-          seasons.add(season);
+          setState(() => _tvShow!.seasons = seasons);
         }
-
-        setState(() => _tvShow!.seasons = seasons);
       }
     } else {
       print('Failed to get tv show seasons');
@@ -175,20 +186,19 @@ class _TvShowState extends State<TvShow> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      List<Map<String, dynamic>> episodesData = (json.decode(response)['episodes'] as List<dynamic>).cast<Map<String, dynamic>>();
-      List<model.Episode> episodes = [];
+      List episodesData = json.decode(response)['episodes'] as List;
+      List<model.Episode> episodes = episodesData.map((json) => model.Episode.fromJson(json)).toList();
 
-      for (Map<String, dynamic> episodeData in episodesData) {
-        model.Episode episode = model.Episode.fromJson(episodeData);
+      Map<String, Map<String, dynamic>>? recentlyWatched = await getRecentlyWatched(season.id);
 
-        Map<String, dynamic>? recentlyWatched = await isRecentlyWatched(season.id, episode.id);
-
-        if (recentlyWatched != null) {
-          episode.isRecentlyWatched = recentlyWatched['isRecentlyWatched'];
-          episode.watchedProgress = recentlyWatched['progress'];
+      if (recentlyWatched != null) {
+        for (model.Episode episode in episodes) {
+          if (recentlyWatched.keys.contains('${episode.id}')) {
+            Map<String, dynamic> episodeDetails = recentlyWatched['${episode.id}'] as Map<String, dynamic>;
+            episode.isRecentlyWatched = true;
+            episode.watchedProgress = episodeDetails['progress'] ?? 0;
+          }
         }
-
-        episodes.add(episode);
       }
 
       return episodes;
@@ -199,8 +209,8 @@ class _TvShowState extends State<TvShow> {
     return [];
   }
 
-  Future<Map<String, dynamic>?> isRecentlyWatched(int seasonId, int episodeId) async {
-    Map<String, dynamic>? results;
+  Future<Map<String, Map<String, dynamic>>?> getRecentlyWatched(int seasonId) async {
+    Map<String, Map<String, dynamic>>? results;
 
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
@@ -217,14 +227,7 @@ class _TvShowState extends State<TvShow> {
             return MapEntry(key, Map<String, dynamic>.from(value));
           });
 
-          if (season.keys.contains('$episodeId')) {
-            Map<String, dynamic> episodeDetails = season['$episodeId'] as Map<String, dynamic>;
-
-            results = {
-              'isRecentlyWatched': true,
-              'progress': episodeDetails['progress'],
-            };
-          }
+          results = season;
         }
       }
     }, onError: (e) => print("Error getting user: $e"));
@@ -254,8 +257,10 @@ class _TvShowState extends State<TvShow> {
       List youtubeVideos = videos.where((video) {
         return video['site'] == 'YouTube' && video['type'] == 'Trailer' && video['official'] == true;
       }).toList();
-      youtubeVideos.sort((a, b) => b['size'].compareTo(a['size']));
-      youtubeId = youtubeVideos[0]['key'] ?? '';
+      if (youtubeVideos.isNotEmpty) {
+        youtubeVideos.sort((a, b) => b['size'].compareTo(a['size']));
+        youtubeId = youtubeVideos[0]['key'] ?? '';
+      }
     } else {
       print('Failed to get trailer youtube url');
     }
@@ -342,16 +347,81 @@ class _TvShowState extends State<TvShow> {
     return streamUrl;
   }
 
-  refresh({bool reload = false}) async {
-    setState(() {
-      _isLoading = true;
-      _isFavorite = false;
-      _tvShow!.trailerUrl = null;
-      _tvShow!.cast = null;
-      _tvShow!.recommendations = null;
-      _tvShow!.similar = null;
-    });
-    getTvShowDetails(reload: reload);
+  getSubtitles(model.Episode episode) async {
+    List<File> srtFiles = [];
+
+    try {
+      Map<String, dynamic> parameters = {
+        'api_key': APIKeys.subdl,
+        'tmdb_id': '${_tvShow!.id}',
+        'season_number': '${episode.season}',
+        'episode_number': '${episode.number}',
+        'languages': 'EN'
+      };
+
+      Uri uri = Uri.parse(Urls.subtitles).replace(
+        queryParameters: parameters,
+      );
+      final response = await http.get(uri);
+
+      if (!kReleaseMode) print(response.body);
+
+      if (response.statusCode == 200) {
+        final subtitlesData = jsonDecode(response.body);
+
+        List subtitles = subtitlesData['subtitles'];
+
+        Directory directory = await getTemporaryDirectory();
+        String destinationDirectory = directory.path;
+
+        for (var subtitle in subtitles) {
+          String zipUrl = subtitle['url'];
+          String fullZipUrl = Urls.subdlDownloadBase + '$zipUrl';
+
+          final zipResponse = await http.get(Uri.parse(fullZipUrl));
+
+          if (zipResponse.statusCode == 200) {
+            final bytes = zipResponse.bodyBytes;
+            final archive = ZipDecoder().decodeBytes(bytes);
+
+            for (final file in archive) {
+              if (file.isFile) {
+                String fileName = file.name;
+                String extension = path.extension(fileName);
+
+                if (extension == '.srt') {
+                  final data = file.content as List<int>;
+
+                  File srtFile = File('$destinationDirectory/$fileName');
+                  await srtFile.writeAsBytes(data);
+
+                  srtFiles.add(srtFile);
+                }
+              }
+            }
+          } else {
+            print('Failed to download subtitle ZIP: ${zipResponse.statusCode}');
+          }
+        }
+      } else {
+        print('Failed to fetch subtitles from API: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+
+    return srtFiles;
+  }
+
+  refresh({required int episodeId, required int watchedProgress}) async {
+    for(model.Episode episode in _tvShow!.seasons![_currentSeason].episodes!) {
+      if (episode.id == episodeId) {
+        setState(() {
+          episode.isRecentlyWatched = true;
+          episode.watchedProgress = watchedProgress;
+        });
+      }
+    }
   }
 
   @override
@@ -534,6 +604,7 @@ class _TvShowState extends State<TvShow> {
       onTap: () async {
         _spinner.show();
         String? streamUrl = await getStreamUrl(episode);
+        List<File>? subtitles = await getSubtitles(episode);
         _spinner.dismiss();
 
         if (streamUrl != null) {
@@ -544,6 +615,7 @@ class _TvShowState extends State<TvShow> {
               episodeId: episode.id,
               title: episode.name,
               streamUrl: streamUrl,
+              subtitles: subtitles,
               pageType: PageType.tv_shows,
             ),
           );
@@ -561,11 +633,11 @@ class _TvShowState extends State<TvShow> {
                     return Container(
                       width: MediaQuery.of(context).size.width * .3,
                       child: AspectRatio(
-                        aspectRatio: 16/9,
+                        aspectRatio: 16 / 10,
                         child: Container(
                           decoration: BoxDecoration(
                             color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Align(
                             alignment: Alignment.center,
@@ -579,9 +651,9 @@ class _TvShowState extends State<TvShow> {
                     return Container(
                       width: MediaQuery.of(context).size.width * .3,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         child: AspectRatio(
-                          aspectRatio: 16/9,
+                          aspectRatio: 16 / 10,
                           child: Container(
                             decoration: BoxDecoration(
                               image: DecorationImage(
@@ -604,7 +676,20 @@ class _TvShowState extends State<TvShow> {
                       ),
                     );
                   },
-                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  errorWidget: (context, url, error) {
+                    return Container(
+                      width: MediaQuery.of(context).size.width * .3,
+                      child: AspectRatio(
+                        aspectRatio: 16 / 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Expanded(
                   child: Container(
@@ -874,7 +959,17 @@ class _TvShowState extends State<TvShow> {
         child: RefreshIndicator(
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          onRefresh: () => refresh(reload: true),
+          onRefresh: () async {
+            setState(() {
+              _isLoading = true;
+              _isFavorite = false;
+              _tvShow!.trailerUrl = null;
+              _tvShow!.cast = null;
+              _tvShow!.recommendations = null;
+              _tvShow!.similar = null;
+            });
+            getTvShowDetails(reload: true);
+          },
           child: !_isLoading ? SingleChildScrollView(
             child: Column(
               children: [

@@ -99,6 +99,7 @@ class Episode {
   String overview;
   String stillPath;
   int duration;
+  String? airDate;
   bool isRecentlyWatched;
   int? watchedProgress;
 
@@ -111,6 +112,7 @@ class Episode {
     required this.overview,
     required this.stillPath,
     required this.duration,
+    this.airDate,
     this.isRecentlyWatched = false,
     this.watchedProgress,
   });
@@ -125,6 +127,7 @@ class Episode {
       overview: json['overview'],
       stillPath: json['still_path'] ?? '',
       duration: json['runtime'] ?? 0,
+      airDate: json['air_date'],
     );
   }
 }

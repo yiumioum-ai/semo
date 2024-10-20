@@ -187,7 +187,12 @@ class _TvShowState extends State<TvShow> {
 
     if (response.isNotEmpty) {
       List episodesData = json.decode(response)['episodes'] as List;
-      List<model.Episode> episodes = episodesData.map((json) => model.Episode.fromJson(json)).toList();
+      List<model.Episode> episodes = [];
+
+      for (var episodeData in episodesData) {
+        model.Episode episode = model.Episode.fromJson(episodeData);
+        if (episode.airDate != null) episodes.add(episode);
+      }
 
       Map<String, Map<String, dynamic>>? recentlyWatched = await getRecentlyWatched(season.id);
 

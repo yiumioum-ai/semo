@@ -47,13 +47,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     total: Duration.zero,
     isBuffering: true,
   );
+  int _watchedProgress = 0;
+  bool _isSeekedToWatchedProgress = false;
   bool _isPlaying = true;
   bool _showControls = true;
-  AnimationController? _scaleVideoAnimationController;
-  Animation<double> _scaleVideoAnimation = AlwaysStoppedAnimation<double>(1.0);
-  double? _targetVideoScale;
-  double _lastZoomGestureScale = 1.0;
-  bool _streamingUpdates = true;
   bool _showSubtitles = false;
   int _selectedSubtitle = 0;
 
@@ -76,7 +73,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
           if (movie['progress'] != null && movie['progress'] != 0) {
-            setState(() => _durationState.progress = Duration(seconds: movie['progress']));
+            setState(() => _watchedProgress = movie['progress']);
           }
         } else {
           recentlyWatched['$_id'] = {
@@ -100,7 +97,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
               episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
               if (episode['progress'] != null && episode['progress'] != 0) {
-                setState(() => _durationState.progress = Duration(seconds: episode['progress']));
+                setState(() => _watchedProgress = episode['progress']);
               }
             } else {
               episodes['$_episodeId'] = {
@@ -138,9 +135,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     setState(() {
       _videoPlayerController = VlcPlayerController.network(
         _streamUrl!,
-        hwAcc: HwAcc.auto,
-        autoInitialize: true,
-        autoPlay: true,
+        hwAcc: HwAcc.full,
         options: VlcPlayerOptions(
           http: VlcHttpOptions([
             VlcHttpOptions.httpReconnect(true),
@@ -150,15 +145,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     });
 
     _videoPlayerController!.addOnInitListener(playerOnInitListener);
+    _videoPlayerController!.addListener(playerListener);
   }
 
   playerOnInitListener() async {
-    if (_durationState.progress.inSeconds != 0 && _videoPlayerController!.value.isPlaying && !_videoPlayerController!.value.isBuffering) {
-      await seek(_durationState.progress);
-    }
-
-    await streamUpdates();
-
     Future.delayed(Duration(seconds: 5), () {
       if (mounted) setState(() => _showControls = false);
     });
@@ -168,37 +158,39 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     });
   }
 
-  streamUpdates() async {
-    if (_streamingUpdates) {
-      await Future.delayed(Duration(milliseconds: 500));
+  playerListener() async {
+    await Future.delayed(Duration(milliseconds: 500));
 
-      Duration progress = await _videoPlayerController!.getPosition();
-      Duration total = await _videoPlayerController!.getDuration();
-      bool isBuffering = false;
-      bool isPlaying = await _videoPlayerController!.isPlaying() ?? false;
+    Duration progress = _videoPlayerController!.value.position;
+    Duration total = _videoPlayerController!.value.duration;
+    bool isBuffering = false;
+    bool isPlaying = _videoPlayerController!.value.isPlaying;
 
-      if (_videoPlayerController!.value.isBuffering) {
-        isBuffering = true;
-      } else {
-        if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
-      }
+    if (_videoPlayerController!.value.isBuffering) {
+      isBuffering = true;
+    } else {
+      if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
+    }
 
-      setState(() {
-        _durationState = DurationState(
-          progress: progress,
-          total: total,
-          isBuffering: isBuffering,
-        );
-        _isPlaying = isPlaying;
-      });
+    if (!_isSeekedToWatchedProgress && total.inSeconds != 0 && progress.inSeconds < _watchedProgress) {
+      Duration watchedProgress = Duration(seconds: _watchedProgress);
+      await seek(watchedProgress);
+      setState(() => _isSeekedToWatchedProgress = true);
+    }
 
-      if (total.inSeconds == 0 || progress != total) {
-        if (mounted) await streamUpdates();
-      } else {
-        await updateRecentlyWatched();
-        await _videoPlayerController!.dispose();
-        Navigator.of(context).pop();
-      }
+    setState(() {
+      _durationState = DurationState(
+        progress: progress,
+        total: total,
+        isBuffering: isBuffering,
+      );
+      _isPlaying = isPlaying;
+    });
+
+    if (total.inSeconds != 0 && progress == total) {
+      await updateRecentlyWatched();
+      await _videoPlayerController!.dispose();
+      Navigator.of(context).pop();
     }
   }
 
@@ -225,23 +217,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   seek(Duration target) async => await _videoPlayerController!.seekTo(target);
-
-  setTargetNativeScale(double newValue) {
-    if (!newValue.isFinite) {
-      return;
-    }
-    _scaleVideoAnimation = Tween<double>(begin: 1.0, end: newValue).animate(
-      CurvedAnimation(
-        parent: _scaleVideoAnimationController!,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    if (_targetVideoScale == null) {
-      _scaleVideoAnimationController!.forward();
-    }
-    _targetVideoScale = newValue;
-  }
 
   forceLandscape() async {
     SystemChrome.setPreferredOrientations([
@@ -279,9 +254,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     }
   }
 
-  selectSubtitle(int index) async {
+  setSubtitle(int index) async {
     await _videoPlayerController!.addSubtitleFromFile(_subtitles![index], isSelected: true);
-    _videoPlayerController!.setSpuDelay(500);
+    _videoPlayerController!.setSpuDelay(0);
     setState(() => _selectedSubtitle = index);
   }
 
@@ -301,7 +276,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                   title: Text('English ${index + 1}'),
                   selected: index == _selectedSubtitle,
                   onTap: () async {
-                    selectSubtitle(index);
+                    setSubtitle(index);
                     Navigator.pop(context);
                   },
                 );
@@ -322,13 +297,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     _streamUrl = widget.streamUrl;
     _subtitles = widget.subtitles;
     _pageType = widget.pageType;
-    super.initState();
-    forceLandscape();
 
-    _scaleVideoAnimationController = AnimationController(
-      duration: Duration(milliseconds: 125),
-      vsync: this,
-    );
+    super.initState();
+
+    forceLandscape();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await updateRecentlyWatched();
@@ -341,22 +313,21 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     forcePortrait();
 
     _videoPlayerController!.removeOnInitListener(playerOnInitListener);
+    _videoPlayerController!.removeListener(playerListener);
     _videoPlayerController!.stopRendererScanning();
     _videoPlayerController!.dispose();
     super.dispose();
   }
 
-  Widget VideoPlayer(Size screenSize) {
+  Widget VideoPlayer() {
+    Size screenSize = MediaQuery.of(context).size;
     return Center(
-      child: ScaleTransition(
-        scale: _scaleVideoAnimation,
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: VlcPlayer(
-            controller: _videoPlayerController!,
-            aspectRatio: screenSize.width / screenSize.height,
-            placeholder: Center(child: CircularProgressIndicator()),
-          ),
+      child: AspectRatio(
+        aspectRatio: screenSize.width / screenSize.height,
+        child: VlcPlayer(
+          controller: _videoPlayerController!,
+          aspectRatio: screenSize.width / screenSize.height,
+          placeholder: Center(child: CircularProgressIndicator()),
         ),
       ),
     );
@@ -383,7 +354,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     leading: BackButton(
                       onPressed: () async {
                         await updateRecentlyWatched();
-                        setState(() => _streamingUpdates = false);
                         Navigator.pop(context, {
                           if (_episodeId != null) 'episodeId': _episodeId,
                           'progress': _durationState.progress.inSeconds,
@@ -399,7 +369,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                             showSubtitleSelector();
                             await _videoPlayerController!.play();
                           } else {
-                            selectSubtitle(0);
+                            setSubtitle(0);
                             setState(() => _showSubtitles = true);
                           }
                         },
@@ -490,15 +460,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    if (_videoPlayerController != null) {
-      final videoSize = _videoPlayerController!.value.size;
-      if (videoSize.width > 0) {
-        final newTargetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
-        setTargetNativeScale(newTargetScale);
-      }
-    }
-
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
@@ -506,34 +467,17 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
             setState(() => _showControls = false);
           } else {
             setState(() => _showControls = true);
-            Future.delayed(const Duration(seconds: 5), () {
+            Future.delayed(Duration(seconds: 5), () {
               if (mounted && _isPlaying) {
                 setState(() => _showControls = false);
               }
             });
           }
         },
-        onScaleUpdate: (details) {
-          _lastZoomGestureScale = details.scale;
-        },
-        onScaleEnd: (details) {
-          if (_lastZoomGestureScale > 1.0) {
-            setState(() {
-              // Zoom in
-              _scaleVideoAnimationController!.forward();
-            });
-          } else if (_lastZoomGestureScale < 1.0) {
-            setState(() {
-              // Zoom out
-              _scaleVideoAnimationController!.reverse();
-            });
-          }
-          _lastZoomGestureScale = 1.0;
-        },
         child: Stack(
           children: [
             Container(color: Colors.black),
-            VideoPlayer(screenSize),
+            VideoPlayer(),
             Controls(),
           ],
         ),

@@ -23,19 +23,17 @@ class _SplashState extends State<Splash> {
     });
   }
 
-  navigate({required Widget destination}) {
-    Duration duration = new Duration(
-      seconds: 3,
-    );
-
-    return Timer(duration, () async {
-      await Navigator.pushReplacement(
-        context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
-      );
+  navigate({required Widget destination}) async {
+    Future.delayed(Duration(seconds: 3), () async {
+      if (mounted) {
+        await Navigator.pushReplacement(
+          context,
+          PageTransition(
+            type: PageTransitionType.rightToLeft,
+            child: destination,
+          ),
+        );
+      }
     });
   }
 

@@ -59,7 +59,13 @@ class _TvShowsState extends State<TvShows> {
           type: PageTransitionType.rightToLeft,
           child: destination,
         ),
-      );
+      ).then((action) async {
+        await Future.delayed(Duration(seconds: 1));
+        if (action == 'refresh') {
+          setState(() => _recentlyWatched.clear());
+          getRecentlyWatched();
+        }
+      });
     }
   }
 
@@ -176,7 +182,9 @@ class _TvShowsState extends State<TvShows> {
     if (response.isNotEmpty) {
       var data = json.decode(response);
       model.TvShow tvShow = model.TvShow.fromJson(data);
-      setState(() => _recentlyWatched.add(tvShow));
+      setState(() {
+        _recentlyWatched.add(tvShow);
+      });
     } else {
       print('Failed to get tv show details: $id');
     }
@@ -569,7 +577,7 @@ class _TvShowsState extends State<TvShows> {
       body: RefreshIndicator(
         color: Theme.of(context).primaryColor,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        onRefresh: () {
+        onRefresh: () async {
           _popularPagingController.dispose();
           _topRatedPagingController.dispose();
 
@@ -583,7 +591,7 @@ class _TvShowsState extends State<TvShows> {
             _popularPagingController = PagingController(firstPageKey: 0);
             _topRatedPagingController = PagingController(firstPageKey: 0);
           });
-          return getCategories(reload: true);
+          getCategories(reload: true);
         },
         child: !_isLoading ? SingleChildScrollView(
           child: SafeArea(

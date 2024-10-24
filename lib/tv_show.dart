@@ -66,7 +66,7 @@ class _TvShowState extends State<TvShow> {
             episodeId: parameters['episodeId'],
             watchedProgress: parameters['progress'],
           );
-        };
+        }
       });
     }
   }

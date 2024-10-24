@@ -24,8 +24,6 @@ class Movie {
   bool? isRecentlyWatched;
   int? watchedProgress;
   String? trailerUrl;
-  String? streamUrl;
-  List<File>? subtitles;
   List<Person>? cast;
   List<Movie>? recommendations;
   List<Movie>? similar;
@@ -50,8 +48,6 @@ class Movie {
     this.isRecentlyWatched,
     this.watchedProgress,
     this.trailerUrl,
-    this.streamUrl,
-    this.subtitles,
     this.cast,
     this.recommendations,
     this.similar,

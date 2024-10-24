@@ -62,7 +62,7 @@ class _MovieState extends State<Movie> {
         await Future.delayed(Duration(seconds: 1));
         if (parameters != null) {
           refresh(watchedProgress: parameters['progress']);
-        };
+        }
       });
     }
   }
@@ -74,8 +74,6 @@ class _MovieState extends State<Movie> {
       isRecentlyWatched(),
       getTrailerUrl(),
       getDuration(),
-      getStreamUrl(),
-      getSubtitles(),
       getCast(),
       getRecommendations(),
       getSimilar(),
@@ -205,13 +203,15 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  Future<void> getStreamUrl() async {
+  getStreamUrl() async {
+    _spinner.show();
     Extractor extractor = Extractor(movie: _movie);
     String? streamUrl = await extractor.getStream();
-    setState(() => _movie!.streamUrl = streamUrl);
+    _spinner.dismiss();
+    return streamUrl;
   }
 
-  Future<void> getSubtitles() async {
+  getSubtitles() async {
     List<File> srtFiles = [];
 
     try {
@@ -272,7 +272,7 @@ class _MovieState extends State<Movie> {
       print('Error: $e');
     }
 
-    setState(() => _movie!.subtitles = srtFiles);
+    return srtFiles;
   }
 
   Future<void> getCast() async {
@@ -349,6 +349,7 @@ class _MovieState extends State<Movie> {
 
   refresh({required int watchedProgress}) async {
     setState(() {
+      _movie!.isRecentlyWatched = true;
       _movie!.watchedProgress = watchedProgress;
     });
   }
@@ -498,13 +499,18 @@ class _MovieState extends State<Movie> {
           ),
         ),
         onPressed: () async {
-          if (_movie!.streamUrl != null) {
+          _spinner.show();
+          String? streamUrl = await getStreamUrl();
+          List<File>? subtitles = await getSubtitles();
+          _spinner.dismiss();
+
+          if (streamUrl != null) {
             navigate(
               destination: Player(
                 id: _movie!.id,
                 title: _movie!.title,
-                streamUrl: _movie!.streamUrl!,
-                subtitles: _movie!.subtitles,
+                streamUrl: streamUrl,
+                subtitles: subtitles,
                 pageType: PageType.movies,
               ),
             );
@@ -527,6 +533,7 @@ class _MovieState extends State<Movie> {
   }
 
   Widget Cast() {
+    //Change all the lists to paginated lists
     List<model.Person>? cast = _movie!.cast != null ? _movie!.cast!.length > 10 ? _movie!.cast!.sublist(0, 10) : _movie!.cast : [];
 
     return Container(
@@ -774,7 +781,6 @@ class _MovieState extends State<Movie> {
               _isLoading = true;
               _isFavorite = false;
               _movie!.trailerUrl = null;
-              _movie!.streamUrl = null;
               _movie!.cast = null;
               _movie!.recommendations = null;
               _movie!.similar = null;

@@ -63,7 +63,10 @@ class _MoviesState extends State<Movies> {
           type: PageTransitionType.rightToLeft,
           child: destination,
         ),
-      );
+      ).then((action) async {
+        await Future.delayed(Duration(seconds: 1));
+        if (action == 'refresh') getRecentlyWatched();
+      });
     }
   }
 
@@ -178,7 +181,10 @@ class _MoviesState extends State<Movies> {
       rawRecentlyWatched = sortRecentlyWatched(rawRecentlyWatched);
 
       for (String id in rawRecentlyWatched.keys) getMovieDetails(int.parse(id));
-      setState(() => _rawRecentlyWatched = rawRecentlyWatched);
+      setState(() {
+        _rawRecentlyWatched = {};
+        _rawRecentlyWatched = rawRecentlyWatched;
+      });
     }, onError: (e) => print("Error getting user: $e"));
   }
 
@@ -627,7 +633,7 @@ class _MoviesState extends State<Movies> {
       body: RefreshIndicator(
         color: Theme.of(context).primaryColor,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        onRefresh: () {
+        onRefresh: () async {
           _trendingPagingController.dispose();
           _popularPagingController.dispose();
           _topRatedPagingController.dispose();
@@ -644,7 +650,7 @@ class _MoviesState extends State<Movies> {
             _popularPagingController = PagingController(firstPageKey: 0);
             _topRatedPagingController = PagingController(firstPageKey: 0);
           });
-          return getCategories(reload: true);
+          getCategories(reload: true);
         },
         child: !_isLoading ? SingleChildScrollView(
           child: SafeArea(

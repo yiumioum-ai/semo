@@ -82,7 +82,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           };
         }
       } else {
-        recentlyWatched = (data['tv_shows'] ?? {}) as Map<String, dynamic>;
+        recentlyWatched = ((data['tv_shows'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+          return MapEntry(key, Map<String, dynamic>.from(value));
+        });
 
         if (recentlyWatched.keys.contains('$_id')) {
           Map<String, dynamic> seasons = recentlyWatched['$_id'] as Map<String, dynamic>;

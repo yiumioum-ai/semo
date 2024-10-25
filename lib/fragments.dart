@@ -190,7 +190,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              for (final (index, item) in _navigationPages.indexed) NavigationTile(index),
+              for (final (index, _) in _navigationPages.indexed) NavigationTile(index),
             ],
           ),
         ),

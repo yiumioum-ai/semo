@@ -49,7 +49,7 @@ class Spinner {
         this.backgroundColor,
         this.borderRadius = 15.0,
         this.spinnerMargin = 16.0,
-        this.spinnerColor = const Color(0xFF604BA5),
+        this.spinnerColor = const Color(0xFFAB261D),
         this.duration,
         this.fromNavigatorToShell = false,
         this.useRootNavigator = true,

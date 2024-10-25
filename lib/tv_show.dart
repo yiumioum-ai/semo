@@ -10,11 +10,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/person.dart' as model;
+import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/person_media.dart';
 import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
@@ -40,6 +43,10 @@ class _TvShowState extends State<TvShow> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
   List<int> _favoriteTvShows = [];
+  model.SearchResults _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+  model.SearchResults _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+  PagingController _recommendationsPagingController = PagingController(firstPageKey: 0);
+  PagingController _similarPagingController = PagingController(firstPageKey: 0);
   late Spinner _spinner;
   bool _isLoading = true;
   int _currentSeason = 0;
@@ -71,17 +78,23 @@ class _TvShowState extends State<TvShow> {
     }
   }
 
-  getTvShowDetails({bool reload = false}) async {
-    if (!reload) _spinner.show();
+  getTvShowDetails() async {
+    _spinner.show();
     await Future.wait([
       isFavorite(),
       getSeasons(),
       getTrailerUrl(),
       getCast(),
-      getRecommendations(),
-      getSimilar(),
     ]);
-    if (!reload) _spinner.dismiss();
+
+    _recommendationsPagingController.addPageRequestListener((pageKey) async {
+      await getRecommendations(pageKey);
+    });
+    _similarPagingController.addPageRequestListener((pageKey) async {
+      await getSimilar(pageKey);
+    });
+
+    _spinner.dismiss();
     setState(() => _isLoading = false);
   }
 
@@ -220,7 +233,9 @@ class _TvShowState extends State<TvShow> {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
       Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
-      Map<String, dynamic> recentlyWatched = (data['tv_shows'] ?? {}) as Map<String, dynamic>;
+      Map<String, Map<String, dynamic>> recentlyWatched = ((data['tv_shows'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+        return MapEntry(key, Map<String, dynamic>.from(value));
+      });
 
       if (recentlyWatched.keys.contains('${_tvShow!.id}')) {
         Map<String, Map<String, dynamic>> seasons = ((recentlyWatched['${_tvShow!.id}'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
@@ -300,12 +315,15 @@ class _TvShowState extends State<TvShow> {
     }
   }
 
-  Future<void> getRecommendations() async {
+  getRecommendations(int pageKey) async {
+    Map<String, dynamic> parameters = {
+      'page': '${_recommendationsResults.page + 1}',
+    };
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getTvShowRecommendations(_tvShow!.id));
+    Uri uri = Uri.parse(Urls.getTvShowRecommendations(_tvShow!.id)).replace(queryParameters: parameters);
     Response request = await http.get(
       uri,
       headers: headers,
@@ -315,20 +333,36 @@ class _TvShowState extends State<TvShow> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      List data = json.decode(response)['results'] as List;
-      List<model.TvShow> recommendations = data.map((json) => model.TvShow.fromJson(json)).toList();
-      setState(() => _tvShow!.recommendations = recommendations);
+      model.SearchResults searchResults = model.SearchResults.fromJson(
+        PageType.tv_shows,
+        json.decode(response),
+      );
+
+      bool isLastPage = pageKey == searchResults.totalResults;
+
+      if (isLastPage) {
+        _recommendationsPagingController.appendLastPage(searchResults.tvShows!);
+      } else {
+        int nextPageKey = pageKey + searchResults.tvShows!.length;
+        _recommendationsPagingController.appendPage(searchResults.tvShows!, nextPageKey);
+      }
+
+      setState(() => _recommendationsResults = searchResults);
     } else {
       print('Failed to get tv show recommendations');
+      _recommendationsPagingController.error = 'error';
     }
   }
 
-  Future<void> getSimilar() async {
+  getSimilar(int pageKey) async {
+    Map<String, dynamic> parameters = {
+      'page': '${_similarResults.page + 1}',
+    };
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getTvShowSimilar(_tvShow!.id));
+    Uri uri = Uri.parse(Urls.getTvShowSimilar(_tvShow!.id)).replace(queryParameters: parameters);
     Response request = await http.get(
       uri,
       headers: headers,
@@ -338,11 +372,24 @@ class _TvShowState extends State<TvShow> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      List data = json.decode(response)['results'] as List;
-      List<model.TvShow> similar = data.map((json) => model.TvShow.fromJson(json)).toList();
-      setState(() => _tvShow!.similar = similar);
+      model.SearchResults searchResults = model.SearchResults.fromJson(
+        PageType.tv_shows,
+        json.decode(response),
+      );
+
+      bool isLastPage = pageKey == searchResults.totalResults;
+
+      if (isLastPage) {
+        _similarPagingController.appendLastPage(searchResults.tvShows!);
+      } else {
+        int nextPageKey = pageKey + searchResults.tvShows!.length;
+        _similarPagingController.appendPage(searchResults.tvShows!, nextPageKey);
+      }
+
+      setState(() => _similarResults = searchResults);
     } else {
       print('Failed to get similar tv shows');
+      _similarPagingController.error = 'error';
     }
   }
 
@@ -361,7 +408,8 @@ class _TvShowState extends State<TvShow> {
         'tmdb_id': '${_tvShow!.id}',
         'season_number': '${episode.season}',
         'episode_number': '${episode.number}',
-        'languages': 'EN'
+        'languages': 'EN',
+        'subs_per_page': '5'
       };
 
       Uri uri = Uri.parse(Urls.subtitles).replace(
@@ -691,6 +739,10 @@ class _TvShowState extends State<TvShow> {
                             color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Icon(Icons.error, color: Colors.white54),
+                          ),
                         ),
                       ),
                     );
@@ -723,8 +775,6 @@ class _TvShowState extends State<TvShow> {
   }
 
   Widget Cast() {
-    List<model.Person>? cast = _tvShow!.cast != null ? _tvShow!.cast!.length > 10 ? _tvShow!.cast!.sublist(0, 10) : _tvShow!.cast : [];
-
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
@@ -737,15 +787,15 @@ class _TvShowState extends State<TvShow> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
-          if (_tvShow!.cast != null) Container(
+          Container(
             height: MediaQuery.of(context).size.height * 0.25,
             margin: EdgeInsets.only(top: 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: cast!.length,
+              itemCount: _tvShow!.cast!.length,
               itemBuilder: (context, index) {
                 return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != cast.length ? 18 : 0),
+                  margin: EdgeInsets.only(right: (index + 1) != _tvShow!.cast!.length ? 18 : 0),
                   child: PersonCard(_tvShow!.cast![index]),
                 );
               },
@@ -777,19 +827,38 @@ class _TvShowState extends State<TvShow> {
               );
             },
             imageBuilder: (context, image) {
-              return Container(
-                width: MediaQuery.of(context).size.width * 0.4,
-                height: double.infinity,
-                decoration: BoxDecoration(
+              return InkWell(
+                customBorder: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: image,
-                    fit: BoxFit.cover,
+                ),
+                onTap: () => navigate(destination: PersonMedia(person)),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: image,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(
@@ -807,9 +876,7 @@ class _TvShowState extends State<TvShow> {
     );
   }
 
-  Widget Category(String title, {required List<model.TvShow> tvShows}) {
-    tvShows = tvShows.length > 10 ? tvShows.sublist(0, 10) : tvShows;
-
+  Widget Category(String title, {required PagingController pagingController}) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
@@ -825,15 +892,17 @@ class _TvShowState extends State<TvShow> {
           Container(
             height: MediaQuery.of(context).size.height * 0.25,
             margin: EdgeInsets.only(top: 10),
-            child: ListView.builder(
+            child: PagedListView(
+              pagingController: pagingController,
               scrollDirection: Axis.horizontal,
-              itemCount: tvShows.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != tvShows ? 18 : 0),
-                  child: TvShowCard(tvShows[index]),
-                );
-              },
+              builderDelegate: PagedChildBuilderDelegate(
+                itemBuilder: (context, tvShow, index) {
+                  return Container(
+                    margin: EdgeInsets.only(right: (index + 1) != pagingController.nextPageKey ? 18 : 0),
+                    child: TvShowCard(tvShow as model.TvShow),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -911,7 +980,20 @@ class _TvShowState extends State<TvShow> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(
@@ -966,15 +1048,20 @@ class _TvShowState extends State<TvShow> {
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           onRefresh: () async {
+            _recommendationsPagingController.dispose();
+            _similarPagingController.dispose();
+
             setState(() {
               _isLoading = true;
               _isFavorite = false;
               _tvShow!.trailerUrl = null;
               _tvShow!.cast = null;
-              _tvShow!.recommendations = null;
-              _tvShow!.similar = null;
+              _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+              _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+              _recommendationsPagingController = PagingController(firstPageKey: 0);
+              _similarPagingController = PagingController(firstPageKey: 0);
             });
-            getTvShowDetails(reload: true);
+            getTvShowDetails();
           },
           child: !_isLoading ? SingleChildScrollView(
             child: Column(
@@ -988,9 +1075,9 @@ class _TvShowState extends State<TvShow> {
                       FirstAirYear(),
                       Overview(),
                       Seasons(),
-                      Cast(),
-                      if (_tvShow!.recommendations!.isNotEmpty) Category('Recommendations', tvShows: _tvShow!.recommendations!),
-                      if (_tvShow!.similar!.isNotEmpty) Category('Similar', tvShows: _tvShow!.similar!),
+                      if (_tvShow!.cast != null && _tvShow!.cast!.isNotEmpty) Cast(),
+                      Category('Recommendations', pagingController: _recommendationsPagingController),
+                      Category('Similar', pagingController: _similarPagingController),
                     ],
                   ),
                 ),

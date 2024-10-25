@@ -37,11 +37,7 @@ class _SearchState extends State<Search> {
   PageType? _pageType;
   bool _isSearched = false;
   TextEditingController _searchController = TextEditingController();
-  model.SearchResults _searchResults = model.SearchResults(
-    page: 0,
-    totalPages: 0,
-    totalResults: 0
-  );
+  model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   PagingController _pagingController = PagingController(firstPageKey: 0);
   List<String> _recentSearches = [];
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -95,7 +91,7 @@ class _SearchState extends State<Search> {
 
     final user = _firestore.collection(DB.recentSearches).doc(_auth.currentUser!.uid);
     await user.set({
-      _pageType == PageType.movies ? 'movies' : 'tv_shows': recentSearches,
+      (_pageType == PageType.movies ? 'movies' : 'tv_shows'): recentSearches,
     }, SetOptions(merge: true));
 
     setState(() => _recentSearches = recentSearches);
@@ -305,7 +301,20 @@ class _SearchState extends State<Search> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(

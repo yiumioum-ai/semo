@@ -241,7 +241,20 @@ class _FavoritesState extends State<Favorites> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(

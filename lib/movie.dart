@@ -10,11 +10,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
+import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/person_media.dart';
 import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
@@ -40,6 +43,10 @@ class _MovieState extends State<Movie> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
   List<int> _favoriteMovies = [];
+  model.SearchResults _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+  model.SearchResults _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+  PagingController _recommendationsPagingController = PagingController(firstPageKey: 0);
+  PagingController _similarPagingController = PagingController(firstPageKey: 0);
   late Spinner _spinner;
   bool _isLoading = true;
 
@@ -67,18 +74,24 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  getMovieDetails({bool reload = false}) async {
-    if (!reload) _spinner.show();
+  getMovieDetails() async {
+    _spinner.show();
     await Future.wait([
       isFavorite(),
       isRecentlyWatched(),
       getTrailerUrl(),
       getDuration(),
       getCast(),
-      getRecommendations(),
-      getSimilar(),
     ]);
-    if (!reload) _spinner.dismiss();
+
+    _recommendationsPagingController.addPageRequestListener((pageKey) async {
+      await getRecommendations(pageKey);
+    });
+    _similarPagingController.addPageRequestListener((pageKey) async {
+      await getSimilar(pageKey);
+    });
+
+    _spinner.dismiss();
     setState(() => _isLoading = false);
   }
 
@@ -218,7 +231,8 @@ class _MovieState extends State<Movie> {
       Map<String, dynamic> parameters = {
         'api_key': APIKeys.subdl,
         'tmdb_id': '${_movie!.id}',
-        'languages': 'EN'
+        'languages': 'EN',
+        'subs_per_page': '5',
       };
 
       Uri uri = Uri.parse(Urls.subtitles).replace(
@@ -301,12 +315,15 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  Future<void> getRecommendations() async {
+  getRecommendations(int pageKey) async {
+    Map<String, dynamic> parameters = {
+      'page': '${_recommendationsResults.page + 1}',
+    };
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getMovieRecommendations(_movie!.id));
+    Uri uri = Uri.parse(Urls.getMovieRecommendations(_movie!.id)).replace(queryParameters: parameters);
     Response request = await http.get(
       uri,
       headers: headers,
@@ -316,20 +333,36 @@ class _MovieState extends State<Movie> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      List data = json.decode(response)['results'] as List;
-      List<model.Movie> recommendations = data.map((json) => model.Movie.fromJson(json)).toList();
-      setState(() => _movie!.recommendations = recommendations);
+      model.SearchResults searchResults = model.SearchResults.fromJson(
+        PageType.movies,
+        json.decode(response),
+      );
+
+      bool isLastPage = pageKey == searchResults.totalResults;
+
+      if (isLastPage) {
+        _recommendationsPagingController.appendLastPage(searchResults.movies!);
+      } else {
+        int nextPageKey = pageKey + searchResults.movies!.length;
+        _recommendationsPagingController.appendPage(searchResults.movies!, nextPageKey);
+      }
+
+      setState(() => _recommendationsResults = searchResults);
     } else {
       print('Failed to get movie recommendations');
+      _recommendationsPagingController.error = 'error';
     }
   }
 
-  Future<void> getSimilar() async {
+  getSimilar(int pageKey) async {
+    Map<String, dynamic> parameters = {
+      'page': '${_similarResults.page + 1}',
+    };
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    Uri uri = Uri.parse(Urls.getMovieSimilar(_movie!.id));
+    Uri uri = Uri.parse(Urls.getMovieSimilar(_movie!.id)).replace(queryParameters: parameters);
     Response request = await http.get(
       uri,
       headers: headers,
@@ -339,11 +372,24 @@ class _MovieState extends State<Movie> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      List data = json.decode(response)['results'] as List;
-      List<model.Movie> similar = data.map((json) => model.Movie.fromJson(json)).toList();
-      setState(() => _movie!.similar = similar);
+      model.SearchResults searchResults = model.SearchResults.fromJson(
+        PageType.movies,
+        json.decode(response),
+      );
+
+      bool isLastPage = pageKey == searchResults.totalResults;
+
+      if (isLastPage) {
+        _similarPagingController.appendLastPage(searchResults.movies!);
+      } else {
+        int nextPageKey = pageKey + searchResults.movies!.length;
+        _similarPagingController.appendPage(searchResults.movies!, nextPageKey);
+      }
+
+      setState(() => _similarResults = searchResults);
     } else {
       print('Failed to get similar movies');
+      _similarPagingController.error = 'error';
     }
   }
 
@@ -533,9 +579,6 @@ class _MovieState extends State<Movie> {
   }
 
   Widget Cast() {
-    //Change all the lists to paginated lists
-    List<model.Person>? cast = _movie!.cast != null ? _movie!.cast!.length > 10 ? _movie!.cast!.sublist(0, 10) : _movie!.cast : [];
-
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
@@ -548,15 +591,15 @@ class _MovieState extends State<Movie> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
-          if (_movie!.cast != null) Container(
+          Container(
             height: MediaQuery.of(context).size.height * 0.25,
             margin: EdgeInsets.only(top: 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: cast!.length,
+              itemCount: _movie!.cast!.length,
               itemBuilder: (context, index) {
                 return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != cast.length ? 18 : 0),
+                  margin: EdgeInsets.only(right: (index + 1) != _movie!.cast!.length ? 18 : 0),
                   child: PersonCard(_movie!.cast![index]),
                 );
               },
@@ -588,19 +631,38 @@ class _MovieState extends State<Movie> {
               );
             },
             imageBuilder: (context, image) {
-              return Container(
-                width: MediaQuery.of(context).size.width * 0.4,
-                height: double.infinity,
-                decoration: BoxDecoration(
+              return InkWell(
+                customBorder: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: image,
-                    fit: BoxFit.cover,
+                ),
+                onTap: () => navigate(destination: PersonMedia(person)),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: image,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(
@@ -618,9 +680,7 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget Category(String title, {required List<model.Movie> movies}) {
-    movies = movies.length > 10 ? movies.sublist(0, 10) : movies;
-
+  Widget Category(String title, {required PagingController pagingController}) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
@@ -636,15 +696,17 @@ class _MovieState extends State<Movie> {
           Container(
             height: MediaQuery.of(context).size.height * 0.25,
             margin: EdgeInsets.only(top: 10),
-            child: ListView.builder(
+            child: PagedListView(
+              pagingController: pagingController,
               scrollDirection: Axis.horizontal,
-              itemCount: movies.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: (index + 1) != movies ? 18 : 0),
-                  child: MovieCard(movies[index]),
-                );
-              },
+              builderDelegate: PagedChildBuilderDelegate(
+                itemBuilder: (context, movie, index) {
+                  return Container(
+                    margin: EdgeInsets.only(right: (index + 1) != pagingController.nextPageKey ? 18 : 0),
+                    child: MovieCard(movie as model.Movie),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -722,7 +784,20 @@ class _MovieState extends State<Movie> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(
@@ -777,15 +852,20 @@ class _MovieState extends State<Movie> {
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           onRefresh: () async {
+            _recommendationsPagingController.dispose();
+            _similarPagingController.dispose();
+
             setState(() {
               _isLoading = true;
               _isFavorite = false;
               _movie!.trailerUrl = null;
               _movie!.cast = null;
-              _movie!.recommendations = null;
-              _movie!.similar = null;
+              _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+              _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+              _recommendationsPagingController = PagingController(firstPageKey: 0);
+              _similarPagingController = PagingController(firstPageKey: 0);
             });
-            getMovieDetails(reload: true);
+            getMovieDetails();
           },
           child: !_isLoading ? SingleChildScrollView(
             child: Column(
@@ -800,9 +880,9 @@ class _MovieState extends State<Movie> {
                       if (_movie!.isRecentlyWatched != null && _movie!.isRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
-                      Cast(),
-                      if (_movie!.recommendations!.isNotEmpty) Category('Recommendations', movies: _movie!.recommendations!),
-                      if (_movie!.similar!.isNotEmpty) Category('Similar', movies: _movie!.similar!),
+                      if (_movie!.cast != null && _movie!.cast!.isNotEmpty) Cast(),
+                      Category('Recommendations', pagingController: _recommendationsPagingController),
+                      Category('Similar', pagingController: _similarPagingController),
                     ],
                   ),
                 ),

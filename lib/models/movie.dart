@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:semo/models/person.dart';
 
 import 'genre.dart';
@@ -25,8 +23,6 @@ class Movie {
   int? watchedProgress;
   String? trailerUrl;
   List<Person>? cast;
-  List<Movie>? recommendations;
-  List<Movie>? similar;
 
   Movie({
     required this.adult,
@@ -49,8 +45,6 @@ class Movie {
     this.watchedProgress,
     this.trailerUrl,
     this.cast,
-    this.recommendations,
-    this.similar,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {

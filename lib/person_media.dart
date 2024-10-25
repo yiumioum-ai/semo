@@ -7,70 +7,68 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
-import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/movie.dart';
 import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
 //ignore: must_be_immutable
-class Genre extends StatefulWidget {
-  model.Genre genre;
-  PageType pageType;
+class PersonMedia extends StatefulWidget {
+  model.Person person;
 
-  Genre({
-    required this.genre,
-    required this.pageType,
-  });
+  PersonMedia(this.person);
 
   @override
-  _GenreState createState() => _GenreState();
+  _PersonMediaState createState() => _PersonMediaState();
 }
 
-class _GenreState extends State<Genre> {
-  model.Genre? _genre;
-  PageType? _pageType;
-  model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  PagingController _pagingController = PagingController(firstPageKey: 0);
+class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin  {
+  model.Person? _person;
+  List<model.Movie> _movies = [];
+  List<model.TvShow> _tvShows = [];
+  late TabController _tabController;
+  PageType _pageType = PageType.movies;
+  Spinner? _spinner;
 
   navigate({required Widget destination, bool replace = false}) async {
+    PageTransition pageTransition = PageTransition(
+      type: PageTransitionType.rightToLeft,
+      child: destination,
+    );
     if (replace) {
       await Navigator.pushReplacement(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     } else {
       await Navigator.push(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     }
   }
 
-  getMovies(int pageKey) async {
-    Map<String, dynamic> parameters = {
-      'page': '${_searchResults.page + 1}',
-      'with_genres': '${_genre!.id}',
-    };
+  getMedia() async {
+    _spinner!.show();
+    await Future.wait([
+      getMovies(),
+      getTvShows(),
+    ]);
+    _spinner!.dismiss();
+  }
+
+  Future<void> getMovies() async {
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    String url = _pageType! == PageType.movies ? Urls.discoverMovie : Urls.discoverTvShow;
-    Uri uri = Uri.parse(url).replace(queryParameters: parameters);
-
+    Uri uri = Uri.parse(Urls.getPersonMovies(_person!.id));
     Response request = await http.get(
       uri,
       headers: headers,
@@ -80,52 +78,103 @@ class _GenreState extends State<Genre> {
     if (!kReleaseMode) print(response);
 
     if (response.isNotEmpty) {
-      model.SearchResults searchResults = model.SearchResults.fromJson(
-        _pageType!,
-        json.decode(response),
-      );
-
-      bool isLastPage = pageKey == searchResults.totalResults;
-
-      if (_pageType == PageType.movies) {
-        if (isLastPage) {
-          _pagingController.appendLastPage(searchResults.movies!);
-        } else {
-          int nextPageKey = pageKey + searchResults.movies!.length;
-          _pagingController.appendPage(searchResults.movies!, nextPageKey);
-        }
-      } else {
-        if (isLastPage) {
-          _pagingController.appendLastPage(searchResults.tvShows!);
-        } else {
-          int nextPageKey = pageKey + searchResults.tvShows!.length;
-          _pagingController.appendPage(searchResults.tvShows!, nextPageKey);
-        }
-      }
-
-      setState(() => _searchResults = searchResults);
+      List data = json.decode(response)['cast'] as List;
+      List<model.Movie> movies = data.map((json) => model.Movie.fromJson(json)).toList();
+      setState(() => _movies = movies);
     } else {
-      _pagingController.error = 'error';
+      print('Failed to get person movies');
+    }
+  }
+
+  Future<void> getTvShows() async {
+    Map<String, String> headers = {
+      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    };
+
+    Uri uri = Uri.parse(Urls.getPersonTvShows(_person!.id));
+    Response request = await http.get(
+      uri,
+      headers: headers,
+    );
+
+    String response = request.body;
+    if (!kReleaseMode) print(response);
+
+    if (response.isNotEmpty) {
+      List data = json.decode(response)['cast'] as List;
+      List<model.TvShow> tvShows = data.map((json) => model.TvShow.fromJson(json)).toList();
+      setState(() => _tvShows = tvShows);
+    } else {
+      print('Failed to get person tv shows');
     }
   }
 
   @override
   void initState() {
-    _genre = widget.genre;
-    _pageType = widget.pageType;
+    _person = widget.person;
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Genre - ${_genre!.id}',
-      );
+
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      PageType pageType = _tabController.index == 0 ? PageType.movies : PageType.tv_shows;
+      setState(() => _pageType = pageType);
     });
-    _pagingController.addPageRequestListener((pageKey) => getMovies(pageKey));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _spinner = Spinner(context);
+      await FirebaseAnalytics.instance.logScreenView(
+        screenName: 'Person Media',
+      );
+      getMedia();
+    });
   }
 
-  @override
-  void dispose() {
-    _pagingController.dispose();
-    super.dispose();
+  Widget NoContent() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.new_releases_outlined,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'The person has no content',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget Movies() {
+    return _movies.isNotEmpty ? GridView.builder(
+      itemCount: _movies.length,
+      itemBuilder: (context, index) => ResultCard(movie: _movies[index]),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1/2,
+      ),
+    ) : NoContent();
+  }
+
+  Widget TvShows() {
+    return _tvShows.isNotEmpty ? GridView.builder(
+      itemCount: _tvShows.length,
+      itemBuilder: (context, index) => ResultCard(tvShow: _tvShows[index]),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1/2,
+      ),
+    ) : NoContent();
   }
 
   Widget ResultCard({model.Movie? movie, model.TvShow? tvShow}) {
@@ -264,26 +313,30 @@ class _GenreState extends State<Genre> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_genre!.name)),
+      appBar: AppBar(
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(
+              icon: Icon(Icons.movie),
+              text: 'Movies',
+            ),
+            Tab(
+              icon: Icon(Icons.video_library),
+              text: 'TV Shows',
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Container(
-          padding: EdgeInsets.all(18),
-          child: PagedGridView(
-            pagingController: _pagingController,
-            builderDelegate: PagedChildBuilderDelegate(
-              itemBuilder: (context, media, index) {
-                if (_pageType == PageType.movies) {
-                  return ResultCard(movie: media as model.Movie);
-                } else {
-                  return ResultCard(tvShow: media as model.TvShow);
-                }
-              },
-            ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1/2,
-            ),
+          margin: EdgeInsets.all(18),
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              Movies(),
+              TvShows(),
+            ],
           ),
         ),
       ),

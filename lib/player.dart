@@ -140,6 +140,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           http: VlcHttpOptions([
             VlcHttpOptions.httpReconnect(true),
           ]),
+          subtitle: VlcSubtitleOptions([
+            VlcSubtitleOptions.boldStyle(true),
+            VlcSubtitleOptions.relativeFontSize(18),
+            VlcSubtitleOptions.textDirection(VlcSubtitleTextDirection.auto),
+          ]),
         ),
       );
     });
@@ -149,6 +154,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   playerOnInitListener() async {
+    for (File file in _subtitles!) await _videoPlayerController!.addSubtitleFromFile(file, isSelected: false);
+    await _videoPlayerController!.setSpuDelay(70);
+
     Future.delayed(Duration(seconds: 5), () {
       if (mounted) setState(() => _showControls = false);
     });
@@ -178,14 +186,16 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       setState(() => _isSeekedToWatchedProgress = true);
     }
 
-    setState(() {
-      _durationState = DurationState(
-        progress: progress,
-        total: total,
-        isBuffering: isBuffering,
-      );
-      _isPlaying = isPlaying;
-    });
+    if (mounted) {
+      setState(() {
+        _durationState = DurationState(
+          progress: progress,
+          total: total,
+          isBuffering: isBuffering,
+        );
+        _isPlaying = isPlaying;
+      });
+    }
 
     if (total.inSeconds != 0 && progress == total) {
       await updateRecentlyWatched();
@@ -255,9 +265,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   setSubtitle(int index) async {
-    await _videoPlayerController!.addSubtitleFromFile(_subtitles![index], isSelected: true);
-    _videoPlayerController!.setSpuDelay(0);
-    setState(() => _selectedSubtitle = index);
+    await _videoPlayerController!.setSpuTrack(index);
+    setState(() {
+      _selectedSubtitle = index;
+      _showSubtitles = index >= 0;
+    });
   }
 
   showSubtitleSelector() async {
@@ -272,9 +284,15 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
               shrinkWrap: true,
               itemCount: _subtitles!.length,
               itemBuilder: (context, index) {
+                bool isSelected = index == _selectedSubtitle;
                 return ListTile(
-                  title: Text('English ${index + 1}'),
-                  selected: index == _selectedSubtitle,
+                  title: Text(
+                    'English ${index + 1}',
+                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                      color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
                   onTap: () async {
                     setSubtitle(index);
                     Navigator.pop(context);
@@ -374,10 +392,13 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                           }
                         },
                         onLongPress: () {
-                          setState(() => _showSubtitles = false);
+                          setSubtitle(-1);
                         },
-                        child: Ink(
-                          child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: Ink(
+                            child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
+                          ),
                         ),
                       ),
                     ],

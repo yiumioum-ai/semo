@@ -19,8 +19,6 @@ class TvShow {
   String? trailerUrl;
   List<Season>? seasons;
   List<Person>? cast;
-  List<TvShow>? recommendations;
-  List<TvShow>? similar;
 
   TvShow({
     required this.adult,
@@ -40,8 +38,6 @@ class TvShow {
     this.trailerUrl,
     this.seasons,
     this.cast,
-    this.recommendations,
-    this.similar,
   });
 
   factory TvShow.fromJson(Map<String, dynamic> json) {

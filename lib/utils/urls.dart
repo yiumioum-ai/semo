@@ -40,6 +40,8 @@ class Urls {
   static String getEpisodeStreamUrl(int id, int season, int episode) => 'https://vidsrc.cc/v2/embed/tv/$id/$season/$episode';
   static String getMovieCast(int id) => '$tmdbBase/movie/$id/credits';
   static String getTvShowCast(int id) => '$tmdbBase/tv/$id/aggregate_credits';
+  static String getPersonMovies(int id) => '$tmdbBase/person/$id/movie_credits';
+  static String getPersonTvShows(int id) => '$tmdbBase/person/$id/tv_credits';
   static String getMovieRecommendations(int id) => '$tmdbBase/movie/$id/recommendations';
   static String getTvShowRecommendations(int id) => '$tmdbBase/tv/$id/recommendations';
   static String getMovieSimilar(int id) => '$tmdbBase/movie/$id/similar';

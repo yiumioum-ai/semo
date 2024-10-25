@@ -44,46 +44,32 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    SettingsThemeData settingsThemeData = SettingsThemeData(
+      titleTextColor: Theme.of(context).primaryColor,
+      settingsListBackground: Theme.of(context).scaffoldBackgroundColor,
+    );
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(18),
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                margin: EdgeInsets.only(bottom: 20),
-                child: Text(
-                  'Settings',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              SettingsList(
-                physics: NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                lightTheme: SettingsThemeData(settingsListBackground: Theme.of(context).scaffoldBackgroundColor),
-                darkTheme: SettingsThemeData(settingsListBackground: Theme.of(context).scaffoldBackgroundColor),
-                sections: [
-                  SettingsSection(
-                    title: Text('Account'),
-                    tiles: [
-                      SettingsTile(
-                        title: Text('Sign out'),
-                        leading: Icon(Icons.exit_to_app),
-                        trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-                        onPressed: (context) async {
-                          await FirebaseAuth.instance.signOut();
-                          navigate(destination: Landing(), replace: true);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+      body: SettingsList(
+        lightTheme: settingsThemeData,
+        darkTheme: settingsThemeData,
+        sections: [
+          SettingsSection(
+            title: Text('Account'),
+            tiles: [
+              SettingsTile(
+                title: Text('Sign out'),
+                leading: Icon(Icons.exit_to_app),
+                trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
+                onPressed: (context) async {
+                  await FirebaseAuth.instance.signOut();
+                  navigate(destination: Landing(), replace: true);
+                },
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

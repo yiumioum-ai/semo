@@ -39,9 +39,9 @@ class _MoviesState extends State<Movies> {
   model.SearchResults _trendingResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   model.SearchResults _popularResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   model.SearchResults _topRatedResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  PagingController<int, model.Movie> _trendingPagingController = PagingController(firstPageKey: 0);
-  PagingController<int, model.Movie> _popularPagingController = PagingController(firstPageKey: 0);
-  PagingController<int, model.Movie> _topRatedPagingController = PagingController(firstPageKey: 0);
+  PagingController _trendingPagingController = PagingController(firstPageKey: 0);
+  PagingController _popularPagingController = PagingController(firstPageKey: 0);
+  PagingController _topRatedPagingController = PagingController(firstPageKey: 0);
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   late Spinner _spinner;
@@ -70,8 +70,8 @@ class _MoviesState extends State<Movies> {
     }
   }
 
-  getCategories({bool reload = false}) async {
-    if (!reload) _spinner.show();
+  getCategories() async {
+    _spinner.show();
     _trendingPagingController.addPageRequestListener((pageKey) async {
       model.SearchResults searchResults = await getMovies(Urls.trendingMovies, pageKey: pageKey, resultsModel: _trendingResults, pagingController: _trendingPagingController);
       setState(() => _trendingResults = searchResults);
@@ -90,7 +90,7 @@ class _MoviesState extends State<Movies> {
       getGenres(),
     ]);
     setState(() => _isLoading = false);
-    if (!reload) _spinner.dismiss();
+    _spinner.dismiss();
   }
 
   Future<void> getNowPlaying() async {
@@ -182,6 +182,7 @@ class _MoviesState extends State<Movies> {
 
       for (String id in rawRecentlyWatched.keys) getMovieDetails(int.parse(id));
       setState(() {
+        _recentlyWatched.clear();
         _rawRecentlyWatched = {};
         _rawRecentlyWatched = rawRecentlyWatched;
       });
@@ -238,12 +239,12 @@ class _MoviesState extends State<Movies> {
 
   removeFromRecentlyWatched(model.Movie movie) async {
     Map<String, Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
-    rawRecentlyWatched.removeWhere((id, value) => id == movie.id);
+    rawRecentlyWatched.removeWhere((id, value) => id == '${movie.id}');
 
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
     await user.set({
       'movies': rawRecentlyWatched,
-    }, SetOptions(merge: true));
+    }, SetOptions(mergeFields: ['movies']));
 
     setState(() {
       _recentlyWatched.remove(movie);
@@ -530,7 +531,20 @@ class _MoviesState extends State<Movies> {
                 ),
               );
             },
-            errorWidget: (context, url, error) => Icon(Icons.error, color: Colors.white54),
+            errorWidget: (context, url, error) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Icon(Icons.error, color: Colors.white54),
+                ),
+              );
+            },
           ),
         ),
         Container(
@@ -642,6 +656,7 @@ class _MoviesState extends State<Movies> {
             _isLoading = true;
             _nowPlaying = [];
             _recentlyWatched = [];
+            _rawRecentlyWatched = {};
             _genres = [];
             _trendingResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
             _popularResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
@@ -650,7 +665,7 @@ class _MoviesState extends State<Movies> {
             _popularPagingController = PagingController(firstPageKey: 0);
             _topRatedPagingController = PagingController(firstPageKey: 0);
           });
-          getCategories(reload: true);
+          getCategories();
         },
         child: !_isLoading ? SingleChildScrollView(
           child: SafeArea(

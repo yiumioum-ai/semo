@@ -391,9 +391,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                             setState(() => _showSubtitles = true);
                           }
                         },
-                        onLongPress: () {
-                          setSubtitle(-1);
-                        },
+                        onLongPress: () => setSubtitle(-1),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(100),
                           child: Ink(

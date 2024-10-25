@@ -105,6 +105,11 @@ class Semo extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.white),
         ),
         progressIndicatorTheme: ProgressIndicatorThemeData(color: Color(0xFFAB261D)),
+        tabBarTheme: TabBarTheme(
+          indicatorColor: Color(0xFFAB261D),
+          labelColor: Color(0xFFAB261D),
+          unselectedLabelColor: Colors.white54,
+        ),
       ),
       home: Splash(),
     );

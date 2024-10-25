@@ -114,6 +114,15 @@ class _MoviesState extends State<Movies> {
       setState(() => _nowPlaying = nowPlaying.length > 10 ? nowPlaying.sublist(0, 10) : nowPlaying);
     } else {
       print('Error getting now playing movies');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get now playing',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -153,6 +162,15 @@ class _MoviesState extends State<Movies> {
       return searchResults;
     } else {
       pagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get movies',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
       return resultsModel;
     }
   }
@@ -186,7 +204,18 @@ class _MoviesState extends State<Movies> {
         _rawRecentlyWatched = {};
         _rawRecentlyWatched = rawRecentlyWatched;
       });
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting recently watched: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recently watched',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
   }
 
   Future<void> getMovieDetails(int id) async {
@@ -210,6 +239,15 @@ class _MoviesState extends State<Movies> {
       setState(() => _recentlyWatched.add(movie));
     } else {
       print('Failed to get movie details: $id');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get movie details',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -234,6 +272,15 @@ class _MoviesState extends State<Movies> {
       setState(() => _genres = genres);
     } else {
       print('Failed to get genres');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get genres',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

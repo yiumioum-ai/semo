@@ -69,7 +69,18 @@ class _FavoritesState extends State<Favorites> {
       List<int> rawFavorites = ((data[_pageType == PageType.movies ? 'movies' : 'tv_shows'] ?? []) as List<dynamic>).cast<int>();
       setState(() => _rawFavorites = rawFavorites);
       for (int id in rawFavorites) getFavoriteDetails(id);
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting favorites: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get favorites',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
     _spinner!.dismiss();
   }
 
@@ -98,6 +109,15 @@ class _FavoritesState extends State<Favorites> {
       setState(() => _favorites.add(mediaModel));
     } else {
       print('Failed to get favorite details: $id');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get movie details',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

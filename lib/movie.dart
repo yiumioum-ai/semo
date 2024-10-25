@@ -107,7 +107,18 @@ class _MovieState extends State<Movie> {
           _favoriteMovies = favoriteMovies;
         });
       }
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting favorites: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get favorites',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
   }
 
   addToFavorites() async {
@@ -157,7 +168,18 @@ class _MovieState extends State<Movie> {
           setState(() => _movie!.watchedProgress = watchedProgress);
         }
       }
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting recently watched: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recently watched',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
   }
 
   Future<void> getTrailerUrl() async {
@@ -186,6 +208,15 @@ class _MovieState extends State<Movie> {
       youtubeId = youtubeVideos[0]['key'] ?? '';
     } else {
       print('Failed to get trailer youtube url');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get trailer',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
 
     String youtubeUrl = 'https://www.youtube.com/watch?v=$youtubeId';
@@ -213,6 +244,15 @@ class _MovieState extends State<Movie> {
       setState(() => _movie!.duration = duration);
     } else {
       print('Failed to get movie duration');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get duration',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -312,6 +352,15 @@ class _MovieState extends State<Movie> {
       setState(() => _movie!.cast = cast);
     } else {
       print('Failed to get movie cast');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get cast',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -351,6 +400,15 @@ class _MovieState extends State<Movie> {
     } else {
       print('Failed to get movie recommendations');
       _recommendationsPagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recommendations',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -390,6 +448,15 @@ class _MovieState extends State<Movie> {
     } else {
       print('Failed to get similar movies');
       _similarPagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get similar',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

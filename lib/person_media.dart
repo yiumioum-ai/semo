@@ -83,6 +83,15 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
       setState(() => _movies = movies);
     } else {
       print('Failed to get person movies');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get movies',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -106,6 +115,15 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
       setState(() => _tvShows = tvShows);
     } else {
       print('Failed to get person tv shows');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get TV shows',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

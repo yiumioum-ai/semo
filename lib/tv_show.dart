@@ -110,7 +110,18 @@ class _TvShowState extends State<TvShow> {
           _favoriteTvShows = favoriteTvShows;
         });
       }
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting favorites: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get favorites',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
   }
 
   addToFavorites() async {
@@ -180,6 +191,15 @@ class _TvShowState extends State<TvShow> {
       }
     } else {
       print('Failed to get tv show seasons');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get seasons',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -222,6 +242,15 @@ class _TvShowState extends State<TvShow> {
       return episodes;
     } else {
       print('Failed to get tv show episodes');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get episodes',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
 
     return [];
@@ -250,7 +279,18 @@ class _TvShowState extends State<TvShow> {
           results = season;
         }
       }
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting recently watched: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recently watched',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
 
     return results;
   }
@@ -283,6 +323,15 @@ class _TvShowState extends State<TvShow> {
       }
     } else {
       print('Failed to get trailer youtube url');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get trailer',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
 
     String youtubeUrl = 'https://www.youtube.com/watch?v=$youtubeId';
@@ -312,6 +361,15 @@ class _TvShowState extends State<TvShow> {
       setState(() => _tvShow!.cast = cast);
     } else {
       print('Failed to get tv show cast');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get cast',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -351,6 +409,15 @@ class _TvShowState extends State<TvShow> {
     } else {
       print('Failed to get tv show recommendations');
       _recommendationsPagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recommendations',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -390,6 +457,15 @@ class _TvShowState extends State<TvShow> {
     } else {
       print('Failed to get similar tv shows');
       _similarPagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get similar',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

@@ -59,7 +59,7 @@ class _GenreState extends State<Genre> {
     }
   }
 
-  getMovies(int pageKey) async {
+  getContent(int pageKey) async {
     Map<String, dynamic> parameters = {
       'page': '${_searchResults.page + 1}',
       'with_genres': '${_genre!.id}',
@@ -106,6 +106,15 @@ class _GenreState extends State<Genre> {
       setState(() => _searchResults = searchResults);
     } else {
       _pagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get movies',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -119,7 +128,7 @@ class _GenreState extends State<Genre> {
         screenName: 'Genre - ${_genre!.id}',
       );
     });
-    _pagingController.addPageRequestListener((pageKey) => getMovies(pageKey));
+    _pagingController.addPageRequestListener((pageKey) => getContent(pageKey));
   }
 
   @override

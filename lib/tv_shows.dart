@@ -109,6 +109,15 @@ class _TvShowsState extends State<TvShows> {
       setState(() => _onTheAir = onTheAir.length > 10 ? onTheAir.sublist(0, 10) : onTheAir);
     } else {
       print('Error getting on the air tv shows');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get on the air',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -148,6 +157,15 @@ class _TvShowsState extends State<TvShows> {
       return searchResults;
     } else {
       pagingController.error = 'error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get TV shows',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
       return resultsModel;
     }
   }
@@ -161,7 +179,18 @@ class _TvShowsState extends State<TvShows> {
       });
 
       for (String id in rawRecentlyWatched.keys) getTvShowsDetails(int.parse(id));
-    }, onError: (e) => print("Error getting user: $e"));
+    }, onError: (e) {
+      print("Error getting recently watched: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get recently watched',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
+    });
   }
 
   Future<void> getTvShowsDetails(int id) async {
@@ -187,6 +216,15 @@ class _TvShowsState extends State<TvShows> {
       });
     } else {
       print('Failed to get tv show details: $id');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get TV show details',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 
@@ -211,6 +249,15 @@ class _TvShowsState extends State<TvShows> {
       setState(() => _genres = genres);
     } else {
       print('Failed to get genres');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to get genres',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          backgroundColor: Theme.of(context).cardColor,
+        ),
+      );
     }
   }
 

@@ -223,6 +223,7 @@ class _TvShowState extends State<TvShow> {
       List<model.Episode> episodes = [];
 
       for (var episodeData in episodesData) {
+        episodeData['show_name'] = _tvShow!.name;
         model.Episode episode = model.Episode.fromJson(episodeData);
         if (episode.airDate != null) episodes.add(episode);
       }

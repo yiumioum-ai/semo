@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 
 class AutoEmbedExtractor {
-  final String autoembed = 'YXV0b2VtYmVkLmNj';
+  final String baseUrl = 'https://autoembed.cc';
 
   Future<String?> extract(Map<String, dynamic> parameters) async {
     try {
@@ -12,8 +12,8 @@ class AutoEmbedExtractor {
       int? episode = parameters['episode'];
 
       String serverUrl = season == null && episode == null
-          ? 'https://${utf8.decode(base64.decode(autoembed))}/embed/oplayer.php?id=$tmdbId'
-          : 'https://${utf8.decode(base64.decode(autoembed))}/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
+          ? 'https://$baseUrl/embed/oplayer.php?id=$tmdbId'
+          : 'https://$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
 
       String? streamUrl = await fetchMultiExtractor(serverUrl);
 

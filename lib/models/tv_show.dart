@@ -89,6 +89,7 @@ class Season {
 class Episode {
   int id;
   int tvShowId;
+  String tvShowName;
   int number;
   int season;
   String name;
@@ -102,6 +103,7 @@ class Episode {
   Episode({
     required this.id,
     required this.tvShowId,
+    required this.tvShowName,
     required this.number,
     required this.season,
     required this.name,
@@ -117,6 +119,7 @@ class Episode {
     return Episode(
       id: json['id'],
       tvShowId: json['show_id'],
+      tvShowName: json['show_name'],
       number: json['episode_number'],
       season: json['season_number'],
       name: json['name'],

@@ -11,6 +11,7 @@ import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 //ignore: must_be_immutable
 class Player extends StatefulWidget {
@@ -141,10 +142,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         options: VlcPlayerOptions(
           http: VlcHttpOptions([
             VlcHttpOptions.httpReconnect(true),
+            VlcHttpOptions.httpContinuous(true),
           ]),
           subtitle: VlcSubtitleOptions([
             VlcSubtitleOptions.boldStyle(true),
-            VlcSubtitleOptions.relativeFontSize(18),
+            VlcSubtitleOptions.relativeFontSize(14),
             VlcSubtitleOptions.textDirection(VlcSubtitleTextDirection.auto),
           ]),
         ),
@@ -321,6 +323,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     super.initState();
 
     forceLandscape();
+    WakelockPlus.enable();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await updateRecentlyWatched();
@@ -331,6 +334,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   @override
   void dispose() {
     forcePortrait();
+    WakelockPlus.disable();
 
     _videoPlayerController!.removeOnInitListener(playerOnInitListener);
     _videoPlayerController!.removeListener(playerListener);

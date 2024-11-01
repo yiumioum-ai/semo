@@ -47,7 +47,6 @@ class Extractor {
       if (streamUrl == null) extractors.removeAt(randomIndex);
     }
 
-    print('Stream URL: $streamUrl');
     return streamUrl;
   }
 }

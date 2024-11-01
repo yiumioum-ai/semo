@@ -4,8 +4,8 @@ class DurationState {
   bool isBuffering;
 
   DurationState({
-    required this.progress,
-    required this.total,
-    required this.isBuffering,
+    this.progress = Duration.zero,
+    this.total = Duration.zero,
+    this.isBuffering = true,
   });
 }

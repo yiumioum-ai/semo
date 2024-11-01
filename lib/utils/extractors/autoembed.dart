@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 
@@ -12,41 +11,29 @@ class AutoEmbedExtractor {
       int? episode = parameters['episode'];
 
       String serverUrl = season == null && episode == null
-          ? 'https://$baseUrl/embed/oplayer.php?id=$tmdbId'
-          : 'https://$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
+          ? '$baseUrl/embed/oplayer.php?id=$tmdbId'
+          : '$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
 
-      String? streamUrl = await fetchMultiExtractor(serverUrl);
+      String? streamUrl = await findStream(serverUrl);
 
       return streamUrl;
     } catch (err) {
-      print('Error fetching stream: $err');
+      print('AutoEmbed - Error fetching stream: $err');
       return null;
     }
   }
 
-  Future<String?> fetchMultiExtractor(String url) async {
+  Future<String?> findStream(String url) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        final document = parse(response.body);
-
-        String? scriptContent = document
-            .querySelectorAll('script')
-            .map((script) => script.innerHtml)
-            .firstWhere((content) => content.contains('Playerjs'), orElse: () => '');
-
-        if (scriptContent.isNotEmpty) {
-          return extractStreamFromScript(scriptContent);
-        } else {
-          print('No Playerjs script found in the HTML');
-          return null;
-        }
+        return extractStreamFromScript(response.body);
       } else {
-        print('Failed to fetch HTML. Status code: ${response.statusCode}');
+        print('AutoEmbed - Failed to fetch HTML. Status code: ${response.statusCode}');
         return null;
       }
     } catch (err) {
-      print('Error in fetchMultiExtractor: $err');
+      print('AutoEmbed - Error in findStream: $err');
       return null;
     }
   }

@@ -6,11 +6,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
+import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 //ignore: must_be_immutable
@@ -42,18 +43,21 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   PageType? _pageType;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
-  VlcPlayerController? _videoPlayerController;
-  DurationState _durationState = DurationState(
-    progress: Duration.zero,
-    total: Duration.zero,
-    isBuffering: true,
-  );
+  VideoPlayerController? _videoPlayerController;
+  SubtitleController? _subtitleController;
+  DurationState _durationState = DurationState();
   int _watchedProgress = 0;
   bool _isSeekedToWatchedProgress = false;
   bool _isPlaying = true;
   bool _showControls = true;
   bool _showSubtitles = false;
   int _selectedSubtitle = 0;
+  late AnimationController _scaleVideoAnimationController;
+  Animation<double> _scaleVideoAnimation = const AlwaysStoppedAnimation<double>(1.0);
+  double? _targetVideoScale;
+  bool _isZoomedIn = false;
+
+  double _lastZoomGestureScale = 1.0;
 
   updateRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
@@ -136,30 +140,19 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   initializePlayer() async {
     setState(() {
-      _videoPlayerController = VlcPlayerController.network(
-        _streamUrl!,
-        hwAcc: HwAcc.full,
-        options: VlcPlayerOptions(
-          http: VlcHttpOptions([
-            VlcHttpOptions.httpReconnect(true),
-            VlcHttpOptions.httpContinuous(true),
-          ]),
-          subtitle: VlcSubtitleOptions([
-            VlcSubtitleOptions.boldStyle(true),
-            VlcSubtitleOptions.relativeFontSize(14),
-            VlcSubtitleOptions.textDirection(VlcSubtitleTextDirection.auto),
-          ]),
-        ),
+      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(_streamUrl!));
+      _subtitleController = SubtitleController(
+        subtitleType: SubtitleType.srt,
+        showSubtitles: false,
       );
     });
 
-    _videoPlayerController!.addOnInitListener(playerOnInitListener);
+    _videoPlayerController!.initialize().then((value) => playerOnInitListener());
     _videoPlayerController!.addListener(playerListener);
   }
 
   playerOnInitListener() async {
-    for (File file in _subtitles!) await _videoPlayerController!.addSubtitleFromFile(file, isSelected: false);
-    await _videoPlayerController!.setSpuDelay(70);
+    await _videoPlayerController!.play();
 
     Future.delayed(Duration(seconds: 5), () {
       if (mounted) setState(() => _showControls = false);
@@ -217,13 +210,13 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   seekForward() async {
-    Duration currentPosition = await _videoPlayerController!.getPosition();
+    Duration currentPosition = await _videoPlayerController!.value.position;
     Duration targetPosition = Duration(seconds: currentPosition.inSeconds + 10);
     await _videoPlayerController!.seekTo(targetPosition);
   }
 
   seekBack() async {
-    Duration currentPosition = await _videoPlayerController!.getPosition();
+    Duration currentPosition = await _videoPlayerController!.value.position;
     Duration targetPosition = Duration(
       seconds: currentPosition.inSeconds - (currentPosition.inSeconds < 10 ? currentPosition.inSeconds : 10),
     );
@@ -269,8 +262,14 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   setSubtitle(int index) async {
-    await _videoPlayerController!.setSpuTrack(index);
+    String? subtitleContent = index >= 0 ? await _subtitles![index].readAsString() : null;
+
     setState(() {
+      _subtitleController = SubtitleController(
+        subtitleType: SubtitleType.srt,
+        subtitlesContent: subtitleContent,
+        showSubtitles: index >= 0,
+      );
       _selectedSubtitle = index;
       _showSubtitles = index >= 0;
     });
@@ -310,6 +309,23 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     );
   }
 
+  void setTargetNativeScale(double newValue) {
+    if (!newValue.isFinite) {
+      return;
+    }
+    _scaleVideoAnimation =
+        Tween<double>(begin: 1.0, end: newValue).animate(CurvedAnimation(
+          parent: _scaleVideoAnimationController,
+          curve: Curves.easeInOut,
+        ));
+
+    if (_targetVideoScale == null) {
+      _scaleVideoAnimationController.forward();
+    }
+    _targetVideoScale = newValue;
+  }
+
+
   @override
   void initState() {
     _id = widget.id;
@@ -325,6 +341,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     forceLandscape();
     WakelockPlus.enable();
 
+    _scaleVideoAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 125),
+      vsync: this,
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await updateRecentlyWatched();
       await initializePlayer();
@@ -336,23 +357,26 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     forcePortrait();
     WakelockPlus.disable();
 
-    _videoPlayerController!.removeOnInitListener(playerOnInitListener);
     _videoPlayerController!.removeListener(playerListener);
-    _videoPlayerController!.stopRendererScanning();
     _videoPlayerController!.dispose();
     super.dispose();
   }
 
-  Widget VideoPlayer() {
-    Size screenSize = MediaQuery.of(context).size;
-    return Center(
-      child: AspectRatio(
-        aspectRatio: screenSize.width / screenSize.height,
-        child: VlcPlayer(
-          controller: _videoPlayerController!,
-          aspectRatio: screenSize.width / screenSize.height,
-          placeholder: Center(child: CircularProgressIndicator()),
+  Widget Player() {
+    return ScaleTransition(
+      scale: _scaleVideoAnimation,
+      child: SubtitleWrapper(
+        subtitleController: _subtitleController!,
+        videoPlayerController: _videoPlayerController!,
+        subtitleStyle: SubtitleStyle(
+          fontSize: 18,
+          hasBorder: true,
+          borderStyle: SubtitleBorderStyle(
+            strokeWidth: 5,
+            color: Colors.white,
+          ),
         ),
+        videoChild: VideoPlayer(_videoPlayerController!),
       ),
     );
   }
@@ -404,6 +428,20 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                             child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
                           ),
                         ),
+                      ),
+                      IconButton(
+                        icon: Icon(!_isZoomedIn ? Icons.zoom_out_map : Icons.zoom_in_map),
+                        onPressed: () {
+                          setState(() {
+                            if (_isZoomedIn) {
+                              _scaleVideoAnimationController.forward(); // Zoom out
+                            } else {
+                              _scaleVideoAnimationController.reverse(); // Zoom in
+                            }
+                            _isZoomedIn = !_isZoomedIn; // Toggle zoom state
+                            _lastZoomGestureScale = 1.0;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -485,24 +523,54 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (_videoPlayerController != null) {
+      final screenSize = MediaQuery.of(context).size;
+      final videoSize = _videoPlayerController!.value.size;
+      if (videoSize.width > 0) {
+        final newTargetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
+        setTargetNativeScale(newTargetScale);
+      }
+    }
+
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
-          if (_showControls) {
-            setState(() => _showControls = false);
-          } else {
-            setState(() => _showControls = true);
-            Future.delayed(Duration(seconds: 5), () {
-              if (mounted && _isPlaying) {
-                setState(() => _showControls = false);
-              }
+          if (_durationState.total.inSeconds != 0) {
+            if (_showControls) {
+              setState(() => _showControls = false);
+            } else {
+              setState(() => _showControls = true);
+              Future.delayed(Duration(seconds: 5), () {
+                if (mounted && _isPlaying) {
+                  setState(() => _showControls = false);
+                }
+              });
+            }
+          }
+        },
+        onScaleUpdate: (details) {
+          _lastZoomGestureScale = details.scale;
+        },
+        onScaleEnd: (details) {
+          if (_lastZoomGestureScale < 1.0) {
+            setState(() {
+              // Zoom in
+              _isZoomedIn = true;
+              _scaleVideoAnimationController.forward();
+            });
+          } else if (_lastZoomGestureScale > 1.0) {
+            setState(() {
+              // Zoom out
+              _isZoomedIn = false;
+              _scaleVideoAnimationController.reverse();
             });
           }
+          _lastZoomGestureScale = 1.0;
         },
         child: Stack(
           children: [
             Container(color: Colors.black),
-            VideoPlayer(),
+            Player(),
             Controls(),
           ],
         ),

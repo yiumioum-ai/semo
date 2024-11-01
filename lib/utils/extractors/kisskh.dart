@@ -47,26 +47,13 @@ class KissKhExtractor {
     return null;
   }
 
-  Future<Map<String, dynamic>> getStream(int id) async {
+  Future<String?> getStreamUrl(int id) async {
     final streamUrl = '$baseUrl/api/DramaList/Episode/$id.png?err=false&ts=&time=';
-    final subUrl = '$baseUrl/api/Sub/$id';
 
     final streamResponse = await http.get(Uri.parse(streamUrl));
     final videoLink = json.decode(streamResponse.body)['Video'];
 
-    final subtitleResponse = await http.get(Uri.parse(subUrl));
-    final subtitles = (json.decode(subtitleResponse.body) as List).map((sub) => {
-      'title': sub['label'],
-      'language': sub['land'],
-      'type': sub['src'].contains('.vtt') ? 'vtt' : 'srt',
-      'uri': sub['src'],
-    }).toList();
-
-    return {
-      'link': videoLink,
-      'type': videoLink.contains('.m3u8') ? 'm3u8' : 'mp4',
-      'subtitles': subtitles,
-    };
+    return videoLink;
   }
 
   Future<String?> extract(Map<String, dynamic> parameters) async {
@@ -106,16 +93,16 @@ class KissKhExtractor {
       }
 
       print("Extracting streams for: ${matchedPost['title']}");
-      final Map<String, dynamic> stream = await getStream(mediaId);
+      String? streamUrl = await getStreamUrl(mediaId);
 
-      if (stream.isNotEmpty) {
-        print("Server: ${stream['server']}, Link: ${stream['link']}, Type: ${stream['type']}");
-        return stream['link'];
+      if (streamUrl != null && streamUrl.isNotEmpty) {
+        print("KissKh - $streamUrl");
+        return streamUrl;
       } else {
-        print("No streams found for '${matchedPost['title']}'");
+        print("KissKh - No streams found for '${matchedPost['title']}'");
       }
     } catch (e) {
-      print("Error during search and extraction: $e");
+      print("KissKh - Error during search and extraction: $e");
     }
 
     return null;

@@ -20,11 +20,8 @@ class Extractor {
       KissKhExtractor(),
     ];
 
-    Random random = Random();
-    int randomIndex = random.nextInt(extractors.length);
-    var extractor = extractors[randomIndex];
-
     late Map<String, dynamic> parameters;
+    Random random = Random();
     String? streamUrl;
 
     if (movie != null) {
@@ -41,7 +38,14 @@ class Extractor {
       };
     }
 
-    streamUrl = await extractor.extract(parameters);
+    while (streamUrl == null && extractors.isNotEmpty) {
+      int randomIndex = random.nextInt(extractors.length);
+      var extractor = extractors[randomIndex];
+
+      streamUrl = await extractor.extract(parameters);
+
+      if (streamUrl == null) extractors.removeAt(randomIndex);
+    }
 
     print('Stream URL: $streamUrl');
     return streamUrl;

@@ -4,11 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/stream.dart';
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/utils/extractors/autoembed.dart';
+import 'package:semo/utils/extractors/auto_embed.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
-import 'package:semo/utils/extractors/moviesapi.dart';
+import 'package:semo/utils/extractors/movies_api.dart';
 import 'package:semo/utils/extractors/rive.dart';
-import 'package:semo/utils/extractors/vidsrc_net.dart';
 
 class Extractor {
   model.Movie? movie;

@@ -47,7 +47,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   VideoPlayerController? _videoPlayerController;
-  SubtitleController? _subtitleController;
+  SubtitleController _subtitleController = SubtitleController(
+    subtitleType: SubtitleType.srt,
+    showSubtitles: false,
+  );
   DurationState _durationState = DurationState();
   int _watchedProgress = 0;
   bool _isSeekedToWatchedProgress = false;
@@ -147,10 +150,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         Uri.parse(_stream!.url!),
         httpHeaders: _stream!.headers ?? {},
       );
-      _subtitleController = SubtitleController(
-        subtitleType: SubtitleType.srt,
-        showSubtitles: false,
-      );
     });
 
     _videoPlayerController!.initialize().then((value) => playerOnInitListener());
@@ -158,6 +157,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   playerOnInitListener() async {
+    await _videoPlayerController!.setClosedCaptionFile(null);
+
     await _videoPlayerController!.play();
 
     Future.delayed(Duration(seconds: 5), () {
@@ -372,7 +373,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     return ScaleTransition(
       scale: _scaleVideoAnimation,
       child: SubtitleWrapper(
-        subtitleController: _subtitleController!,
+        subtitleController: _subtitleController,
         videoPlayerController: _videoPlayerController!,
         subtitleStyle: SubtitleStyle(
           fontSize: 18,

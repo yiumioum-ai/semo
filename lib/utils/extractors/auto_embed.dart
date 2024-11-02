@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'package:semo/models/stream.dart';
 
 class AutoEmbedExtractor {
-  final String baseUrl = 'https://autoembed.cc';
+  final String baseUrl = 'autoembed.cc';
 
   Future<MediaStream> extract(Map<String, dynamic> parameters) async {
     try {
@@ -11,10 +11,18 @@ class AutoEmbedExtractor {
       int? episode = parameters['episode'];
 
       String serverUrl = season == null && episode == null
-          ? '$baseUrl/embed/oplayer.php?id=$tmdbId'
-          : '$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
+          ? 'https://$baseUrl/embed/oplayer.php?id=$tmdbId'
+          : 'https://$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
 
-      String? streamUrl = await findStream(serverUrl);
+      String? streamUrl = await findStream(serverUrl, false);
+
+      if (streamUrl == null) {
+        serverUrl = season == null && episode == null
+            ? 'https://viet.$baseUrl/movie/$tmdbId'
+            : 'https://viet.$baseUrl/tv/$tmdbId/$season/$episode';
+
+        streamUrl = await findStream(serverUrl, true);
+      }
 
       return MediaStream(extractor: 'AutoEmbed', url: streamUrl);
     } catch (err) {
@@ -23,11 +31,15 @@ class AutoEmbedExtractor {
     }
   }
 
-  Future<String?> findStream(String url) async {
+  Future<String?> findStream(String url, bool stable) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        return extractStreamFromScript(response.body);
+        if (stable) {
+          return extractStreamFromStableScript(response.body);
+        } else {
+          return extractStreamFromMultiScript(response.body);
+        }
       } else {
         print('AutoEmbed - Failed to fetch HTML. Status code: ${response.statusCode}');
         return null;
@@ -38,13 +50,25 @@ class AutoEmbedExtractor {
     }
   }
 
-  String? extractStreamFromScript(String scriptContent) {
+  String? extractStreamFromStableScript(String scriptContent) {
+    RegExp regex = RegExp(r'file:\s*"([^"]+)"');
+    Iterable<RegExpMatch> matches = regex.allMatches(scriptContent);
+
+    for (var match in matches) {
+      String? url = match.group(1);
+      return url;
+    }
+
+    return null;
+  }
+
+  String? extractStreamFromMultiScript(String scriptContent) {
     RegExp regex = RegExp(r'"title":\s*"([^"]+)",\s*"file":\s*"(https:\/\/[^"]+)"');
     Iterable<RegExpMatch> matches = regex.allMatches(scriptContent);
 
     for (var match in matches) {
       String language = match.group(1) ?? '';
-      String url = match.group(2) ?? '';
+      String? url = match.group(2);
 
       if (language == 'English') return url;
     }

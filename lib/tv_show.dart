@@ -16,6 +16,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/stream.dart';
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/person_media.dart';
 import 'package:semo/player.dart';
@@ -470,10 +471,10 @@ class _TvShowState extends State<TvShow> {
     }
   }
 
-  getStreamUrl(model.Episode episode) async {
+  getStream(model.Episode episode) async {
     Extractor extractor = Extractor(episode: episode);
-    String? streamUrl = await extractor.getStream();
-    return streamUrl;
+    MediaStream stream = await extractor.getStream();
+    return stream;
   }
 
   getSubtitles(model.Episode episode) async {
@@ -733,18 +734,18 @@ class _TvShowState extends State<TvShow> {
     return InkWell(
       onTap: () async {
         _spinner.show();
-        String? streamUrl = await getStreamUrl(episode);
+        MediaStream stream = await getStream(episode);
         List<File>? subtitles = await getSubtitles(episode);
         _spinner.dismiss();
 
-        if (streamUrl != null) {
+        if (stream.url != null) {
           navigate(
             destination: Player(
               id: _tvShow!.id,
               seasonId: season.id,
               episodeId: episode.id,
               title: episode.name,
-              streamUrl: streamUrl,
+              stream: stream,
               subtitles: subtitles,
               pageType: PageType.tv_shows,
             ),

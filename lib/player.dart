@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
+import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
@@ -18,7 +19,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 class Player extends StatefulWidget {
   int id;
   int? seasonId, episodeId;
-  String title, streamUrl;
+  String title;
+  MediaStream stream;
   List<File>? subtitles;
   PageType pageType;
 
@@ -27,7 +29,7 @@ class Player extends StatefulWidget {
     this.seasonId,
     this.episodeId,
     required this.title,
-    required this.streamUrl,
+    required this.stream,
     this.subtitles,
     required this.pageType,
   });
@@ -38,7 +40,8 @@ class Player extends StatefulWidget {
 
 class _PlayerState extends State<Player> with TickerProviderStateMixin {
   int? _id, _seasonId, _episodeId;
-  String? _title, _streamUrl;
+  String? _title;
+  MediaStream? _stream;
   List<File>? _subtitles;
   PageType? _pageType;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -140,7 +143,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   initializePlayer() async {
     setState(() {
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(_streamUrl!));
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(_stream!.url!),
+        httpHeaders: _stream!.headers ?? {},
+      );
       _subtitleController = SubtitleController(
         subtitleType: SubtitleType.srt,
         showSubtitles: false,
@@ -332,7 +338,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     _seasonId = widget.seasonId;
     _episodeId = widget.episodeId;
     _title = widget.title;
-    _streamUrl = widget.streamUrl;
+    _stream = widget.stream;
     _subtitles = widget.subtitles;
     _pageType = widget.pageType;
 

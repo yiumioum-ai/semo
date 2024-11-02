@@ -1,9 +1,14 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/stream.dart';
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/utils/extractors/autoembed.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
+import 'package:semo/utils/extractors/moviesapi.dart';
+import 'package:semo/utils/extractors/rive.dart';
+import 'package:semo/utils/extractors/vidsrc_net.dart';
 
 class Extractor {
   model.Movie? movie;
@@ -14,15 +19,17 @@ class Extractor {
     this.episode,
   });
 
-  Future<String?> getStream() async {
+  Future<MediaStream> getStream() async {
     List extractors = [
       AutoEmbedExtractor(),
       KissKhExtractor(),
+      MoviesApi(),
+      if (movie != null) Rive(),
     ];
 
     late Map<String, dynamic> parameters;
     Random random = Random();
-    String? streamUrl;
+    MediaStream? stream;
 
     if (movie != null) {
       parameters = {
@@ -38,15 +45,19 @@ class Extractor {
       };
     }
 
-    while (streamUrl == null && extractors.isNotEmpty) {
+    while (stream == null && extractors.isNotEmpty) {
       int randomIndex = random.nextInt(extractors.length);
       var extractor = extractors[randomIndex];
 
-      streamUrl = await extractor.extract(parameters);
+      stream = await extractor.extract(parameters);
 
-      if (streamUrl == null) extractors.removeAt(randomIndex);
+      if (stream!.url == null) {
+        extractors.removeAt(randomIndex);
+        stream = null;
+      }
     }
 
-    return streamUrl;
+    if (!kReleaseMode) print('${stream!.extractor}: ${stream.url}');
+    return stream!;
   }
 }

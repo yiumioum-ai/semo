@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:semo/models/stream.dart';
 import 'package:semo/utils/urls.dart';
 
 class KissKhExtractor {
@@ -56,7 +57,7 @@ class KissKhExtractor {
     return videoLink;
   }
 
-  Future<String?> extract(Map<String, dynamic> parameters) async {
+  Future<MediaStream> extract(Map<String, dynamic> parameters) async {
     String searchQuery = parameters['title'];
     int? season = parameters['season'];
     int episode = parameters['episode'] ?? 1;
@@ -79,7 +80,7 @@ class KissKhExtractor {
 
       if (matchedPost == null) {
         print("No matching post found for '$searchQuery'");
-        return null;
+        return MediaStream(extractor: 'KissKh');
       }
 
       print("Found match: ${matchedPost['title']}");
@@ -89,15 +90,14 @@ class KissKhExtractor {
 
       if (mediaId == null) {
         print("No media id found for '$searchQuery'");
-        return null;
+        return MediaStream(extractor: 'KissKh');
       }
 
       print("Extracting streams for: ${matchedPost['title']}");
       String? streamUrl = await getStreamUrl(mediaId);
 
       if (streamUrl != null && streamUrl.isNotEmpty) {
-        print("KissKh - $streamUrl");
-        return streamUrl;
+        return MediaStream(extractor: 'KissKh', url: streamUrl);
       } else {
         print("KissKh - No streams found for '${matchedPost['title']}'");
       }
@@ -105,6 +105,6 @@ class KissKhExtractor {
       print("KissKh - Error during search and extraction: $e");
     }
 
-    return null;
+    return MediaStream(extractor: 'KissKh');
   }
 }

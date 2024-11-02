@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semo/utils/enums.dart';
+
 class NavigationPage {
   IconData icon;
   String title;

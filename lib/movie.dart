@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/stream.dart';
 import 'package:semo/person_media.dart';
 import 'package:semo/player.dart';
 import 'package:semo/utils/api_keys.dart';
@@ -256,12 +257,12 @@ class _MovieState extends State<Movie> {
     }
   }
 
-  getStreamUrl() async {
+  getStream() async {
     _spinner.show();
     Extractor extractor = Extractor(movie: _movie);
-    String? streamUrl = await extractor.getStream();
+    MediaStream? stream = await extractor.getStream();
     _spinner.dismiss();
-    return streamUrl;
+    return stream;
   }
 
   getSubtitles() async {
@@ -613,16 +614,16 @@ class _MovieState extends State<Movie> {
         ),
         onPressed: () async {
           _spinner.show();
-          String? streamUrl = await getStreamUrl();
+          MediaStream stream = await getStream();
           List<File>? subtitles = await getSubtitles();
           _spinner.dismiss();
 
-          if (streamUrl != null) {
+          if (stream.url != null) {
             navigate(
               destination: Player(
                 id: _movie!.id,
                 title: _movie!.title,
-                streamUrl: streamUrl,
+                stream: stream,
                 subtitles: subtitles,
                 pageType: PageType.movies,
               ),

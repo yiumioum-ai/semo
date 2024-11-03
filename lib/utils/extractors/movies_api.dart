@@ -14,7 +14,7 @@ class MoviesApi {
         params['episode'],
       );
     } catch (e) {
-      print('Extraction error: $e');
+      print('MoviesApi - Extraction error: $e');
       return null;
     }
   }
@@ -81,7 +81,7 @@ class MoviesApi {
         }
       }
     } catch (e) {
-      print('Error fetching stream: $e');
+      print('MoviesApi - Error fetching stream: $e');
     }
     return MediaStream(extractor: 'MoviesApi');
   }

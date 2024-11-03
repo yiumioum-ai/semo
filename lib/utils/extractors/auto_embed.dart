@@ -14,15 +14,7 @@ class AutoEmbedExtractor {
           ? 'https://$baseUrl/embed/oplayer.php?id=$tmdbId'
           : 'https://$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
 
-      String? streamUrl = await findStream(serverUrl, false);
-
-      if (streamUrl == null) {
-        serverUrl = season == null && episode == null
-            ? 'https://viet.$baseUrl/movie/$tmdbId'
-            : 'https://viet.$baseUrl/tv/$tmdbId/$season/$episode';
-
-        streamUrl = await findStream(serverUrl, true);
-      }
+      String? streamUrl = await findStream(serverUrl);
 
       return MediaStream(extractor: 'AutoEmbed', url: streamUrl);
     } catch (err) {
@@ -31,15 +23,11 @@ class AutoEmbedExtractor {
     }
   }
 
-  Future<String?> findStream(String url, bool stable) async {
+  Future<String?> findStream(String url) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
-        if (stable) {
-          return extractStreamFromStableScript(response.body);
-        } else {
-          return extractStreamFromMultiScript(response.body);
-        }
+        return extractStreamFromMultiScript(response.body);
       } else {
         print('AutoEmbed - Failed to fetch HTML. Status code: ${response.statusCode}');
         return null;
@@ -48,18 +36,6 @@ class AutoEmbedExtractor {
       print('AutoEmbed - Error in findStream: $err');
       return null;
     }
-  }
-
-  String? extractStreamFromStableScript(String scriptContent) {
-    RegExp regex = RegExp(r'file:\s*"([^"]+)"');
-    Iterable<RegExpMatch> matches = regex.allMatches(scriptContent);
-
-    for (var match in matches) {
-      String? url = match.group(1);
-      return url;
-    }
-
-    return null;
   }
 
   String? extractStreamFromMultiScript(String scriptContent) {

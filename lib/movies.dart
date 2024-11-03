@@ -199,11 +199,7 @@ class _MoviesState extends State<Movies> {
       rawRecentlyWatched = sortRecentlyWatched(rawRecentlyWatched);
 
       for (String id in rawRecentlyWatched.keys) getMovieDetails(int.parse(id));
-      setState(() {
-        _recentlyWatched.clear();
-        _rawRecentlyWatched = {};
-        _rawRecentlyWatched = rawRecentlyWatched;
-      });
+      _rawRecentlyWatched = rawRecentlyWatched;
     }, onError: (e) {
       print("Error getting recently watched: $e");
       ScaffoldMessenger.of(context).showSnackBar(

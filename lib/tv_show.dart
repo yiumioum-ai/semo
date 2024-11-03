@@ -68,8 +68,17 @@ class _TvShowState extends State<TvShow> {
         context,
         pageTransition,
       ).then((parameters) async {
-        await Future.delayed(Duration(seconds: 1));
-        if (parameters != null) {
+        if (parameters['error'] != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Playback error. Try again',
+                style: Theme.of(context).textTheme.displayMedium,
+              ),
+              backgroundColor: Theme.of(context).cardColor,
+            ),
+          );
+        } else if (parameters['episodeId'] != null && parameters['progress'] != null) {
           refresh(
             episodeId: parameters['episodeId'],
             watchedProgress: parameters['progress'],
@@ -269,6 +278,8 @@ class _TvShowState extends State<TvShow> {
       });
 
       if (recentlyWatched.keys.contains('${_tvShow!.id}')) {
+        recentlyWatched['${_tvShow!.id}']!.remove('visibleInMenu');
+
         Map<String, Map<String, dynamic>> seasons = ((recentlyWatched['${_tvShow!.id}'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
           return MapEntry(key, Map<String, dynamic>.from(value));
         });

@@ -21,7 +21,7 @@ class KissKhExtractor {
         'link': '$baseUrl/api/DramaList/Drama/${item['id']}?isq=false',
       }).toList();
     } else {
-      throw Exception('Failed to load search results');
+      throw Exception('KissKh - Failed to load search results');
     }
   }
 
@@ -42,7 +42,7 @@ class KissKhExtractor {
         }
       }
     } else {
-      throw Exception('Failed to load media id');
+      throw Exception('KissKh - Failed to load media id');
     }
 
     return null;
@@ -67,7 +67,6 @@ class KissKhExtractor {
     }
 
     try {
-      print("Searching for media: $searchQuery");
       final List<Map<String, dynamic>?> searchResults = await search(searchQuery);
 
       final matchedPost = searchResults.firstWhere((post) {
@@ -79,21 +78,17 @@ class KissKhExtractor {
       });
 
       if (matchedPost == null) {
-        print("No matching post found for '$searchQuery'");
+        print("KissKh - No matching post found for '$searchQuery'");
         return MediaStream(extractor: 'KissKh');
       }
 
-      print("Found match: ${matchedPost['title']}");
-
-      print("Extracting media id for: ${matchedPost['title']}");
       final int? mediaId = await getMediaId(matchedPost['id'], episode);
 
       if (mediaId == null) {
-        print("No media id found for '$searchQuery'");
+        print("KissKh - No media id found for '$searchQuery'");
         return MediaStream(extractor: 'KissKh');
       }
 
-      print("Extracting streams for: ${matchedPost['title']}");
       String? streamUrl = await getStreamUrl(mediaId);
 
       if (streamUrl != null && streamUrl.isNotEmpty) {

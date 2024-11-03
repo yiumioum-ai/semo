@@ -69,7 +69,19 @@ class _MovieState extends State<Movie> {
       ).then((parameters) async {
         await Future.delayed(Duration(seconds: 1));
         if (parameters != null) {
-          refresh(watchedProgress: parameters['progress']);
+          if (parameters['error'] != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Playback error. Try again',
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+                backgroundColor: Theme.of(context).cardColor,
+              ),
+            );
+          } else if (parameters['progress'] != null) {
+            refresh(watchedProgress: parameters['progress']);
+          }
         }
       });
     }

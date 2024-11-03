@@ -15,7 +15,7 @@ class Rive {
       );
       return MediaStream(extractor: 'Rive', url: link);
     } catch (e) {
-      print('Extraction error: $e');
+      print('Rive - Extraction error: $e');
       return MediaStream(extractor: 'Rive');
     }
   }
@@ -44,13 +44,12 @@ class Rive {
           final data = json.decode(res.body);
           if (data['data'] != null && data['data']['sources'] != null) {
             final source = data['data']['sources'][0];
-            print(data['data']['sources']);
             final link = source['url'];
             return link;
           }
         }
       } catch (e) {
-        print('Error fetching from server $server: $e');
+        print('Rive - Error fetching from server $server: $e');
       }
     }
     return null;

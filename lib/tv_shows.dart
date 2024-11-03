@@ -20,6 +20,7 @@ import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -31,6 +32,7 @@ class TvShows extends StatefulWidget {
 
 class _TvShowsState extends State<TvShows> {
   List<model.TvShow> _onTheAir = [], _recentlyWatched = [];
+  Map<String, Map<String, dynamic>>? _rawRecentlyWatched;
   CarouselSliderController _onTheAirController = CarouselSliderController();
   int _currentOnTheAirIndex = 0;
   List<model.Genre> _genres = [];
@@ -178,7 +180,11 @@ class _TvShowsState extends State<TvShows> {
         return MapEntry(key, Map<String, dynamic>.from(value));
       });
 
-      for (String id in rawRecentlyWatched.keys) getTvShowsDetails(int.parse(id));
+      for (String id in rawRecentlyWatched.keys) {
+        if (rawRecentlyWatched[id]!['visibleInMenu'] != false) getTvShowsDetails(int.parse(id));
+      }
+
+      _rawRecentlyWatched = rawRecentlyWatched;
     }, onError: (e) {
       print("Error getting recently watched: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -259,6 +265,21 @@ class _TvShowsState extends State<TvShows> {
         ),
       );
     }
+  }
+
+  removeFromRecentlyWatched(model.TvShow tvShow) async {
+    Map<String, Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
+    rawRecentlyWatched['${tvShow.id}']!['visibleInMenu'] = false;
+
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
+    await user.set({
+      'tv_shows': rawRecentlyWatched,
+    }, SetOptions(mergeFields: ['tv_shows']));
+
+    setState(() {
+      _recentlyWatched.remove(tvShow);
+      _rawRecentlyWatched = rawRecentlyWatched;
+    });
   }
 
   @override
@@ -475,48 +496,64 @@ class _TvShowsState extends State<TvShows> {
               );
             },
             imageBuilder: (context, image) {
-              return Container(
-                width: MediaQuery.of(context).size.width * 0.3,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: image,
-                    fit: BoxFit.cover,
+              return PopupMenuContainer<String>(
+                items: recentlyWatched ? [
+                  PopupMenuItem(
+                    value: 'remove',
+                    child: Text(
+                      'Remove',
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
                   ),
-                ),
-                child: InkWell(
-                  customBorder: RoundedRectangleBorder(
+                ] : null,
+                onItemSelected: (action) async {
+                  if (action != null) {
+                    if (action == 'remove') removeFromRecentlyWatched(tvShow);
+                  }
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: image,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  onTap: () => navigate(destination: TvShow(tvShow)),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 5,
-                              horizontal: 8,
+                  child: InkWell(
+                    customBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onTap: () => navigate(destination: TvShow(tvShow)),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Spacer(),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 8,
+                              ),
+                              margin: EdgeInsets.only(
+                                top: 5,
+                                right: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              child: Text(
+                                '${tvShow.voteAverage}',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
                             ),
-                            margin: EdgeInsets.only(
-                              top: 5,
-                              right: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            child: Text(
-                              '${tvShow.voteAverage}',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Spacer(),
-                    ],
+                          ],
+                        ),
+                        Spacer(),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -645,6 +682,7 @@ class _TvShowsState extends State<TvShows> {
             _isLoading = true;
             _onTheAir = [];
             _recentlyWatched = [];
+            _rawRecentlyWatched = {};
             _genres = [];
             _popularResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
             _topRatedResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);

@@ -60,7 +60,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   int _selectedSubtitle = 0;
   late AnimationController _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = const AlwaysStoppedAnimation<double>(1.0);
-  double? _targetVideoScale;
   bool _isZoomedIn = false;
 
   double _lastZoomGestureScale = 1.0;
@@ -87,10 +86,12 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
             setState(() => _watchedProgress = movie['progress']);
           }
         } else {
-          recentlyWatched['$_id'] = {
-            if (_videoPlayerController != null) 'progress': _durationState.progress.inSeconds,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          };
+          if (_durationState.total.inSeconds > 0) {
+            recentlyWatched['$_id'] = {
+              'progress': _durationState.progress.inSeconds,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            };
+          }
         }
       } else {
         recentlyWatched = ((data['tv_shows'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
@@ -98,6 +99,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
         });
 
         if (recentlyWatched.keys.contains('$_id')) {
+          if (_durationState.total.inSeconds > 0) {
+            recentlyWatched['$_id']['visibleInMenu'] = true;
+          }
+
           Map<String, dynamic> seasons = recentlyWatched['$_id'] as Map<String, dynamic>;
 
           if (seasons.containsKey('$_seasonId')) {
@@ -113,28 +118,35 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                 setState(() => _watchedProgress = episode['progress']);
               }
             } else {
-              episodes['$_episodeId'] = {
-                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
-              };
+              if (_durationState.total.inSeconds > 0) {
+                episodes['$_episodeId'] = {
+                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'timestamp': DateTime.now().millisecondsSinceEpoch,
+                };
+              }
             }
           } else {
-            seasons['$_seasonId'] = {
-              '$_episodeId': {
-                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
+            if (_durationState.total.inSeconds > 0) {
+              seasons['$_seasonId'] = {
+                '$_episodeId': {
+                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'timestamp': DateTime.now().millisecondsSinceEpoch,
+                },
+              };
+            }
+          }
+        } else {
+          if (_durationState.total.inSeconds > 0) {
+            recentlyWatched['$_id'] = {
+              'visibleInMenu': true,
+              '$_seasonId': {
+                '$_episodeId': {
+                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'timestamp': DateTime.now().millisecondsSinceEpoch,
+                },
               },
             };
           }
-        } else {
-          recentlyWatched['$_id'] = {
-            '$_seasonId': {
-              '$_episodeId': {
-                'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
-              },
-            },
-          };
         }
       }
 
@@ -152,12 +164,31 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       );
     });
 
-    _videoPlayerController!.initialize().then((value) => playerOnInitListener());
+    _videoPlayerController!.initialize()
+        .then((value) => playerInitListener())
+        .catchError((error) => Navigator.pop(context, {'error': error}));
     _videoPlayerController!.addListener(playerListener);
   }
 
-  playerOnInitListener() async {
-    await _videoPlayerController!.setClosedCaptionFile(null);
+  setTargetNativeScale(double newValue) {
+    if (!newValue.isFinite) return;
+    setState(() {
+      _scaleVideoAnimation = Tween<double>(begin: 1.0, end: newValue).animate(
+        CurvedAnimation(
+          parent: _scaleVideoAnimationController,
+          curve: Curves.easeInOut,
+        ),
+      );
+    });
+  }
+
+  playerInitListener() async {
+    final screenSize = MediaQuery.of(context).size;
+    final videoSize = _videoPlayerController!.value.size;
+    if (videoSize.width > 0) {
+      final newTargetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
+      setTargetNativeScale(newTargetScale);
+    }
 
     await _videoPlayerController!.play();
 
@@ -165,18 +196,25 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       if (mounted) setState(() => _showControls = false);
     });
 
-    Timer.periodic(Duration(seconds: 30), (timer) {
+    Timer.periodic(Duration(seconds: 15), (timer) {
       if (mounted) updateRecentlyWatched();
     });
   }
 
   playerListener() async {
-    await Future.delayed(Duration(milliseconds: 500));
+    bool isPlaying = _videoPlayerController!.value.isPlaying;
+    setState(() => _isPlaying = isPlaying);
+
+    await Future.delayed(Duration(milliseconds: 1000));
+
+    if (_videoPlayerController!.value.hasError) {
+      Navigator.pop(context, {'error': _videoPlayerController!.value.errorDescription});
+      return;
+    }
 
     Duration progress = _videoPlayerController!.value.position;
     Duration total = _videoPlayerController!.value.duration;
     bool isBuffering = false;
-    bool isPlaying = _videoPlayerController!.value.isPlaying;
 
     if (_videoPlayerController!.value.isBuffering) {
       isBuffering = true;
@@ -197,7 +235,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           total: total,
           isBuffering: isBuffering,
         );
-        _isPlaying = isPlaying;
       });
     }
 
@@ -316,23 +353,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     );
   }
 
-  void setTargetNativeScale(double newValue) {
-    if (!newValue.isFinite) {
-      return;
-    }
-    _scaleVideoAnimation =
-        Tween<double>(begin: 1.0, end: newValue).animate(CurvedAnimation(
-          parent: _scaleVideoAnimationController,
-          curve: Curves.easeInOut,
-        ));
-
-    if (_targetVideoScale == null) {
-      _scaleVideoAnimationController.forward();
-    }
-    _targetVideoScale = newValue;
-  }
-
-
   @override
   void initState() {
     _id = widget.id;
@@ -370,20 +390,28 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   Widget Player() {
-    return ScaleTransition(
-      scale: _scaleVideoAnimation,
-      child: SubtitleWrapper(
-        subtitleController: _subtitleController,
-        videoPlayerController: _videoPlayerController!,
-        subtitleStyle: SubtitleStyle(
-          fontSize: 18,
-          hasBorder: true,
-          borderStyle: SubtitleBorderStyle(
-            strokeWidth: 5,
-            color: Colors.white,
+    return SubtitleWrapper(
+      subtitleController: _subtitleController,
+      videoPlayerController: _videoPlayerController!,
+      subtitleStyle: SubtitleStyle(
+        fontSize: 18,
+        hasBorder: true,
+        borderStyle: SubtitleBorderStyle(
+          strokeWidth: 5,
+          color: Colors.white,
+        ),
+      ),
+      videoChild: ScaleTransition(
+        scale: _scaleVideoAnimation,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: _videoPlayerController!.value.aspectRatio,
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: VideoPlayer(_videoPlayerController!),
+            ),
           ),
         ),
-        videoChild: VideoPlayer(_videoPlayerController!),
       ),
     );
   }
@@ -441,9 +469,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                         onPressed: () {
                           setState(() {
                             if (_isZoomedIn) {
-                              _scaleVideoAnimationController.forward(); // Zoom out
+                              _scaleVideoAnimationController.reverse(); // Zoom out
                             } else {
-                              _scaleVideoAnimationController.reverse(); // Zoom in
+                              _scaleVideoAnimationController.forward(); // Zoom in
                             }
                             _isZoomedIn = !_isZoomedIn; // Toggle zoom state
                             _lastZoomGestureScale = 1.0;
@@ -530,15 +558,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if (_videoPlayerController != null) {
-      final screenSize = MediaQuery.of(context).size;
-      final videoSize = _videoPlayerController!.value.size;
-      if (videoSize.width > 0) {
-        final newTargetScale = screenSize.width / (videoSize.width * screenSize.height / videoSize.height);
-        setTargetNativeScale(newTargetScale);
-      }
-    }
-
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {

@@ -213,7 +213,9 @@ class _SearchState extends State<Search> {
 
   AppBar SearchAppBar() {
     return AppBar(
-      leading: BackButton(),
+      leading: BackButton(
+        onPressed: () => Navigator.pop(context, 'refresh'),
+      ),
       title: TextField(
         controller: _searchController,
         readOnly: _isSearched,

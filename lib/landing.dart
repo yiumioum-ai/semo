@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:semo/firebase_options.dart';
 import 'package:semo/fragments.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:video_player/video_player.dart';
@@ -44,11 +42,7 @@ class _LandingState extends State<Landing> {
     if (kIsWeb) {
       instance = GoogleSignIn(clientId: '373107998814-pd40tjns96ae7b5ncjb03gqsr5bsk59e.apps.googleusercontent.com');
     } else {
-      if (Platform.isIOS) {
-        instance = GoogleSignIn(clientId: '373107998814-9lr9ne6v59js6hjgkcaijvc37lta56qn.apps.googleusercontent.com');
-      } else {
-        instance = GoogleSignIn();
-      }
+      instance = GoogleSignIn();
     }
 
     GoogleSignInAccount? googleUser = await instance.signIn();
@@ -68,6 +62,9 @@ class _LandingState extends State<Landing> {
       navigate(destination: Fragments());
     } catch (e) {
       print(e);
+
+      _spinner!.dismiss();
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

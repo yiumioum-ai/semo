@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "373107998814",
     "project_id": "semo-5557f",
-    "storage_bucket": "semo-5557f.appspot.com"
+    "storage_bucket": "semo-5557f.firebasestorage.app"
   },
   "client": [
     {
@@ -47,7 +47,7 @@
               "client_type": 3
             },
             {
-              "client_id": "373107998814-sd19gobakp05i2e9mm9hpk0lg4uecr84.apps.googleusercontent.com",
+              "client_id": "373107998814-9lr9ne6v59js6hjgkcaijvc37lta56qn.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "net.examnet.semo"

@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '373107998814',
     projectId: 'semo-5557f',
     authDomain: 'semo-5557f.firebaseapp.com',
-    storageBucket: 'semo-5557f.appspot.com',
+    storageBucket: 'semo-5557f.firebasestorage.app',
     measurementId: 'G-BQNWRHH5ZC',
   );
 
@@ -61,7 +61,7 @@ class DefaultFirebaseOptions {
     appId: '1:373107998814:android:a963cce13fa1e1521774cf',
     messagingSenderId: '373107998814',
     projectId: 'semo-5557f',
-    storageBucket: 'semo-5557f.appspot.com',
+    storageBucket: 'semo-5557f.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -69,7 +69,10 @@ class DefaultFirebaseOptions {
     appId: '1:373107998814:ios:5c6b968e1a1314291774cf',
     messagingSenderId: '373107998814',
     projectId: 'semo-5557f',
-    storageBucket: 'semo-5557f.appspot.com',
+    storageBucket: 'semo-5557f.firebasestorage.app',
+    androidClientId: '373107998814-ab1ec65gne4rsfg6n7e5pnkt6ss184vm.apps.googleusercontent.com',
+    iosClientId: '373107998814-9lr9ne6v59js6hjgkcaijvc37lta56qn.apps.googleusercontent.com',
     iosBundleId: 'net.examnet.semo',
   );
+
 }

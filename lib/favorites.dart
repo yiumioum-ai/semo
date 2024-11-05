@@ -63,6 +63,7 @@ class _FavoritesState extends State<Favorites> {
 
   Future<void> getFavorites() async {
     _spinner!.show();
+
     final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
       Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
@@ -81,6 +82,7 @@ class _FavoritesState extends State<Favorites> {
         ),
       );
     });
+
     _spinner!.dismiss();
   }
 

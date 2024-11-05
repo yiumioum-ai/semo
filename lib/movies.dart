@@ -65,6 +65,7 @@ class _MoviesState extends State<Movies> {
         ),
       ).then((action) async {
         await Future.delayed(Duration(seconds: 1));
+        setState(() => _recentlyWatched.clear());
         if (action == 'refresh') getRecentlyWatched();
       });
     }
@@ -199,7 +200,7 @@ class _MoviesState extends State<Movies> {
       rawRecentlyWatched = sortRecentlyWatched(rawRecentlyWatched);
 
       for (String id in rawRecentlyWatched.keys) getMovieDetails(int.parse(id));
-      _rawRecentlyWatched = rawRecentlyWatched;
+      setState(() => _rawRecentlyWatched = rawRecentlyWatched);
     }, onError: (e) {
       print("Error getting recently watched: $e");
       ScaffoldMessenger.of(context).showSnackBar(

@@ -18,19 +18,13 @@ class Landing extends StatefulWidget {
 
 class _LandingState extends State<Landing> {
   VideoPlayerController? _controller;
-  bool _visible = false;
   Spinner? _spinner;
 
   initializeVideo() {
-    _controller = VideoPlayerController.asset('assets/cover.mp4');
+    _controller = VideoPlayerController.asset('assets/cover_portrait.mp4');
     _controller!.initialize().then((_) {
+      _controller!.play();
       _controller!.setLooping(true);
-      Timer(Duration(milliseconds: 100), () {
-        setState(() {
-          _controller!.play();
-          _visible = true;
-        });
-      });
     });
   }
 
@@ -90,12 +84,14 @@ class _LandingState extends State<Landing> {
   @override
   void initState() {
     super.initState();
+
+    initializeVideo();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Landing',
       );
-      initializeVideo();
     });
   }
 
@@ -107,16 +103,6 @@ class _LandingState extends State<Landing> {
       _controller!.dispose();
       _controller = null;
     }
-  }
-
-  Widget VideoBackground() {
-    return AnimatedOpacity(
-      opacity: _visible ? 1.0 : 0.0,
-      duration: Duration(
-        milliseconds: 1000,
-      ),
-      child: VideoPlayer(_controller!),
-    );
   }
 
   Widget BackgroundTint() {
@@ -248,7 +234,7 @@ class _LandingState extends State<Landing> {
     return Scaffold(
       body: _controller != null ? Stack(
         children: [
-          VideoBackground(),
+          VideoPlayer(_controller!),
           BackgroundTint(),
           Content(),
         ],

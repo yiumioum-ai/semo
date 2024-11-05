@@ -184,7 +184,7 @@ class _TvShowsState extends State<TvShows> {
         if (rawRecentlyWatched[id]!['visibleInMenu'] != false) getTvShowsDetails(int.parse(id));
       }
 
-      _rawRecentlyWatched = rawRecentlyWatched;
+      setState(() => _rawRecentlyWatched = rawRecentlyWatched);
     }, onError: (e) {
       print("Error getting recently watched: $e");
       ScaffoldMessenger.of(context).showSnackBar(

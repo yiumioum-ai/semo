@@ -1,6 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 class Template extends StatefulWidget {
   @override
@@ -10,9 +10,9 @@ class Template extends StatefulWidget {
 class _TemplateState extends State<Template> {
 
   navigate({required Widget destination, bool replace = false}) async {
-    PageTransition pageTransition = PageTransition(
-      type: PageTransitionType.rightToLeft,
-      child: destination,
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
     );
 
     if (replace) {

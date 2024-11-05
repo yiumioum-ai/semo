@@ -4,9 +4,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/fragments.dart';
 import 'package:semo/landing.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 class Splash extends StatefulWidget {
   @override
@@ -24,14 +24,16 @@ class _SplashState extends State<Splash> {
   }
 
   navigate({required Widget destination}) async {
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
+    );
+
     Future.delayed(Duration(seconds: 3), () async {
       if (mounted) {
         await Navigator.pushReplacement(
           context,
-          PageTransition(
-            type: PageTransitionType.rightToLeft,
-            child: destination,
-          ),
+          pageTransition,
         );
       }
     });

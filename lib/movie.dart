@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/movie.dart' as model;
@@ -26,6 +25,7 @@ import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 //ignore: must_be_immutable
@@ -52,9 +52,9 @@ class _MovieState extends State<Movie> {
   bool _isLoading = true;
 
   navigate({required Widget destination, bool replace = false}) async {
-    PageTransition pageTransition = PageTransition(
-      type: PageTransitionType.rightToLeft,
-      child: destination,
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
     );
 
     if (replace) {

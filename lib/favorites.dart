@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/movie.dart';
@@ -20,6 +19,7 @@ import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
 class Favorites extends StatefulWidget {
@@ -42,9 +42,9 @@ class _FavoritesState extends State<Favorites> {
   List<int> _rawFavorites = [];
 
   navigate({required Widget destination, bool replace = false}) async {
-    PageTransition pageTransition = PageTransition(
-      type: PageTransitionType.rightToLeft,
-      child: destination,
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
     );
     if (replace) {
       await Navigator.pushReplacement(

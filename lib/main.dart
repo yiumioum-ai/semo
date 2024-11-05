@@ -123,6 +123,7 @@ class Semo extends StatelessWidget {
         tabBarTheme: TabBarTheme(
           indicatorColor: Color(0xFFAB261D),
           labelColor: Color(0xFFAB261D),
+          dividerColor: Color(0xFF250604),
           unselectedLabelColor: Colors.white54,
         ),
         switchTheme: SwitchThemeData(

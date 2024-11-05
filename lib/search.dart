@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/movie.dart';
@@ -20,6 +19,7 @@ import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
 class Search extends StatefulWidget {
@@ -44,21 +44,20 @@ class _SearchState extends State<Search> {
   FirebaseAuth _auth = FirebaseAuth.instance;
 
   navigate({required Widget destination, bool replace = false}) async {
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
+    );
+
     if (replace) {
       await Navigator.pushReplacement(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     } else {
       await Navigator.push(
         context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
+        pageTransition,
       );
     }
   }

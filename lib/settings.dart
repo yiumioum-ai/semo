@@ -4,8 +4,8 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/landing.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 class Settings extends StatefulWidget {
   @override
@@ -14,9 +14,9 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   navigate({required Widget destination, bool replace = false}) async {
-    PageTransition pageTransition = PageTransition(
-      type: PageTransitionType.rightToLeft,
-      child: destination,
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
     );
 
     if (replace) {
@@ -42,6 +42,39 @@ class _SettingsState extends State<Settings> {
     });
   }
 
+  SectionTitle(String title) {
+    return Text(
+      'Playback',
+      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+        fontSize: 20,
+        color: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+
+  SettingsTile SectionTile({
+    required String title,
+    String description = '',
+    required IconData icon,
+    Widget? trailing,
+    required Function(BuildContext context) onPressed,
+  }) {
+    return SettingsTile(
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.displayMedium,
+      ),
+      description: Text(
+        description,
+        style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+      ),
+      leading: Icon(icon),
+      trailing: trailing,
+      backgroundColor: Platform.isIOS ? Theme.of(context).cardColor: Colors.transparent,
+      onPressed: onPressed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     SettingsThemeData settingsThemeData = SettingsThemeData(
@@ -50,144 +83,83 @@ class _SettingsState extends State<Settings> {
     );
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SettingsList(
         lightTheme: settingsThemeData,
         darkTheme: settingsThemeData,
         sections: [
           SettingsSection(
-            title: Text(
-              'Playback',
-              style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                fontSize: 20,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
+            title: SectionTitle('Playback'),
             tiles: [
-              SettingsTile(
-                title: Text(
-                  'Server',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                description: Text(
-                  'Select a server that works best for you',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.dns_outlined),
+              SectionTile(
+                title: 'Server',
+                description: 'Select a server that works best for you',
+                icon: Icons.dns_outlined,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Subtitles',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                description: Text(
-                  'Customize the subtitles style to fit your preference',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.subtitles_outlined),
+              SectionTile(
+                title: 'Subtitles',
+                description: 'Customize the subtitles style to fit your preference',
+                icon: Icons.subtitles_outlined,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Seek duration',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                description: Text(
-                  'Adjust how long the seek forward/backward duration is',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.update),
+              SectionTile(
+                title: 'Seek duration',
+                description: 'Adjust how long the seek forward/backward duration is',
+                icon: Icons.update,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Autoplay next episode',
-                  style: Theme.of(context).textTheme.displayMedium,
+              SectionTile(
+                title: 'Autoplay next episode',
+                description: 'Automatically plays the next episode',
+                icon: Icons.skip_next,
+                trailing: Switch(
+                  value: true,
+                  onChanged: (isSelected) {},
                 ),
-                description: Text(
-                  'Automatically plays the next episode',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.skip_next),
-                trailing: Switch(value: true, onChanged: (isSelected) {}),
                 onPressed: (context) async {},
               ),
             ],
           ),
           SettingsSection(
-            title: Text(
-              'App',
-              style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                fontSize: 20,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
+            title: SectionTitle('App'),
             tiles: [
-              SettingsTile(
-                title: Text(
-                  'About',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                leading: Icon(Icons.info_outline_rounded),
+              SectionTile(
+                title: 'About',
+                icon: Icons.info_outline_rounded,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Open source licenses',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                leading: Icon(Icons.description_outlined),
+              SectionTile(
+                title: 'Open source licenses',
+                icon: Icons.description_outlined,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
             ],
           ),
           SettingsSection(
-            title: Text(
-              'Other',
-              style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                fontSize: 20,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
+            title: SectionTitle('Other'),
             tiles: [
-              SettingsTile(
-                title: Text(
-                  'Clear recent searches',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                description: Text(
-                  'Deletes all the recent search queries',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.delete_outline),
+              SectionTile(
+                title: 'Clear recent searches',
+                description: 'Deletes all the recent search queries',
+                icon: Icons.delete_outline,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Clear recently watched',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                description: Text(
-                  'Deletes all the recently watched movies and TV shows',
-                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-                ),
-                leading: Icon(Icons.delete_outline),
+              SectionTile(
+                title: 'Clear recently watched',
+                description: 'Deletes all the progress of recently watched movies and TV shows',
+                icon: Icons.delete_outline,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {},
               ),
-              SettingsTile(
-                title: Text(
-                  'Sign out',
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                leading: Icon(Icons.exit_to_app),
+              SectionTile(
+                title: 'Sign out',
+                icon: Icons.exit_to_app,
                 trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
                 onPressed: (context) async {
                   await FirebaseAuth.instance.signOut();

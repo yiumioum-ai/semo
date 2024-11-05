@@ -6,12 +6,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/duration_state.dart';
 import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -61,8 +61,26 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   late AnimationController _scaleVideoAnimationController;
   Animation<double> _scaleVideoAnimation = const AlwaysStoppedAnimation<double>(1.0);
   bool _isZoomedIn = false;
-
   double _lastZoomGestureScale = 1.0;
+
+  navigate({required Widget destination, bool replace = false}) async {
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
+    );
+
+    if (replace) {
+      await Navigator.pushReplacement(
+        context,
+        pageTransition,
+      );
+    } else {
+      await Navigator.push(
+        context,
+        pageTransition,
+      );
+    }
+  }
 
   updateRecentlyWatched() async {
     final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
@@ -283,26 +301,6 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
-  }
-
-  navigate({required Widget destination, bool replace = false}) async {
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
-      );
-    } else {
-      await Navigator.push(
-        context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
-      );
-    }
   }
 
   setSubtitle(int index) async {

@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/favorites.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
@@ -9,6 +8,7 @@ import 'package:semo/search.dart';
 import 'package:semo/settings.dart';
 import 'package:semo/tv_shows.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
 class Fragments extends StatefulWidget {
@@ -27,6 +27,25 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
   late int _selectedPageIndex;
   List<NavigationPage> _navigationPages = [];
   late TabController _tabController;
+
+  navigate({required Widget destination, bool replace = false}) async {
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
+    );
+
+    if (replace) {
+      await Navigator.pushReplacement(
+        context,
+        pageTransition,
+      );
+    } else {
+      await Navigator.push(
+        context,
+        pageTransition,
+      );
+    }
+  }
 
   checkUserSession() async {
     await FirebaseAuth.instance.authStateChanges().listen((User? user) {
@@ -76,26 +95,6 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         ),
       ];
     });
-  }
-
-  navigate({required Widget destination, bool replace = false}) async {
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
-      );
-    } else {
-      await Navigator.push(
-        context,
-        PageTransition(
-          type: PageTransitionType.rightToLeft,
-          child: destination,
-        ),
-      );
-    }
   }
 
   @override

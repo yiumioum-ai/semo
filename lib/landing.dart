@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:semo/fragments.dart';
 import 'package:semo/utils/spinner.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:video_player/video_player.dart';
 
 class Landing extends StatefulWidget {
@@ -70,12 +70,14 @@ class _LandingState extends State<Landing> {
   }
 
   navigate({required Widget destination}) async {
+    SwipeablePageRoute pageTransition = SwipeablePageRoute(
+      canOnlySwipeFromEdge: true,
+      builder: (BuildContext context) => destination,
+    );
+
     await Navigator.pushReplacement(
       context,
-      PageTransition(
-        type: PageTransitionType.rightToLeft,
-        child: destination,
-      ),
+      pageTransition,
     );
   }
 

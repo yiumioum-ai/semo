@@ -23,7 +23,7 @@ class Extractor {
       AutoEmbedExtractor(),
       KissKhExtractor(),
       MoviesApi(),
-      if (movie != null) Rive(),
+      Rive(),
     ];
 
     late Map<String, dynamic> parameters;

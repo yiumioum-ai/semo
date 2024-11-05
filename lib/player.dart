@@ -465,13 +465,15 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                       IconButton(
                         icon: Icon(!_isZoomedIn ? Icons.zoom_out_map : Icons.zoom_in_map),
                         onPressed: () => setState(() {
-                          if (_isZoomedIn) {
-                            _scaleVideoAnimationController.reverse();
-                          } else {
-                            _scaleVideoAnimationController.forward();
+                          if (_durationState.total.inSeconds > 0) {
+                            if (_isZoomedIn) {
+                              _scaleVideoAnimationController.reverse();
+                            } else {
+                              _scaleVideoAnimationController.forward();
+                            }
+                            _isZoomedIn = !_isZoomedIn;
+                            _lastZoomGestureScale = 1.0;
                           }
-                          _isZoomedIn = !_isZoomedIn;
-                          _lastZoomGestureScale = 1.0;
                         }),
                       ),
                     ],
@@ -557,7 +559,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
-          if (_durationState.total.inSeconds != 0) {
+          if (_durationState.total.inSeconds > 0) {
             if (_showControls) {
               setState(() => _showControls = false);
             } else {
@@ -574,35 +576,39 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
           _lastZoomGestureScale = details.scale;
         },
         onScaleEnd: (details) {
-          if (_lastZoomGestureScale < 1.0) {
-            setState(() {
-              _isZoomedIn = true;
-              _scaleVideoAnimationController.forward();
-            });
-          } else if (_lastZoomGestureScale > 1.0) {
-            setState(() {
-              _isZoomedIn = false;
-              _scaleVideoAnimationController.reverse();
-            });
+          if (_durationState.total.inSeconds > 0) {
+            if (_lastZoomGestureScale < 1.0) {
+              setState(() {
+                _isZoomedIn = true;
+                _scaleVideoAnimationController.forward();
+              });
+            } else if (_lastZoomGestureScale > 1.0) {
+              setState(() {
+                _isZoomedIn = false;
+                _scaleVideoAnimationController.reverse();
+              });
+            }
+            _lastZoomGestureScale = 1.0;
           }
-          _lastZoomGestureScale = 1.0;
         },
         onDoubleTapDown: (details) async {
-          setState(() => _showControls = true);
-          Future.delayed(Duration(seconds: 3), () {
-            if (mounted && _isPlaying) {
-              setState(() => _showControls = false);
-            }
-          });
+          if (_durationState.total.inSeconds > 0) {
+            setState(() => _showControls = true);
+            Future.delayed(Duration(seconds: 3), () {
+              if (mounted && _isPlaying) {
+                setState(() => _showControls = false);
+              }
+            });
 
-          Future.delayed(Duration(milliseconds: 500), () async {
-            var position = details.globalPosition;
-            if (position.dx < MediaQuery.of(context).size.width / 2) {
-              await seekBack();
-            } else {
-              await seekForward();
-            }
-          });
+            Future.delayed(Duration(milliseconds: 500), () async {
+              var position = details.globalPosition;
+              if (position.dx < MediaQuery.of(context).size.width / 2) {
+                await seekBack();
+              } else {
+                await seekForward();
+              }
+            });
+          }
         },
         child: Stack(
           children: [

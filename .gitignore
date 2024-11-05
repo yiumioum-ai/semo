@@ -1,4 +1,5 @@
-/lib/utils/api_keys.dart
+lib/utils/api_keys.dart
+fonts/
 .vscode/
 .idx/
 

@@ -10,7 +10,7 @@ import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/tv_show.dart'  as model;
 import 'package:semo/movie.dart';
 import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
@@ -332,6 +332,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(_person!.name),
         bottom: TabBar(
           controller: _tabController,
           tabs: [

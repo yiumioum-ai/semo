@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -198,8 +196,8 @@ class _LandingState extends State<Landing> {
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(top: 8),
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 20),
                 child: Container(
                   width: double.infinity,
                   child: Text(
@@ -216,7 +214,6 @@ class _LandingState extends State<Landing> {
                 bottom: true,
                 child: Container(
                   margin: EdgeInsets.only(
-                    top: 30,
                     bottom: 18,
                   ),
                   child: ContinueWithGoogle(),

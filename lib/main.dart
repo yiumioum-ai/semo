@@ -6,6 +6,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:semo/firebase_options.dart';
 import 'package:semo/splash.dart';
@@ -13,6 +14,7 @@ import 'package:semo/splash.dart';
 void main() async {
   if (kIsWeb) usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
   await initializeFirebase();
   runApp(Semo());
 }
@@ -44,7 +46,7 @@ initializeFirebase() async {
       FlutterError.onError = crashlytics.recordFlutterFatalError;
     }
   }, (error, stack) async {
-    if (!kIsWeb) await FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    if (!kIsWeb) await crashlytics.recordError(error, stack, fatal: true);
   });
 }
 
@@ -60,53 +62,72 @@ class Semo extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.dark,
         primaryColor: Color(0xFFAB261D),
-        scaffoldBackgroundColor: Color(0xFF121212),
-        dialogBackgroundColor: Color(0xFF212121),
-        cardColor: Color(0xFF212121),
-        textTheme: TextTheme(
-          titleLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          titleMedium: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          titleSmall: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-          ),
-          displayLarge: TextStyle(
-            fontSize: 16,
-            color: Colors.white,
-          ),
-          displayMedium: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          displaySmall: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-          ),
-        ),
+        scaffoldBackgroundColor: Color(0xFF120201),
+        dialogBackgroundColor: Color(0xFF250604),
+        cardColor: Color(0xFF250604),
         appBarTheme: AppBarTheme(
           scrolledUnderElevation: 0,
-          backgroundColor: Color(0xFF121212),
-          titleTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          backgroundColor: Color(0xFF120201),
+          titleTextStyle: GoogleFonts.freckleFace(
+            textStyle: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
           ),
           iconTheme: IconThemeData(color: Colors.white),
+          centerTitle: false,
+        ),
+        textTheme: TextTheme(
+          titleLarge: GoogleFonts.freckleFace(
+            textStyle: TextStyle(
+              fontSize: 38,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          titleMedium: GoogleFonts.freckleFace(
+            textStyle: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          titleSmall: GoogleFonts.freckleFace(
+            textStyle: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          displayLarge: GoogleFonts.lexend(
+            textStyle: TextStyle(
+              fontSize: 18,
+              color: Colors.white,
+            ),
+          ),
+          displayMedium: GoogleFonts.lexend(
+            textStyle: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          displaySmall: GoogleFonts.lexend(
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
         progressIndicatorTheme: ProgressIndicatorThemeData(color: Color(0xFFAB261D)),
         tabBarTheme: TabBarTheme(
           indicatorColor: Color(0xFFAB261D),
           labelColor: Color(0xFFAB261D),
           unselectedLabelColor: Colors.white54,
+        ),
+        switchTheme: SwitchThemeData(
+          trackColor: WidgetStatePropertyAll(Color(0xFFAB261D).withOpacity(.5)),
+          thumbColor: WidgetStatePropertyAll(Color(0xFFAB261D)),
         ),
       ),
       home: Splash(),

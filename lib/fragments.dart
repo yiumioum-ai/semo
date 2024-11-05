@@ -107,8 +107,8 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
 
   Widget NavigationTile(int index) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 8,
+      margin: EdgeInsets.symmetric(
+        horizontal: 18,
       ),
       child: ListTile(
         textColor: Colors.white,
@@ -116,12 +116,15 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         selectedColor: Theme.of(context).primaryColor,
         selectedTileColor: Theme.of(context).primaryColor.withOpacity(.3),
         titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
-          fontWeight: _selectedPageIndex == index ? FontWeight.bold : FontWeight.normal,
+          fontWeight: _selectedPageIndex == index ? FontWeight.w900 : FontWeight.normal,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         selected: _selectedPageIndex == index,
         leading: Icon(_navigationPages[index].icon),
-        title: Text(_navigationPages[index].title),
+        title: Container(
+          padding: _selectedPageIndex == index ? EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
+          child: Text(_navigationPages[index].title),
+        ),
         onTap: () {
           setState(() => _selectedPageIndex = index);
           Navigator.pop(context);
@@ -181,14 +184,18 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
             padding: EdgeInsets.zero,
             children: [
               Container(
-                height: 150,
+                height: 200,
                 child: Center(
                   child: Image.asset(
                   'assets/icon.png',
-                    width: 50,
-                    height: 50,
+                    width: 80,
+                    height: 80,
                   ),
                 ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: Divider(color: Theme.of(context).cardColor),
               ),
               for (final (index, _) in _navigationPages.indexed) NavigationTile(index),
             ],

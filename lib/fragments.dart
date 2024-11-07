@@ -110,7 +110,6 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         horizontal: 18,
       ),
       child: ListTile(
-        textColor: Colors.white,
         iconColor: Colors.white,
         selectedColor: Theme.of(context).primaryColor,
         selectedTileColor: Theme.of(context).primaryColor.withOpacity(.3),

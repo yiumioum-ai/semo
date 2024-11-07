@@ -10,11 +10,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:semo/firebase_options.dart';
 import 'package:semo/splash.dart';
+import 'package:semo/utils/preferences.dart';
 
 void main() async {
   if (kIsWeb) usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
+  await Preferences.init();
   await initializeFirebase();
   runApp(Semo());
 }
@@ -126,9 +128,19 @@ class Semo extends StatelessWidget {
           dividerColor: Color(0xFF250604),
           unselectedLabelColor: Colors.white54,
         ),
-        switchTheme: SwitchThemeData(
-          trackColor: WidgetStatePropertyAll(Color(0xFFAB261D).withOpacity(.5)),
-          thumbColor: WidgetStatePropertyAll(Color(0xFFAB261D)),
+        menuTheme: MenuThemeData(
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(Color(0xFF250604)),
+          ),
+        ),
+        bottomSheetTheme: BottomSheetThemeData(
+          showDragHandle: true,
+          backgroundColor: Color(0xFF120201),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(25),
+            ),
+          ),
         ),
       ),
       home: Splash(),

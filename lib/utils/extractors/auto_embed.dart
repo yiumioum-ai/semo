@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'package:semo/models/stream.dart';
 
-class AutoEmbedExtractor {
+class AutoEmbed {
   final String baseUrl = 'autoembed.cc';
 
   Future<MediaStream> extract(Map<String, dynamic> parameters) async {
@@ -16,10 +16,10 @@ class AutoEmbedExtractor {
 
       String? streamUrl = await findStream(serverUrl);
 
-      return MediaStream(extractor: 'AutoEmbed', url: streamUrl);
+      return MediaStream(url: streamUrl);
     } catch (err) {
       print('AutoEmbed - Error fetching stream: $err');
-      return MediaStream(extractor: 'AutoEmbed');
+      return MediaStream();
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:semo/models/duration_state.dart';
 import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
+import 'package:semo/utils/preferences.dart';
 import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:video_player/video_player.dart';
@@ -51,6 +52,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     subtitleType: SubtitleType.srt,
     showSubtitles: false,
   );
+  int _seekDuration = 0;
   DurationState _durationState = DurationState();
   int _watchedProgress = 0;
   bool _isSeekedToWatchedProgress = false;
@@ -201,6 +203,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   playerInitListener() async {
+    Preferences preferences = Preferences();
+    int seekDuration = await preferences.getSeekDuration();
+    setState(() => _seekDuration = seekDuration);
+
     final screenSize = MediaQuery.of(context).size;
     final videoSize = _videoPlayerController!.value.size;
     if (videoSize.width > 0) {
@@ -273,14 +279,14 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   seekForward() async {
     Duration currentPosition = await _videoPlayerController!.value.position;
-    Duration targetPosition = Duration(seconds: currentPosition.inSeconds + 10);
+    Duration targetPosition = Duration(seconds: currentPosition.inSeconds + _seekDuration);
     await _videoPlayerController!.seekTo(targetPosition);
   }
 
   seekBack() async {
     Duration currentPosition = await _videoPlayerController!.value.position;
     Duration targetPosition = Duration(
-      seconds: currentPosition.inSeconds - (currentPosition.inSeconds < 10 ? currentPosition.inSeconds : 10),
+      seconds: currentPosition.inSeconds - (currentPosition.inSeconds < _seekDuration ? currentPosition.inSeconds : _seekDuration),
     );
     await _videoPlayerController!.seekTo(targetPosition);
   }
@@ -489,11 +495,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                   children: [
                     IconButton(
                       icon: Icon(
-                        Icons.replay_10,
+                        Icons.fast_rewind,
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () => !_durationState.isBuffering ? seekBack() : null,
+                      onPressed: () => _durationState.total.inSeconds > 0 ? seekBack() : null,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -510,11 +516,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     ),
                     IconButton(
                       icon: Icon(
-                        Icons.forward_10,
+                        Icons.fast_forward,
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () => !_durationState.isBuffering ? seekForward() : null,
+                      onPressed: () => _durationState.total.inSeconds > 0 ? seekForward() : null,
                     ),
                   ],
                 ),

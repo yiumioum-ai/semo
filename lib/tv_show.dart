@@ -761,6 +761,16 @@ class _TvShowState extends State<TvShow> {
               pageType: PageType.tv_shows,
             ),
           );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No stream link found',
+                style: Theme.of(context).textTheme.displayMedium,
+              ),
+              backgroundColor: Theme.of(context).cardColor,
+            ),
+          );
         }
       },
       child: Container(

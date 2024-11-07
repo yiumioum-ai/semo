@@ -1,17 +1,27 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/movie.dart';
+import 'package:semo/models/server.dart';
 import 'package:semo/models/stream.dart';
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/tv_show.dart';
 import 'package:semo/utils/extractors/auto_embed.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
 import 'package:semo/utils/extractors/movies_api.dart';
 import 'package:semo/utils/extractors/rive.dart';
+import 'package:semo/utils/preferences.dart';
 
 class Extractor {
-  model.Movie? movie;
-  model.Episode? episode;
+  Movie? movie;
+  Episode? episode;
+
+  static List<Server> servers = [
+    Server(name: 'Random', extractor: null),
+    Server(name: 'AutoEmbed', extractor: AutoEmbed()),
+    Server(name: 'KissKh', extractor: KissKh()),
+    Server(name: 'MoviesApi', extractor: MoviesApi()),
+    Server(name: 'Rive', extractor: Rive()),
+  ];
 
   Extractor({
     this.movie,
@@ -19,16 +29,7 @@ class Extractor {
   });
 
   Future<MediaStream> getStream() async {
-    List extractors = [
-      AutoEmbedExtractor(),
-      KissKhExtractor(),
-      MoviesApi(),
-      Rive(),
-    ];
-
     late Map<String, dynamic> parameters;
-    Random random = Random();
-    MediaStream? stream;
 
     if (movie != null) {
       parameters = {
@@ -44,19 +45,38 @@ class Extractor {
       };
     }
 
-    while (stream == null && extractors.isNotEmpty) {
-      int randomIndex = random.nextInt(extractors.length);
-      var extractor = extractors[randomIndex];
+    Preferences preferences = Preferences();
+
+    Random random = Random();
+
+    String serverName = await preferences.getServer();
+
+    var extractor;
+
+    if (serverName != 'Default') {
+      Server server = servers.firstWhere((server) => server.name == serverName);
+      extractor = server.extractor;
+    }
+
+    MediaStream? stream;
+
+    while (stream == null && servers.isNotEmpty) {
+      int randomIndex = random.nextInt(servers.length);
+
+      if (serverName == 'Default' && extractor == null) {
+        Server server = servers[randomIndex];
+        extractor = server.extractor;
+      }
 
       stream = await extractor.extract(parameters);
 
       if (stream!.url == null) {
-        extractors.removeAt(randomIndex);
+        if (serverName == 'Default') servers.removeAt(randomIndex);
         stream = null;
       }
     }
 
-    if (!kReleaseMode) print('${stream!.extractor}: ${stream.url}');
+    if (!kReleaseMode) print('$serverName: ${stream?.url}');
     return stream!;
   }
 }

@@ -306,6 +306,30 @@ class _FavoritesState extends State<Favorites> {
     );
   }
 
+  Widget NoContent() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.new_releases_outlined,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You don\'t have any favorites',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -327,27 +351,7 @@ class _FavoritesState extends State<Favorites> {
               crossAxisSpacing: 10,
               childAspectRatio: 1/2,
             ),
-          ) : Container(
-            width: double.infinity,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.new_releases_outlined,
-                  color: Colors.white54,
-                  size: 80,
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 10),
-                  child: Text(
-                    'You don\'t have any favorites',
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ) : NoContent(),
         ),
       ),
     );

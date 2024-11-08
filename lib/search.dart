@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/movie.dart';
@@ -42,6 +44,8 @@ class _SearchState extends State<Search> {
   List<String> _recentSearches = [];
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isConnectedToInternet = true;
+  late StreamSubscription _connectionSubscription;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -192,10 +196,29 @@ class _SearchState extends State<Search> {
     }
   }
 
+  initConnectivity() async {
+    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
+    setState(() => _isConnectedToInternet = isConnectedToInternet);
+
+    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) {
+      switch (status) {
+        case InternetStatus.connected:
+          if (mounted) setState(() => _isConnectedToInternet = true);
+          break;
+        case InternetStatus.disconnected:
+          if (mounted) setState(() => _isConnectedToInternet = false);
+          break;
+      }
+    });
+  }
+
   @override
   void initState() {
     _pageType = widget.pageType;
     super.initState();
+
+    initConnectivity();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Search',
@@ -207,6 +230,7 @@ class _SearchState extends State<Search> {
   @override
   void dispose() {
     _pagingController.dispose();
+    _connectionSubscription.cancel();
     super.dispose();
   }
 
@@ -217,7 +241,7 @@ class _SearchState extends State<Search> {
       ),
       title: TextField(
         controller: _searchController,
-        readOnly: _isSearched,
+        readOnly: _isConnectedToInternet ? _isSearched : false,
         textInputAction: TextInputAction.search,
         cursorColor: Colors.white,
         style: Theme.of(context).textTheme.displayMedium,
@@ -412,17 +436,41 @@ class _SearchState extends State<Search> {
     );
   }
 
+  Widget NoInternet() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_sharp,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You have lost internet connection',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: _pageType != null ? SearchAppBar() : null,
-      body: SafeArea(
-        child: _pageType != null ? Container(
+      body: _pageType != null ? SafeArea(
+        child: Container(
           padding: EdgeInsets.all(18),
-          child: _isSearched ? SearchResults() : RecentSearches(),
-        ) : Container(),
-      ),
+          child: _isConnectedToInternet ? (_isSearched ? SearchResults() : RecentSearches()) : NoInternet(),
+        ),
+      ) : Container(),
     );
   }
 }

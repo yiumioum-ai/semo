@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart'  as model;
@@ -35,6 +37,8 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
   late TabController _tabController;
   PageType _pageType = PageType.movies;
   Spinner? _spinner;
+  bool _isConnectedToInternet = true;
+  late StreamSubscription _connectionSubscription;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -128,10 +132,28 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
     }
   }
 
+  initConnectivity() async {
+    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
+    setState(() => _isConnectedToInternet = isConnectedToInternet);
+
+    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) {
+      switch (status) {
+        case InternetStatus.connected:
+          if (mounted) setState(() => _isConnectedToInternet = true);
+          break;
+        case InternetStatus.disconnected:
+          if (mounted) setState(() => _isConnectedToInternet = false);
+          break;
+      }
+    });
+  }
+
   @override
   void initState() {
     _person = widget.person;
     super.initState();
+
+    initConnectivity();
 
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
@@ -146,6 +168,12 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
       );
       getMedia();
     });
+  }
+
+  @override
+  void dispose() {
+    _connectionSubscription.cancel();
+    super.dispose();
   }
 
   Widget NoContent() {
@@ -329,12 +357,36 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
     );
   }
 
+  Widget NoInternet() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_sharp,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You have lost internet connection',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_person!.name),
-        bottom: TabBar(
+        bottom: _isConnectedToInternet ? TabBar(
           controller: _tabController,
           tabs: [
             Tab(
@@ -346,18 +398,18 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
               text: 'TV Shows',
             ),
           ],
-        ),
+        ) : null,
       ),
       body: SafeArea(
         child: Container(
           margin: EdgeInsets.all(18),
-          child: TabBarView(
+          child: _isConnectedToInternet ? TabBarView(
             controller: _tabController,
             children: [
               Movies(),
               TvShows(),
             ],
-          ),
+          ) : NoInternet(),
         ),
       ),
     );

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/favorites.dart';
 import 'package:semo/landing.dart';
 import 'package:semo/models/navigation_page.dart';
@@ -27,6 +30,8 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
   late int _selectedPageIndex;
   List<NavigationPage> _navigationPages = [];
   late TabController _tabController;
+  bool _isConnectedToInternet = true;
+  late StreamSubscription _connectionSubscription;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -97,11 +102,34 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
     });
   }
 
+  initConnectivity() async {
+    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
+    setState(() => _isConnectedToInternet = isConnectedToInternet);
+
+    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) async {
+      switch (status) {
+        case InternetStatus.connected:
+          if (mounted) setState(() => _isConnectedToInternet = true);
+          break;
+        case InternetStatus.disconnected:
+          if (mounted) setState(() => _isConnectedToInternet = false);
+          break;
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    initConnectivity();
     checkUserSession();
     populatePages();
+  }
+
+  @override
+  void dispose() {
+    _connectionSubscription.cancel();
+    super.dispose();
   }
 
   Widget NavigationTile(int index) {
@@ -127,6 +155,30 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           setState(() => _selectedPageIndex = index);
           Navigator.pop(context);
         },
+      ),
+    );
+  }
+
+  Widget NoInternet() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_sharp,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You have lost internet connection',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -157,7 +209,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           ],
         ) : null,
         actions: [
-          _selectedPageIndex <= 1 ? IconButton(
+          (_isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
             icon: Icon(
               Icons.search,
               color: Colors.white,
@@ -170,7 +222,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           ) : Container(),
         ],
       ),
-      body: _navigationPages[_selectedPageIndex].widget,
+      body: _isConnectedToInternet ? _navigationPages[_selectedPageIndex].widget : NoInternet(),
       drawer: SafeArea(
         top: true,
         left: true,

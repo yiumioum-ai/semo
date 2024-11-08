@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
@@ -38,6 +40,8 @@ class _GenreState extends State<Genre> {
   PageType? _pageType;
   model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   PagingController _pagingController = PagingController(firstPageKey: 0);
+  bool _isConnectedToInternet = true;
+  late StreamSubscription _connectionSubscription;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -116,10 +120,29 @@ class _GenreState extends State<Genre> {
     }
   }
 
+  initConnectivity() async {
+    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
+    setState(() => _isConnectedToInternet = isConnectedToInternet);
+
+    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) {
+      switch (status) {
+        case InternetStatus.connected:
+          if (mounted) setState(() => _isConnectedToInternet = true);
+          break;
+        case InternetStatus.disconnected:
+          if (mounted) setState(() => _isConnectedToInternet = false);
+          break;
+      }
+    });
+  }
+
   @override
   void initState() {
     _genre = widget.genre;
     _pageType = widget.pageType;
+
+    initConnectivity();
+
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
@@ -132,6 +155,7 @@ class _GenreState extends State<Genre> {
   @override
   void dispose() {
     _pagingController.dispose();
+    _connectionSubscription.cancel();
     super.dispose();
   }
 
@@ -268,6 +292,30 @@ class _GenreState extends State<Genre> {
     );
   }
 
+  Widget NoInternet() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_sharp,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You have lost internet connection',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -275,7 +323,7 @@ class _GenreState extends State<Genre> {
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.all(18),
-          child: PagedGridView(
+          child: _isConnectedToInternet ? PagedGridView(
             pagingController: _pagingController,
             builderDelegate: PagedChildBuilderDelegate(
               itemBuilder: (context, media, index) {
@@ -291,7 +339,7 @@ class _GenreState extends State<Genre> {
               crossAxisSpacing: 10,
               childAspectRatio: 1/2,
             ),
-          ),
+          ) : NoInternet(),
         ),
       ),
     );

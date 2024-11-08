@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:semo/models/movie.dart' as model;
@@ -50,6 +52,8 @@ class _MovieState extends State<Movie> {
   PagingController _similarPagingController = PagingController(firstPageKey: 0);
   late Spinner _spinner;
   bool _isLoading = true;
+  bool _isConnectedToInternet = true;
+  late StreamSubscription _connectionSubscription;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -270,10 +274,8 @@ class _MovieState extends State<Movie> {
   }
 
   getStream() async {
-    _spinner.show();
     Extractor extractor = Extractor(movie: _movie);
     MediaStream? stream = await extractor.getStream();
-    _spinner.dismiss();
     return stream;
   }
 
@@ -480,10 +482,29 @@ class _MovieState extends State<Movie> {
     });
   }
 
+  initConnectivity() async {
+    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
+    setState(() => _isConnectedToInternet = isConnectedToInternet);
+
+    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) {
+      switch (status) {
+        case InternetStatus.connected:
+          if (mounted) setState(() => _isConnectedToInternet = true);
+          break;
+        case InternetStatus.disconnected:
+          if (mounted) setState(() => _isConnectedToInternet = false);
+          break;
+      }
+    });
+  }
+
   @override
   void initState() {
     _movie = widget.movie;
     super.initState();
+
+    initConnectivity();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
       await FirebaseAnalytics.instance.logScreenView(
@@ -491,6 +512,12 @@ class _MovieState extends State<Movie> {
       );
       await getMovieDetails();
     });
+  }
+
+  @override
+  void dispose() {
+    _connectionSubscription.cancel();
+    super.dispose();
   }
 
   Widget TrailerPoster() {
@@ -916,6 +943,30 @@ class _MovieState extends State<Movie> {
     );
   }
 
+  Widget NoInternet() {
+    return Container(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_sharp,
+            color: Colors.white54,
+            size: 80,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 10),
+            child: Text(
+              'You have lost internet connection',
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -924,7 +975,7 @@ class _MovieState extends State<Movie> {
           onPressed: () => Navigator.pop(context, 'refresh'),
         ),
         actions: [
-          IconButton(
+          if (_isConnectedToInternet) IconButton(
             icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
             color: _isFavorite ? Colors.red : Colors.white,
             onPressed: () async {
@@ -938,7 +989,7 @@ class _MovieState extends State<Movie> {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
+        child: _isConnectedToInternet ? RefreshIndicator(
           color: Theme.of(context).primaryColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           onRefresh: () async {
@@ -979,7 +1030,7 @@ class _MovieState extends State<Movie> {
               ],
             ),
           ) : Container(),
-        ),
+        ) : NoInternet(),
       ),
     );
   }

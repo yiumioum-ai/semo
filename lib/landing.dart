@@ -1,6 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,13 +28,7 @@ class _LandingState extends State<Landing> {
   googleAuthentication() async {
     _spinner!.show();
 
-    late GoogleSignIn instance;
-
-    if (kIsWeb) {
-      instance = GoogleSignIn(clientId: '373107998814-pd40tjns96ae7b5ncjb03gqsr5bsk59e.apps.googleusercontent.com');
-    } else {
-      instance = GoogleSignIn();
-    }
+    GoogleSignIn instance = GoogleSignIn();
 
     GoogleSignInAccount? googleUser = await instance.signIn();
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;

@@ -4,7 +4,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
@@ -242,13 +241,7 @@ class _SettingsState extends State<Settings> {
   reauthenticate() async {
     _spinner!.show();
 
-    late GoogleSignIn instance;
-
-    if (kIsWeb) {
-      instance = GoogleSignIn(clientId: '373107998814-pd40tjns96ae7b5ncjb03gqsr5bsk59e.apps.googleusercontent.com');
-    } else {
-      instance = GoogleSignIn();
-    }
+    GoogleSignIn instance = GoogleSignIn();
 
     GoogleSignInAccount? googleUser = await instance.signIn();
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;

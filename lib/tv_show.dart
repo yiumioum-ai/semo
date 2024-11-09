@@ -25,6 +25,7 @@ import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
+import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
@@ -46,6 +47,7 @@ class _TvShowState extends State<TvShow> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isFavorite = false;
   List<int> _favoriteTvShows = [];
+  Map<String, Map<String, dynamic>> _rawRecentlyWatched = {};
   model.SearchResults _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   model.SearchResults _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   PagingController _recommendationsPagingController = PagingController(firstPageKey: 0);
@@ -281,6 +283,8 @@ class _TvShowState extends State<TvShow> {
         return MapEntry(key, Map<String, dynamic>.from(value));
       });
 
+      setState(() => _rawRecentlyWatched = recentlyWatched);
+
       if (recentlyWatched.keys.contains('${_tvShow!.id}')) {
         recentlyWatched['${_tvShow!.id}']!.remove('visibleInMenu');
 
@@ -289,11 +293,11 @@ class _TvShowState extends State<TvShow> {
         });
 
         if (seasons.keys.contains('$seasonId')) {
-          Map<String, Map<String, dynamic>> season = ((seasons['$seasonId'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+          Map<String, Map<String, dynamic>> episodes = ((seasons['$seasonId'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
             return MapEntry(key, Map<String, dynamic>.from(value));
           });
 
-          results = season;
+          results = episodes;
         }
       }
     }, onError: (e) {
@@ -559,6 +563,103 @@ class _TvShowState extends State<TvShow> {
     return srtFiles;
   }
 
+  addToRecentlyWatched(model.Season season, model.Episode episode) async {
+    Map<String, dynamic> episodeData = {
+      'progress': episode.duration * 60,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+
+    Map<String, Map<String, dynamic>> recentlyWatched = _rawRecentlyWatched;
+
+    if (recentlyWatched.isNotEmpty) {
+      Map<String, dynamic> seasons = recentlyWatched['${_tvShow!.id}']!;
+      recentlyWatched['${_tvShow!.id}']!.remove('visibleInMenu');
+
+      seasons = seasons.map<String, Map<String, dynamic>>((key, value) {
+        return MapEntry(key, Map<String, dynamic>.from(value));
+      });
+
+      if (seasons.containsKey('${season.id}')) {
+        Map<String, Map<String, dynamic>> episodes = ((seasons['${season.id}'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+          return MapEntry(key, Map<String, dynamic>.from(value));
+        });
+
+        episodes['${episode.id}'] = episodeData;
+        seasons['${season.id}'] = episodes;
+      } else {
+        seasons['${season.id}'] = {
+          '${episode.id}': episodeData,
+        };
+      }
+
+      recentlyWatched['${_tvShow!.id}'] = {};
+      recentlyWatched['${_tvShow!.id}']!['visibleInMenu'] = true;
+      recentlyWatched['${_tvShow!.id}']!.addAll(seasons);
+    } else {
+      recentlyWatched['${_tvShow!.id}'] = {
+        'visibleInMenu': true,
+        '${season.id}': {
+          '${episode.id}': episodeData,
+        },
+      };
+    }
+
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
+    await user.set({
+      'tv_shows': recentlyWatched,
+    }, SetOptions(mergeFields: ['tv_shows']));
+
+    model.TvShow updatedTvShow = _tvShow!;
+    updatedTvShow.seasons!.firstWhere((s) => s.id == season.id).episodes!.firstWhere((e) => e.id == episode.id)
+      ..isRecentlyWatched = true
+      ..watchedProgress = episode.duration * 60;
+
+    setState(() {
+      _tvShow = updatedTvShow;
+      _rawRecentlyWatched = recentlyWatched;
+    });
+  }
+
+  removeFromRecentlyWatched(model.Season season, model.Episode episode) async {
+    Map<String, Map<String, dynamic>> recentlyWatched = _rawRecentlyWatched;
+
+    Map<String, dynamic> seasons = recentlyWatched['${_tvShow!.id}']!;
+    recentlyWatched['${_tvShow!.id}']!.remove('visibleInMenu');
+
+    seasons = seasons.map<String, Map<String, dynamic>>((key, value) {
+      return MapEntry(key, Map<String, dynamic>.from(value));
+    });
+
+    Map<String, Map<String, dynamic>> episodes = ((seasons['${season.id}'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
+      return MapEntry(key, Map<String, dynamic>.from(value));
+    });
+
+    episodes.removeWhere((id, value) => id == '${episode.id}');
+
+    seasons['${season.id}'] = episodes;
+    recentlyWatched['${_tvShow!.id}'] = {};
+    recentlyWatched['${_tvShow!.id}']!['visibleInMenu'] = true;
+    recentlyWatched['${_tvShow!.id}']!.addAll(seasons);
+
+    if (episodes.isEmpty) seasons.remove('${season.id}');
+    if (seasons.isEmpty) recentlyWatched.remove('${_tvShow!.id}');
+
+    final user = _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid);
+    await user.set({
+      'tv_shows': recentlyWatched,
+    }, SetOptions(mergeFields: ['tv_shows']));
+
+    model.TvShow updatedTvShow = _tvShow!;
+    updatedTvShow.seasons!.firstWhere((s) => s.id == season.id).episodes!.firstWhere((e) => e.id == episode.id)
+        ..isRecentlyWatched = false
+        ..watchedProgress = null;
+
+    setState(() {
+      _tvShow = updatedTvShow;
+      _rawRecentlyWatched = recentlyWatched;
+    });
+  }
+
   refresh({required int episodeId, required int watchedProgress}) async {
     for(model.Episode episode in _tvShow!.seasons![_currentSeason].episodes!) {
       if (episode.id == episodeId) {
@@ -771,132 +872,156 @@ class _TvShowState extends State<TvShow> {
   }
 
   Widget Episode(model.Season season, model.Episode episode) {
-    return InkWell(
-      onTap: () async {
-        _spinner.show();
-        MediaStream stream = await getStream(episode);
-        List<File>? subtitles = await getSubtitles(episode);
-        _spinner.dismiss();
-
-        if (stream.url != null) {
-          navigate(
-            destination: Player(
-              id: _tvShow!.id,
-              seasonId: season.id,
-              episodeId: episode.id,
-              title: episode.name,
-              stream: stream,
-              subtitles: subtitles,
-              pageType: PageType.tv_shows,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'No stream link found',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              backgroundColor: Theme.of(context).cardColor,
-            ),
-          );
+    return PopupMenuContainer<String>(
+      items: [
+        PopupMenuItem(
+          value: 'already_watched',
+          child: Text(
+            'Already watched',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+        ),
+        if (episode.isRecentlyWatched) PopupMenuItem(
+          value: 'remove',
+          child: Text(
+            'Remove',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+        ),
+      ],
+      onItemSelected: (action) async {
+        if (action != null) {
+          if (action == 'already_watched') addToRecentlyWatched(season, episode);
+          if (action == 'remove') removeFromRecentlyWatched(season, episode);
         }
       },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CachedNetworkImage(
-                  imageUrl: Urls.getBestImageUrl(context) + episode.stillPath,
-                  placeholder: (context, url) {
-                    return Container(
-                      width: MediaQuery.of(context).size.width * .3,
-                      child: AspectRatio(
-                        aspectRatio: 16 / 10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  imageBuilder: (context, image) {
-                    return Container(
-                      width: MediaQuery.of(context).size.width * .3,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: () async {
+          _spinner.show();
+          MediaStream stream = await getStream(episode);
+          List<File>? subtitles = await getSubtitles(episode);
+          _spinner.dismiss();
+
+          if (stream.url != null) {
+            navigate(
+              destination: Player(
+                id: _tvShow!.id,
+                seasonId: season.id,
+                episodeId: episode.id,
+                title: episode.name,
+                stream: stream,
+                subtitles: subtitles,
+                pageType: PageType.tv_shows,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'No stream link found',
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+                backgroundColor: Theme.of(context).cardColor,
+              ),
+            );
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: Urls.getBestImageUrl(context) + episode.stillPath,
+                    placeholder: (context, url) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width * .3,
                         child: AspectRatio(
                           aspectRatio: 16 / 10,
                           child: Container(
                             decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: image,
-                                fit: BoxFit.cover,
-                              ),
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: episode.isRecentlyWatched ? Column(
-                              children: [
-                                Spacer(),
-                                LinearProgressIndicator(
-                                  value: episode.watchedProgress! / (episode.duration * 60),
-                                  valueColor: AlwaysStoppedAnimation(Theme.of(context).primaryColor),
-                                  backgroundColor: Colors.transparent,
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    imageBuilder: (context, image) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width * .3,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 10,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: image,
+                                  fit: BoxFit.cover,
                                 ),
-                              ],
-                            ) : Container(),
+                              ),
+                              child: episode.isRecentlyWatched ? Column(
+                                children: [
+                                  Spacer(),
+                                  LinearProgressIndicator(
+                                    value: episode.watchedProgress! / (episode.duration * 60),
+                                    valueColor: AlwaysStoppedAnimation(Theme.of(context).primaryColor),
+                                    backgroundColor: Colors.transparent,
+                                  ),
+                                ],
+                              ) : Container(),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      width: MediaQuery.of(context).size.width * .3,
-                      child: AspectRatio(
-                        aspectRatio: 16 / 10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: Icon(Icons.error, color: Colors.white54),
+                      );
+                    },
+                    errorWidget: (context, url, error) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width * .3,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 10,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Icon(Icons.error, color: Colors.white54),
+                            ),
                           ),
                         ),
+                      );
+                    },
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Text(
+                        episode.name,
+                        style: Theme.of(context).textTheme.displayMedium!.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 3,
                       ),
-                    );
-                  },
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      episode.name,
-                      style: Theme.of(context).textTheme.displayMedium!.copyWith(fontWeight: FontWeight.w600),
-                      maxLines: 3,
                     ),
                   ),
-                ),
-              ],
-            ),
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(top: 18),
-              child: Text(
-                episode.overview,
-                style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+                ],
               ),
-            ),
-          ],
+              Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(top: 18),
+                child: Text(
+                  episode.overview,
+                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1208,6 +1333,7 @@ class _TvShowState extends State<TvShow> {
               _isFavorite = false;
               _tvShow!.trailerUrl = null;
               _tvShow!.cast = null;
+              _rawRecentlyWatched = {};
               _recommendationsResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
               _similarResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
               _recommendationsPagingController = PagingController(firstPageKey: 0);

@@ -175,7 +175,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
       user.set({
         _pageType!.name: recentlyWatched,
-      }, SetOptions(merge: true));
+      }, SetOptions(mergeFields: [_pageType!.name]));
     }, onError: (e) => print("Error getting user: $e"));
   }
 

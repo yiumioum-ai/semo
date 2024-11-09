@@ -141,69 +141,75 @@ class _SettingsState extends State<Settings> {
         return Container(
           width: double.infinity,
           margin: EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/icon.png',
-                width: 200,
-                height: 200,
-              ),
-              Container(
-                margin: EdgeInsets.only(top: 25),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: Theme.of(context).textTheme.displayMedium,
-                    children: [
-                      TextSpan(text: 'Developed by '),
-                      TextSpan(
-                        text: 'Moses Mbaga',
-                        style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
+          child: SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            bottom: Platform.isIOS,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/icon.png',
+                  width: 200,
+                  height: 200,
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 25),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: Theme.of(context).textTheme.displayMedium,
+                      children: [
+                        TextSpan(text: 'Developed by '),
+                        TextSpan(
+                          text: 'Moses Mbaga',
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          recognizer: TapGestureRecognizer()..onTap = () async {
+                            await launchUrl(Uri.parse(Urls.mosesGithub));
+                          },
                         ),
-                        recognizer: TapGestureRecognizer()..onTap = () async {
-                          await launchUrl(Uri.parse(Urls.mosesGithub));
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        child: Text(
+                          '$version',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                      ),
+                      Text(
+                        ' · ',
+                        style: Theme.of(context).textTheme.displayMedium,
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          await launchUrl(Uri.parse(Urls.github));
                         },
+                        child: Text(
+                          'GitHub',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              Container(
-                margin: EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      child: Text(
-                        '$version',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.displayMedium,
-                      ),
-                    ),
-                    Text(
-                      ' · ',
-                      style: Theme.of(context).textTheme.displayMedium,
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        await launchUrl(Uri.parse(Urls.github));
-                      },
-                      child: Text(
-                        'GitHub',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -410,9 +416,13 @@ class _SettingsState extends State<Settings> {
                   );
                 },
                 errorWidget: (context, url, error) {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: Icon(Icons.error, color: Colors.white54),
+                  return Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(1000)),
+                    child: Icon(
+                      Icons.account_circle,
+                      color: Theme.of(context).primaryColor,
+                    ),
                   );
                 },
               ),
@@ -583,6 +593,7 @@ class _SettingsState extends State<Settings> {
               icon: Icons.exit_to_app,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
               onPressed: (context) async {
+                await GoogleSignIn().signOut();
                 await FirebaseAuth.instance.signOut();
                 navigate(destination: Landing(), replace: true);
               },

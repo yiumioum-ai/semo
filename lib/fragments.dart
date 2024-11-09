@@ -195,7 +195,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        bottom: _selectedPageIndex == 2 ? TabBar(
+        bottom: _isConnectedToInternet && _selectedPageIndex == 2 ? TabBar(
           controller: _tabController,
           tabs: [
             Tab(

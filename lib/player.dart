@@ -11,6 +11,7 @@ import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/preferences.dart';
+import 'package:semo/models/subtitle_style.dart' as local;
 import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:video_player/video_player.dart';
@@ -64,6 +65,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   Animation<double> _scaleVideoAnimation = const AlwaysStoppedAnimation<double>(1.0);
   bool _isZoomedIn = false;
   double _lastZoomGestureScale = 1.0;
+  Preferences _preferences = Preferences();
+  SubtitleStyle _subtitleStyle = SubtitleStyle();
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -177,6 +180,19 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   initializePlayer() async {
+    local.SubtitleStyle localSubtitlesStyle = await _preferences.getSubtitlesStyle();
+    SubtitleStyle subtitleStyle = SubtitleStyle(
+      fontSize: localSubtitlesStyle.fontSize,
+      textColor: local.SubtitleStyle.colors[localSubtitlesStyle.color]!,
+      hasBorder: localSubtitlesStyle.hasBorder,
+      borderStyle: SubtitleBorderStyle(
+        strokeWidth: localSubtitlesStyle.borderStyle.strokeWidth,
+        style: localSubtitlesStyle.borderStyle.style,
+        color: local.SubtitleStyle.colors[localSubtitlesStyle.borderStyle.color]!,
+      ),
+    );
+    setState(() => _subtitleStyle = subtitleStyle);
+
     setState(() {
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(_stream!.url!),
@@ -203,8 +219,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   }
 
   playerInitListener() async {
-    Preferences preferences = Preferences();
-    int seekDuration = await preferences.getSeekDuration();
+    int seekDuration = await _preferences.getSeekDuration();
     setState(() => _seekDuration = seekDuration);
 
     final screenSize = MediaQuery.of(context).size;
@@ -397,14 +412,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     return SubtitleWrapper(
       subtitleController: _subtitleController,
       videoPlayerController: _videoPlayerController!,
-      subtitleStyle: SubtitleStyle(
-        fontSize: 18,
-        hasBorder: true,
-        borderStyle: SubtitleBorderStyle(
-          strokeWidth: 5,
-          color: Colors.white,
-        ),
-      ),
+      subtitleStyle: _subtitleStyle,
       videoChild: ScaleTransition(
         scale: _scaleVideoAnimation,
         child: Center(

@@ -27,7 +27,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  Preferences preferences = Preferences();
+  Preferences _preferences = Preferences();
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   Spinner? _spinner;
@@ -53,7 +53,7 @@ class _SettingsState extends State<Settings> {
   }
 
   openServerSelector() async {
-    String savedServerName = await preferences.getServer();
+    String savedServerName = await _preferences.getServer();
     List<Server> servers = Extractor.servers;
 
     await showModalBottomSheet(
@@ -80,7 +80,7 @@ class _SettingsState extends State<Settings> {
                   title: Text(server.name),
                   leading: isSelected ? Icon(Icons.check) : null,
                   onTap: () async {
-                    await preferences.setServer(server);
+                    await _preferences.setServer(server);
                     setState(() => serverName = server.name);
                   },
                 );
@@ -93,7 +93,7 @@ class _SettingsState extends State<Settings> {
   }
 
   openSeekDurationSelector() async {
-    int savedSeekDuration = await preferences.getSeekDuration();
+    int savedSeekDuration = await _preferences.getSeekDuration();
     List<int> seekDurations = [5, 15, 30, 45, 60];
 
     await showModalBottomSheet(
@@ -119,7 +119,7 @@ class _SettingsState extends State<Settings> {
                   title: Text(seekDurations[index] != 60 ? '${seekDurations[index]} s' : '1 m'),
                   leading: isSelected ? Icon(Icons.check) : null,
                   onTap: () async {
-                    await preferences.setSeekDuration(seekDurations[index]);
+                    await _preferences.setSeekDuration(seekDurations[index]);
                     setState(() => seekDuration = seekDurations[index]);
                   },
                 );
@@ -283,7 +283,7 @@ class _SettingsState extends State<Settings> {
       clearFavorites(showSpinner: false, showSnackBar: false),
       clearRecentlyWatched(showSpinner: false, showSnackBar: false),
     ]);
-    await preferences.clear();
+    await _preferences.clear();
 
     await _auth.currentUser!.delete();
 
@@ -366,7 +366,7 @@ class _SettingsState extends State<Settings> {
         screenName: 'Settings',
       );
 
-      bool autoplayNextEpisode = await preferences.getAutoplayNextEpisode();
+      bool autoplayNextEpisode = await _preferences.getAutoplayNextEpisode();
       setState(() => _autoplayNextEpisode = autoplayNextEpisode);
     });
   }
@@ -518,13 +518,13 @@ class _SettingsState extends State<Settings> {
               trailing: Switch(
                 value: _autoplayNextEpisode,
                 onChanged: (isSelected) async {
-                  await preferences.setAutoplayNextEpisode(isSelected);
+                  await _preferences.setAutoplayNextEpisode(isSelected);
                   setState(() => _autoplayNextEpisode = isSelected);
                 },
                 activeColor: Theme.of(context).primaryColor,
               ),
               onPressed: (context) async {
-                await preferences.setAutoplayNextEpisode(!_autoplayNextEpisode);
+                await _preferences.setAutoplayNextEpisode(!_autoplayNextEpisode);
                 setState(() => _autoplayNextEpisode = !_autoplayNextEpisode);
               },
             ),

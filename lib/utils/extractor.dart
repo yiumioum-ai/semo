@@ -53,7 +53,7 @@ class Extractor {
 
     var extractor;
 
-    if (serverName != 'Default') {
+    if (serverName != 'Random') {
       Server server = servers.firstWhere((server) => server.name == serverName);
       extractor = server.extractor;
     }
@@ -63,7 +63,7 @@ class Extractor {
     while (stream == null && servers.isNotEmpty) {
       int randomIndex = random.nextInt(servers.length);
 
-      if (serverName == 'Default' && extractor == null) {
+      if (serverName == 'Random' && extractor == null) {
         Server server = servers[randomIndex];
         extractor = server.extractor;
       }
@@ -71,7 +71,7 @@ class Extractor {
       stream = await extractor.extract(parameters);
 
       if (stream!.url == null) {
-        if (serverName == 'Default') servers.removeAt(randomIndex);
+        if (serverName == 'Random') servers.removeAt(randomIndex);
         stream = null;
       }
     }

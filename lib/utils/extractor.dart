@@ -9,17 +9,17 @@ import 'package:semo/utils/extractors/auto_embed.dart';
 import 'package:semo/utils/extractors/embedsu.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
 import 'package:semo/utils/extractors/movies_api.dart';
-import 'package:semo/utils/extractors/rive.dart';
+import 'package:semo/utils/extractors/rive_stream.dart';
 import 'package:semo/utils/preferences.dart';
 
 class Extractor {
   static List<Server> servers = [
     Server(name: 'Random', extractor: null),
-    Server(name: 'AutoEmbed', extractor: AutoEmbed()),
+    Server(name: 'Auto Embed', extractor: AutoEmbed()),
     Server(name: 'EmbedSu', extractor: EmbedSu()),
-    Server(name: 'MoviesApi', extractor: MoviesApi()),
+    Server(name: 'Movies Api', extractor: MoviesApi()),
     Server(name: 'KissKh', extractor: KissKh()),
-    Server(name: 'Rive', extractor: Rive()),
+    Server(name: 'Rive Stream', extractor: RiveStream()),
   ];
 
   Movie? movie;

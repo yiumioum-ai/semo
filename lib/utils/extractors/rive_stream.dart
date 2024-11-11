@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:semo/models/stream.dart';
 
-class Rive {
+class RiveStream {
   String baseUrl = 'https://rivestream.live';
 
   Future<MediaStream> extract(Map<String, dynamic> params) async {

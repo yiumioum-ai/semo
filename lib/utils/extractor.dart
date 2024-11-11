@@ -15,11 +15,11 @@ import 'package:semo/utils/preferences.dart';
 class Extractor {
   static List<Server> servers = [
     Server(name: 'Random', extractor: null),
-    Server(name: 'Auto Embed', extractor: AutoEmbed()),
+    Server(name: 'AutoEmbed', extractor: AutoEmbed()),
     Server(name: 'EmbedSu', extractor: EmbedSu()),
-    Server(name: 'Movies Api', extractor: MoviesApi()),
     Server(name: 'KissKh', extractor: KissKh()),
-    Server(name: 'Rive Stream', extractor: RiveStream()),
+    Server(name: 'MoviesApi', extractor: MoviesApi()),
+    Server(name: 'RiveStream', extractor: RiveStream()),
   ];
 
   Movie? movie;

@@ -5,9 +5,9 @@ import 'package:semo/models/stream.dart';
 class EmbedSu {
   final String baseUrl = "https://embed.su";
   final Map<String, String> headers = {
-    'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    'Referer': "https://embed.su",
-    'Origin': "https://embed.su",
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Referer': 'https://embed.su',
+    'Origin': 'https://embed.su',
   };
 
   Future<MediaStream> extract(Map<String, dynamic> params) async {
@@ -18,9 +18,9 @@ class EmbedSu {
     try {
       String urlSearch;
       if (season != null && episode != null) {
-        urlSearch = "$baseUrl/embed/tv/$tmdbId/$season/$episode";
+        urlSearch = '$baseUrl/embed/tv/$tmdbId/$season/$episode';
       } else {
-        urlSearch = "$baseUrl/embed/movie/$tmdbId";
+        urlSearch = '$baseUrl/embed/movie/$tmdbId';
       }
 
       final htmlSearch = await http.get(Uri.parse(urlSearch), headers: headers);
@@ -36,31 +36,28 @@ class EmbedSu {
       if (mEncrypt == null) return MediaStream();
 
       final firstDecode = (await stringAtob(mEncrypt))
-          .split(".")
-          .map((item) => item.split("").reversed.join(""))
+          .split('.')
+          .map((item) => item.split('').reversed.join(''))
           .toList();
-      final secondDecode = jsonDecode(await stringAtob(firstDecode.join("").split("").reversed.join("")));
+      final secondDecode = jsonDecode(await stringAtob(firstDecode.join('').split('').reversed.join('')));
 
       if (secondDecode.isEmpty) return MediaStream();
 
       for (var item in secondDecode) {
-        if (item['name'].toString().toLowerCase() != "viper") continue;
+        if (item['name'].toString().toLowerCase() != 'viper') continue;
 
-        final urlDirect = "$baseUrl/api/e/${item['hash']}";
-        final dataDirect = await requestGet(urlDirect, headers);
+        final urlDirect = '$baseUrl/api/e/${item['hash']}';
+        late final dataDirect;
+        try {
+          final response = await http.get(Uri.parse(urlDirect), headers: headers);
+          if (response.statusCode == 200) {
+            dataDirect = jsonDecode(response.body);
+          }
+        } catch (e) {
+          return MediaStream();
+        }
 
         if (dataDirect == null || dataDirect['source'] == null) continue;
-
-        List<Map<String, String>> tracks = [];
-        try {
-          for (var itemTrack in dataDirect['subtitles']) {
-            final labelMatch = RegExp(r'^([A-Za-z]+)').firstMatch(itemTrack['label']);
-            final label = labelMatch?.group(1) ?? "";
-            if (label.isNotEmpty) {
-              tracks.add({'url': itemTrack['file'], 'lang': label});
-            }
-          }
-        } catch (e) {}
 
         final requestDirectSize = await http.get(Uri.parse(dataDirect['source']), headers: headers);
         final parseRequest = requestDirectSize.body.split('\n');
@@ -71,7 +68,7 @@ class EmbedSu {
           final sizeQualityMatch = RegExp(r'/([0-9]+)/').firstMatch(item);
           final sizeQuality = sizeQualityMatch != null ? int.parse(sizeQualityMatch.group(1)!) : 1080;
 
-          var dURL = "$baseUrl$item".replaceAll("embed.su/api/proxy/viper/", "").replaceAll(".png", ".m3u8");
+          var dURL = "$baseUrl$item".replaceAll('embed.su/api/proxy/viper/', '').replaceAll('.png', '.m3u8');
           directQuality.add({'url': dURL, 'quality': sizeQuality, 'isM3U8': true});
         }
 
@@ -83,9 +80,9 @@ class EmbedSu {
         return MediaStream(
           url: bestQuality['url'],
           headers: {
-            "Referer": baseUrl,
-            "User-Agent": headers['User-Agent']!,
-            "Accept": "*/*",
+            'Referer': baseUrl,
+            'User-Agent': headers['User-Agent']!,
+            'Accept': '*/*',
           },
         );
       }
@@ -101,7 +98,7 @@ class EmbedSu {
     String output = '';
 
     if (str.length % 4 == 1) {
-      throw Exception("'atob' failed: The string to be decoded is not correctly encoded.");
+      throw Exception('Atob failed: The string to be decoded is not correctly encoded.');
     }
 
     int bc = 0, bs = 0;
@@ -114,17 +111,5 @@ class EmbedSu {
       output += String.fromCharCode(255 & bs >> (-2 * bc & 6));
     }
     return output;
-  }
-
-  Future<Map<String, dynamic>?> requestGet(String url, Map<String, String> headers) async {
-    try {
-      final response = await http.get(Uri.parse(url), headers: headers);
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
   }
 }

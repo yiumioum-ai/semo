@@ -59,11 +59,11 @@ class AutoEmbed {
           return data['videoSource'];
         }
       } else {
-        print('AutoEmbed - Failed to fetch HTML. Status code: ${response.statusCode}');
+        print('AutoEmbed $server - Failed to fetch HTML. Status code: ${response.statusCode}');
         return null;
       }
     } catch (err) {
-      print('AutoEmbed - Error in findStream: $err');
+      print('AutoEmbed $server - Error in findStream: $err');
       return null;
     }
   }

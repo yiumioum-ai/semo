@@ -57,7 +57,7 @@ class Whvx {
           );
         }
       } catch (e) {
-        print('Error with $provider server: $e');
+        print('Whvx - Error with $provider server: $e');
       }
     }
 

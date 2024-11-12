@@ -10,6 +10,7 @@ import 'package:semo/utils/extractors/embedsu.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
 import 'package:semo/utils/extractors/movies_api.dart';
 import 'package:semo/utils/extractors/rive_stream.dart';
+import 'package:semo/utils/extractors/whvx.dart';
 import 'package:semo/utils/preferences.dart';
 
 class Extractor {
@@ -20,6 +21,7 @@ class Extractor {
     Server(name: 'KissKh', extractor: KissKh()),
     Server(name: 'MoviesApi', extractor: MoviesApi()),
     Server(name: 'RiveStream', extractor: RiveStream()),
+    Server(name: 'Whvx', extractor: Whvx()),
   ];
 
   Movie? movie;

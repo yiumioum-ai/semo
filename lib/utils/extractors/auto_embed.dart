@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:semo/models/stream.dart';
 
@@ -14,7 +16,30 @@ class AutoEmbed {
           ? 'https://$baseUrl/embed/oplayer.php?id=$tmdbId'
           : 'https://$baseUrl/embed/oplayer.php?id=$tmdbId&s=$season&e=$episode';
 
-      String? streamUrl = await findStream(serverUrl);
+      String? streamUrl = await findStream(serverUrl, server: 1);
+
+      if (streamUrl == null) {
+        serverUrl = season == null && episode == null
+            ? 'https://$baseUrl/embed/player.php?id=$tmdbId'
+            : 'https://$baseUrl/embed/player.php?id=$tmdbId&s=$season&e=$episode';
+
+        streamUrl = await findStream(serverUrl, server: 2);
+
+        if (streamUrl == null) {
+          serverUrl = season == null && episode == null
+              ? 'https://tom.$baseUrl/api/getVideoSource?type=movie&id=$tmdbId'
+              : 'https://tom.$baseUrl/api/getVideoSource?type=tv&id=$tmdbId/$season/$episode';
+
+          streamUrl = await findStream(
+            serverUrl,
+            headers: {
+              'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0',
+              'Referer': 'https://$baseUrl/',
+            },
+            server: 3,
+          );
+        }
+      }
 
       return MediaStream(url: streamUrl);
     } catch (err) {
@@ -23,11 +48,16 @@ class AutoEmbed {
     }
   }
 
-  Future<String?> findStream(String url) async {
+  Future<String?> findStream(String url, {Map<String, String>? headers, required int server}) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
-        return extractStreamFromMultiScript(response.body);
+        if (server != 3) {
+          return extractStreamFromMultiScript(response.body);
+        } else {
+          var data = json.decode(response.body);
+          return data['videoSource'];
+        }
       } else {
         print('AutoEmbed - Failed to fetch HTML. Status code: ${response.statusCode}');
         return null;

@@ -570,14 +570,14 @@ class _SettingsState extends State<Settings> {
             SectionTile(
               title: 'Clear favorites',
               description: 'Deletes all your favorites',
-              icon: Icons.favorite,
+              icon: Icons.favorite_border,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
               onPressed: (context) => clearFavorites(),
             ),
             SectionTile(
               title: 'Clear recently watched',
               description: 'Deletes all the progress of recently watched movies and TV shows',
-              icon: Icons.video_library_rounded,
+              icon: Icons.video_library_outlined,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
               onPressed: (context) => clearRecentlyWatched(),
             ),

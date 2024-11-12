@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:semo/fragments.dart';
@@ -51,10 +53,31 @@ class _SplashState extends State<Splash> {
     });
   }
 
+  initRemoteConfig() async {
+    FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
+
+    await remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: const Duration(hours: 1),
+      ),
+    );
+
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    await remoteConfig.setDefaults({
+      'appVersion': packageInfo.version,
+    });
+
+    await remoteConfig.fetchAndActivate();
+
+    if (!kIsWeb) remoteConfig.onConfigUpdated.listen((event) async => await remoteConfig.activate());
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      initRemoteConfig();
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Splash',
       );

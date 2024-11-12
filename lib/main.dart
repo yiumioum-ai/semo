@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:semo/firebase_options.dart';
 import 'package:semo/splash.dart';
 import 'package:semo/utils/preferences.dart';
@@ -20,24 +18,7 @@ void main() async {
 }
 
 initializeFirebase() async {
-  FirebaseApp app = await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instanceFor(app: app);
-
-  await remoteConfig.setConfigSettings(
-    RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1),
-      minimumFetchInterval: const Duration(hours: 1),
-    ),
-  );
-
-  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  await remoteConfig.setDefaults({
-    'appVersion': packageInfo.version,
-  });
-
-  await remoteConfig.fetchAndActivate();
-
-  if (!kIsWeb) remoteConfig.onConfigUpdated.listen((event) async => await remoteConfig.activate());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseCrashlytics crashlytics = await FirebaseCrashlytics.instance;
   runZonedGuarded<Future<void>>(() async {

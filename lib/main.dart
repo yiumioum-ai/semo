@@ -114,7 +114,7 @@ class Semo extends StatelessWidget {
         ),
         bottomSheetTheme: BottomSheetThemeData(
           showDragHandle: true,
-          backgroundColor: Color(0xFF120201),
+          backgroundColor: Color(0xFF250604),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(25),

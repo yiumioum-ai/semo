@@ -10,33 +10,36 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:semo/models/genre.dart' as model;
+import 'package:semo/tv_show.dart';
+import 'package:semo/utils/api_keys.dart';
+import 'package:semo/movie.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/movie.dart';
-import 'package:semo/tv_show.dart';
-import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
-class Genre extends StatefulWidget {
-  model.Genre genre;
+class ViewAll extends StatefulWidget {
+  String title, source;
+  Map<String, String>? parameters;
   PageType pageType;
 
-  Genre({
-    required this.genre,
+  ViewAll({
+    required this.title,
+    required this.source,
+    this.parameters,
     required this.pageType,
   });
 
   @override
-  _GenreState createState() => _GenreState();
+  _ViewAllState createState() => _ViewAllState();
 }
 
-class _GenreState extends State<Genre> {
-  model.Genre? _genre;
+class _ViewAllState extends State<ViewAll> {
+  String? _title, _source;
+  Map<String, String>? _parameters;
   PageType? _pageType;
   model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   PagingController _pagingController = PagingController(firstPageKey: 0);
@@ -48,6 +51,7 @@ class _GenreState extends State<Genre> {
       canOnlySwipeFromEdge: true,
       builder: (BuildContext context) => destination,
     );
+
     if (replace) {
       await Navigator.pushReplacement(
         context,
@@ -61,17 +65,17 @@ class _GenreState extends State<Genre> {
     }
   }
 
-  getContent(int pageKey) async {
-    Map<String, dynamic> parameters = {
+  search(int pageKey) async {
+    Map<String, String> parameters = {
       'page': '${_searchResults.page + 1}',
-      'with_genres': '${_genre!.id}',
     };
+    if (_parameters != null) parameters.addAll(_parameters!);
+
     Map<String, String> headers = {
       HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
     };
 
-    String url = _pageType! == PageType.movies ? Urls.discoverMovie : Urls.discoverTvShow;
-    Uri uri = Uri.parse(url).replace(queryParameters: parameters);
+    Uri uri = Uri.parse(_source!).replace(queryParameters: parameters);
 
     Response request = await http.get(
       uri,
@@ -86,6 +90,8 @@ class _GenreState extends State<Genre> {
         _pageType!,
         json.decode(response),
       );
+
+      setState(() => _searchResults = searchResults);
 
       bool isLastPage = pageKey == searchResults.totalResults;
 
@@ -104,14 +110,12 @@ class _GenreState extends State<Genre> {
           _pagingController.appendPage(searchResults.tvShows!, nextPageKey);
         }
       }
-
-      setState(() => _searchResults = searchResults);
     } else {
       _pagingController.error = 'error';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to get movies',
+            'Failed to get results',
             style: Theme.of(context).textTheme.displayMedium,
           ),
           backgroundColor: Theme.of(context).cardColor,
@@ -138,18 +142,21 @@ class _GenreState extends State<Genre> {
 
   @override
   void initState() {
-    _genre = widget.genre;
+    _title = widget.title;
+    _source = widget.source;
+    _parameters = widget.parameters;
     _pageType = widget.pageType;
+    super.initState();
 
     initConnectivity();
 
-    super.initState();
+    _pagingController.addPageRequestListener((pageKey) => search(pageKey));
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Genre - ${_genre!.id}',
+        screenName: 'View All - $_title',
       );
     });
-    _pagingController.addPageRequestListener((pageKey) => getContent(pageKey));
   }
 
   @override
@@ -292,6 +299,26 @@ class _GenreState extends State<Genre> {
     );
   }
 
+  Widget SearchResults() {
+    return PagedGridView(
+      pagingController: _pagingController,
+      builderDelegate: PagedChildBuilderDelegate(
+        itemBuilder: (context, media, index) {
+          if (_pageType == PageType.movies) {
+            return ResultCard(movie: media as model.Movie);
+          } else {
+            return ResultCard(tvShow: media as model.TvShow);
+          }
+        },
+      ),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1/2,
+      ),
+    );
+  }
+
   Widget NoInternet() {
     return Container(
       width: double.infinity,
@@ -319,29 +346,16 @@ class _GenreState extends State<Genre> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_genre!.name)),
-      body: SafeArea(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: Text(_title!),
+      ),
+      body: _pageType != null ? SafeArea(
         child: Container(
           padding: EdgeInsets.all(18),
-          child: _isConnectedToInternet ? PagedGridView(
-            pagingController: _pagingController,
-            builderDelegate: PagedChildBuilderDelegate(
-              itemBuilder: (context, media, index) {
-                if (_pageType == PageType.movies) {
-                  return ResultCard(movie: media as model.Movie);
-                } else {
-                  return ResultCard(tvShow: media as model.TvShow);
-                }
-              },
-            ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1/2,
-            ),
-          ) : NoInternet(),
+          child: _isConnectedToInternet ?  SearchResults() : NoInternet(),
         ),
-      ),
+      ) : Container(),
     );
   }
 }

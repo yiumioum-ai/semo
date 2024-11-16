@@ -28,6 +28,7 @@ import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:semo/view_all.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -687,6 +688,17 @@ class _TvShowState extends State<TvShow> {
     });
   }
 
+  String formatDuration(Duration duration) {
+    int hours = duration.inHours;
+    int minutes = duration.inMinutes.remainder(60);
+
+    if (hours > 0) {
+      return '${hours} ${hours == 1 ? 'hr' : 'hrs'}${minutes > 0 ? ' ${minutes} ${minutes == 1 ? 'min' : 'mins'}' : ''}';
+    } else {
+      return '$minutes ${minutes == 1 ? 'min' : 'mins'}';
+    }
+  }
+
   @override
   void initState() {
     _tvShow = widget.tvShow;
@@ -1002,11 +1014,23 @@ class _TvShowState extends State<TvShow> {
                   ),
                   Expanded(
                     child: Container(
-                      padding: EdgeInsets.only(left: 10),
-                      child: Text(
-                        episode.name,
-                        style: Theme.of(context).textTheme.displayMedium!.copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 3,
+                      width: double.infinity,
+                      margin: EdgeInsets.only(left: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            episode.name,
+                            style: Theme.of(context).textTheme.displayMedium!.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 2,
+                          ),
+                          Padding(padding: EdgeInsets.only(top: 2)),
+                          Text(
+                            formatDuration(Duration(minutes: episode.duration)),
+                            style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+                            maxLines: 1,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1129,18 +1153,35 @@ class _TvShowState extends State<TvShow> {
     );
   }
 
-  Widget Category(String title, {required PagingController pagingController}) {
+  Widget Category(String title, {required String source, required PagingController pagingController}) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+          Row(
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              Spacer(),
+              GestureDetector(
+                onTap: () {
+                  navigate(
+                    destination: ViewAll(
+                      title: title,
+                      source: source,
+                      pageType: PageType.tv_shows,
+                    ),
+                  );
+                },
+                child: Text(
+                  'View all',
+                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+                ),
+              ),
+            ],
           ),
           Container(
             height: MediaQuery.of(context).size.height * 0.25,
@@ -1354,8 +1395,8 @@ class _TvShowState extends State<TvShow> {
                       Overview(),
                       Seasons(),
                       if (_tvShow!.cast != null && _tvShow!.cast!.isNotEmpty) Cast(),
-                      Category('Recommendations', pagingController: _recommendationsPagingController),
-                      Category('Similar', pagingController: _similarPagingController),
+                      Category('Recommendations', source: Urls.getTvShowRecommendations(_tvShow!.id), pagingController: _recommendationsPagingController),
+                      Category('Similar', source: Urls.getTvShowSimilar(_tvShow!.id), pagingController: _similarPagingController),
                     ],
                   ),
                 ),

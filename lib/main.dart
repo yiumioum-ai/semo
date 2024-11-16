@@ -121,6 +121,10 @@ class Semo extends StatelessWidget {
             ),
           ),
         ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: Color(0xFF250604),
+          behavior: SnackBarBehavior.floating,
+        )
       ),
       home: Splash(),
     );

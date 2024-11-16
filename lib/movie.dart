@@ -27,6 +27,7 @@ import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:semo/view_all.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -590,12 +591,13 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget ReleaseYear() {
+  Widget ReleaseYearAndRuntime() {
     String releaseYear = _movie!.releaseDate.split('-')[0];
+    String runtime = formatDuration(Duration(minutes: _movie!.duration!));
     return Container(
       width: double.infinity,
       child: Text(
-        releaseYear,
+        '$releaseYear \u2981 $runtime',
         style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
         textAlign: TextAlign.center,
       ),
@@ -797,18 +799,35 @@ class _MovieState extends State<Movie> {
     );
   }
 
-  Widget Category(String title, {required PagingController pagingController}) {
+  Widget Category(String title, {required String source, required PagingController pagingController}) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(top: 30),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+          Row(
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              Spacer(),
+              GestureDetector(
+                onTap: () {
+                  navigate(
+                    destination: ViewAll(
+                      title: title,
+                      source: source,
+                      pageType: PageType.movies,
+                    ),
+                  );
+                },
+                child: Text(
+                  'View all',
+                  style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+                ),
+              ),
+            ],
           ),
           Container(
             height: MediaQuery.of(context).size.height * 0.25,
@@ -967,6 +986,17 @@ class _MovieState extends State<Movie> {
     );
   }
 
+  String formatDuration(Duration duration) {
+    int hours = duration.inHours;
+    int minutes = duration.inMinutes.remainder(60);
+
+    if (hours > 0) {
+      return '${hours} ${hours == 1 ? 'hr' : 'hrs'}${minutes > 0 ? ' ${minutes} ${minutes == 1 ? 'min' : 'mins'}' : ''}';
+    } else {
+      return '$minutes ${minutes == 1 ? 'min' : 'mins'}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1017,13 +1047,13 @@ class _MovieState extends State<Movie> {
                   child: Column(
                     children: [
                       Title(),
-                      ReleaseYear(),
+                      ReleaseYearAndRuntime(),
                       if (_movie!.isRecentlyWatched != null && _movie!.isRecentlyWatched!) WatchedProgress(),
                       Play(),
                       Overview(),
                       if (_movie!.cast != null && _movie!.cast!.isNotEmpty) Cast(),
-                      Category('Recommendations', pagingController: _recommendationsPagingController),
-                      Category('Similar', pagingController: _similarPagingController),
+                      Category('Recommendations', source: Urls.getMovieRecommendations(_movie!.id), pagingController: _recommendationsPagingController),
+                      Category('Similar', source: Urls.getMovieSimilar(_movie!.id), pagingController: _similarPagingController),
                     ],
                   ),
                 ),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -14,14 +15,15 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
+import 'package:semo/models/streaming_platform.dart';
 import 'package:semo/movie.dart';
-import 'package:semo/genre.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
+import 'package:semo/view_all.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
@@ -35,13 +37,21 @@ class _MoviesState extends State<Movies> {
   Map<String, Map<String, dynamic>>? _rawRecentlyWatched;
   CarouselSliderController _nowPlayingController = CarouselSliderController();
   int _currentNowPlayingIndex = 0;
-  List<model.Genre> _genres = [];
   model.SearchResults _trendingResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   model.SearchResults _popularResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   model.SearchResults _topRatedResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
   PagingController _trendingPagingController = PagingController(firstPageKey: 0);
   PagingController _popularPagingController = PagingController(firstPageKey: 0);
   PagingController _topRatedPagingController = PagingController(firstPageKey: 0);
+  List<model.Genre> _genres = [];
+  List<StreamingPlatform> _streamingPlatforms = [
+    StreamingPlatform(id: 8, logoPath: '/netflix.png', name: 'Netflix'),
+    StreamingPlatform(id: 9, logoPath: '/amazon_prime_video.png', name: 'Amazon Prime Video'),
+    StreamingPlatform(id: 119, logoPath: '/apple_tv.png', name: 'Apple TV'),
+    StreamingPlatform(id: 337, logoPath: '/disney_plus.png', name: 'Disney+'),
+    StreamingPlatform(id: 384, logoPath: '/hbo_max.png', name: 'HBO Max'),
+    StreamingPlatform(id: 15, logoPath: '/hulu.png', name: 'Hulu'),
+  ];
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   late Spinner _spinner;
@@ -280,6 +290,45 @@ class _MoviesState extends State<Movies> {
     }
   }
 
+  Future<String> getGenreBackdrop(model.Genre genre) async {
+    String backdropPath = '';
+
+    if (genre.backdropPath == null) {
+      Map<String, dynamic> parameters = {
+        'with_genres': '${genre.id}',
+      };
+      Map<String, String> headers = {
+        HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+      };
+
+      Uri uri = Uri.parse(Urls.discoverMovie).replace(queryParameters: parameters);
+      Response request = await http.get(
+        uri,
+        headers: headers,
+      );
+
+      String response = request.body;
+      if (!kReleaseMode) print(response);
+
+      List movies = json.decode(response)['results'] as List;
+
+      Random random = Random();
+      int randomIndex = random.nextInt(movies.length);
+
+      model.Movie movie = model.Movie.fromJson(movies[randomIndex]);
+
+      for (model.Genre g in _genres) {
+        if (g.id == genre.id && g.backdropPath == null) g.backdropPath = movie.backdropPath;
+      }
+
+      backdropPath = movie.backdropPath;
+    } else {
+      backdropPath = genre.backdropPath!;
+    }
+
+    return backdropPath;
+  }
+
   removeFromRecentlyWatched(model.Movie movie) async {
     Map<String, Map<String, dynamic>> rawRecentlyWatched = _rawRecentlyWatched!;
     rawRecentlyWatched.removeWhere((id, value) => id == '${movie.id}');
@@ -437,13 +486,30 @@ class _MoviesState extends State<Movies> {
     );
   }
 
-  Widget Category(String title, {PagingController? pagingController, List<model.Movie>? movies}) {
-    Widget titleContainer = Container(
-      width: double.infinity,
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall,
-      ),
+  Widget Category(String title, {String? source, PagingController? pagingController, List<model.Movie>? movies}) {
+    Widget titleContainer = Row(
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        Spacer(),
+        if (movies == null) GestureDetector(
+            onTap: () {
+              navigate(
+                destination: ViewAll(
+                  title: title,
+                  source: source!,
+                  pageType: PageType.movies,
+                ),
+              );
+            },
+            child: Text(
+            'View all',
+            style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+          ),
+        ),
+      ],
     );
     late Widget contentContainer;
 
@@ -614,6 +680,71 @@ class _MoviesState extends State<Movies> {
     );
   }
 
+  Widget StreamingPlatforms(List<StreamingPlatform> streamingPlatforms) {
+    return Container(
+      margin: EdgeInsets.only(top: 30),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            child: Text(
+              'Providers',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.15,
+            margin: EdgeInsets.only(top: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: streamingPlatforms.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: (index + 1) != streamingPlatforms.length ? 18 : 0),
+                  child: StreamingPlatformCard(streamingPlatforms[index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget StreamingPlatformCard(StreamingPlatform streamingPlatform) {
+    return Container(
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(18),
+          child: Image.asset(
+            'assets${streamingPlatform.logoPath}',
+            width: MediaQuery.of(context).size.width * .4,
+            color: Colors.white,
+          ),
+        ),
+        onTap: () => navigate(
+          destination: ViewAll(
+            title: streamingPlatform.name,
+            source: Urls.discoverMovie,
+            parameters: {
+              'with_watch_providers': '${streamingPlatform.id}',
+              'watch_region': 'US',
+            },
+            pageType: PageType.movies,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget Genres(List<model.Genre> genres) {
     return Container(
       margin: EdgeInsets.only(top: 30),
@@ -627,7 +758,7 @@ class _MoviesState extends State<Movies> {
             ),
           ),
           Container(
-            height: MediaQuery.of(context).size.height * 0.25,
+            height: MediaQuery.of(context).size.height * 0.2,
             margin: EdgeInsets.only(top: 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -645,25 +776,36 @@ class _MoviesState extends State<Movies> {
     );
   }
 
-  Widget GenreCard(model.Genre genre) {
-    return AspectRatio(
-      aspectRatio: 1,
+  Widget GenreCardImageBuilder(model.Genre genre, {required ImageProvider image}) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * .6,
       child: Column(
         children: [
           Expanded(
-            child: Container(
-              height: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: InkWell(
-                customBorder: RoundedRectangleBorder(
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Container(
+                height: double.infinity,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: image,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                child: Container(),
-                onTap: () => navigate(
-                  destination: Genre(genre: genre, pageType: PageType.movies),
+                child: InkWell(
+                  customBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Container(),
+                  onTap: () => navigate(
+                    destination: ViewAll(
+                      title: genre.name,
+                      source: Urls.discoverMovie,
+                      parameters: {'with_genres': '${genre.id}'},
+                      pageType: PageType.movies,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -682,6 +824,70 @@ class _MoviesState extends State<Movies> {
         ],
       ),
     );
+  }
+
+  Widget GenreCard(model.Genre genre) {
+    Widget error = Container(
+      width: MediaQuery.of(context).size.width * .6,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
+        child: Container(),
+      ),
+    );
+
+    Widget placeholder = Container(
+      width: MediaQuery.of(context).size.width * .6,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
+        child: Align(
+          alignment: Alignment.center,
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+
+    Widget future = FutureBuilder<String>(
+      future: getGenreBackdrop(genre),
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting: return placeholder;
+          default:
+            if (snapshot.hasError) return error;
+            else
+              return CachedNetworkImage(
+                imageUrl: '${Urls.getBestImageUrl(context)}${snapshot.data!}',
+                placeholder: (context, url) => placeholder,
+                imageBuilder: (context, image) {
+                  return GenreCardImageBuilder(genre, image: image);
+                },
+                errorWidget: (context, url, _) => error,
+              );
+        }
+      },
+    );
+
+    Widget card = CachedNetworkImage(
+      imageUrl: '${Urls.getBestImageUrl(context)}${genre.backdropPath}',
+      placeholder: (context, url) => placeholder,
+      imageBuilder: (context, image) {
+        return GenreCardImageBuilder(genre, image: image);
+      },
+      errorWidget: (context, url, _) => error,
+    );
+
+    if (genre.backdropPath == null) {
+      return future;
+    } else {
+      return card;
+    }
   }
 
   @override
@@ -718,9 +924,10 @@ class _MoviesState extends State<Movies> {
                 children: [
                   NowPlaying(_nowPlaying),
                   if (_recentlyWatched.isNotEmpty) Category('Recently watched', movies: _recentlyWatched),
-                  Category('Trending', pagingController: _trendingPagingController),
-                  Category('Popular', pagingController: _popularPagingController),
-                  Category('Top rated', pagingController: _topRatedPagingController),
+                  Category('Trending', source: Urls.trendingMovies, pagingController: _trendingPagingController),
+                  Category('Popular', source: Urls.popularMovies, pagingController: _popularPagingController),
+                  Category('Top rated', source: Urls.topRatedMovies, pagingController: _topRatedPagingController),
+                  StreamingPlatforms(_streamingPlatforms),
                   Genres(_genres),
                 ],
               ),

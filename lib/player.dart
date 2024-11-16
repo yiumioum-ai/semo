@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:semo/models/duration_state.dart';
 import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
@@ -244,7 +245,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     bool isPlaying = _videoPlayerController!.value.isPlaying;
     setState(() => _isPlaying = isPlaying);
 
-    await Future.delayed(Duration(milliseconds: 500));
+    //await Future.delayed(Duration(milliseconds: 500));
 
     if (_videoPlayerController!.value.hasError) {
       Navigator.pop(context, {'error': _videoPlayerController!.value.errorDescription});
@@ -255,11 +256,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     Duration total = _videoPlayerController!.value.duration;
     bool isBuffering = false;
 
-    if (_videoPlayerController!.value.isBuffering) {
-      isBuffering = true;
-    } else {
-      if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
-    }
+    if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
 
     if (!_isSeekedToWatchedProgress && total.inSeconds != 0 && progress.inSeconds < _watchedProgress) {
       Duration watchedProgress = Duration(seconds: _watchedProgress);
@@ -279,8 +276,11 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
     if (total.inSeconds != 0 && progress == total) {
       await updateRecentlyWatched();
-      await _videoPlayerController!.dispose();
-      Navigator.of(context).pop();
+      endSession();
+      Navigator.pop(context, {
+        if (_episodeId != null) 'episodeId': _episodeId,
+        'progress': _durationState.progress.inSeconds,
+      });
     }
   }
 
@@ -372,6 +372,14 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     );
   }
 
+  endSession() {
+    forcePortrait();
+    WakelockPlus.disable();
+
+    _videoPlayerController!.removeListener(playerListener);
+    _videoPlayerController!.dispose();
+  }
+
   @override
   void initState() {
     _id = widget.id;
@@ -400,11 +408,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    forcePortrait();
-    WakelockPlus.disable();
-
-    _videoPlayerController!.removeListener(playerListener);
-    _videoPlayerController!.dispose();
+    endSession();
     super.dispose();
   }
 
@@ -502,10 +506,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(
-                        Icons.fast_rewind,
+                      icon: FaIcon(
+                        FontAwesomeIcons.rotateLeft,
                         color: Colors.white,
-                        size: 30,
+                        size: 25,
                       ),
                       onPressed: () => _durationState.total.inSeconds > 0 ? seekBack() : null,
                     ),
@@ -523,10 +527,10 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                       ) : CircularProgressIndicator(),
                     ),
                     IconButton(
-                      icon: Icon(
-                        Icons.fast_forward,
+                      icon: FaIcon(
+                        FontAwesomeIcons.rotateRight,
                         color: Colors.white,
-                        size: 30,
+                        size: 25,
                       ),
                       onPressed: () => _durationState.total.inSeconds > 0 ? seekForward() : null,
                     ),

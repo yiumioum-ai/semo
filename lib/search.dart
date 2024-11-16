@@ -123,9 +123,7 @@ class _SearchState extends State<Search> {
 
     String url = _pageType == PageType.movies ? Urls.searchMovies : Urls.searchTvShows;
 
-    Uri uri = Uri.parse(url).replace(
-      queryParameters: parameters,
-    );
+    Uri uri = Uri.parse(url).replace(queryParameters: parameters);
 
     Response request = await http.get(
       uri,
@@ -137,8 +135,8 @@ class _SearchState extends State<Search> {
 
     if (response.isNotEmpty) {
       model.SearchResults searchResults = model.SearchResults.fromJson(
-          _pageType!,
-          json.decode(response)
+        _pageType!,
+        json.decode(response),
       );
 
       setState(() => _searchResults = searchResults);

@@ -245,7 +245,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     bool isPlaying = _videoPlayerController!.value.isPlaying;
     setState(() => _isPlaying = isPlaying);
 
-    //await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 500));
 
     if (_videoPlayerController!.value.hasError) {
       Navigator.pop(context, {'error': _videoPlayerController!.value.errorDescription});

@@ -47,9 +47,8 @@ class _MoviesState extends State<Movies> {
   List<StreamingPlatform> _streamingPlatforms = [
     StreamingPlatform(id: 8, logoPath: '/netflix.png', name: 'Netflix'),
     StreamingPlatform(id: 9, logoPath: '/amazon_prime_video.png', name: 'Amazon Prime Video'),
-    StreamingPlatform(id: 119, logoPath: '/apple_tv.png', name: 'Apple TV'),
+    StreamingPlatform(id: 2, logoPath: '/apple_tv.png', name: 'Apple TV'),
     StreamingPlatform(id: 337, logoPath: '/disney_plus.png', name: 'Disney+'),
-    StreamingPlatform(id: 384, logoPath: '/hbo_max.png', name: 'HBO Max'),
     StreamingPlatform(id: 15, logoPath: '/hulu.png', name: 'Hulu'),
   ];
   FirebaseFirestore _firestore = FirebaseFirestore.instance;

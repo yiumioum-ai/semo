@@ -31,7 +31,6 @@ class _SettingsState extends State<Settings> {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   Spinner? _spinner;
-  bool _autoplayNextEpisode = false;
 
   navigate({required Widget destination, bool replace = false}) async {
     SwipeablePageRoute pageTransition = SwipeablePageRoute(
@@ -371,9 +370,6 @@ class _SettingsState extends State<Settings> {
       await FirebaseAnalytics.instance.logScreenView(
         screenName: 'Settings',
       );
-
-      bool autoplayNextEpisode = await _preferences.getAutoplayNextEpisode();
-      setState(() => _autoplayNextEpisode = autoplayNextEpisode);
     });
   }
 
@@ -520,23 +516,6 @@ class _SettingsState extends State<Settings> {
               icon: Icons.update,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
               onPressed: (context) => openSeekDurationSelector(),
-            ),
-            SectionTile(
-              title: 'Autoplay next episode',
-              description: 'Automatically plays the next episode',
-              icon: Icons.skip_next,
-              trailing: Switch(
-                value: _autoplayNextEpisode,
-                onChanged: (isSelected) async {
-                  await _preferences.setAutoplayNextEpisode(isSelected);
-                  setState(() => _autoplayNextEpisode = isSelected);
-                },
-                activeColor: Theme.of(context).primaryColor,
-              ),
-              onPressed: (context) async {
-                await _preferences.setAutoplayNextEpisode(!_autoplayNextEpisode);
-                setState(() => _autoplayNextEpisode = !_autoplayNextEpisode);
-              },
             ),
           ],
         ),

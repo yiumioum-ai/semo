@@ -256,7 +256,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     Duration total = _videoPlayerController!.value.duration;
     bool isBuffering = false;
 
-    if (isPlaying && (progress == _durationState.progress)) isBuffering = true;
+    if (isPlaying && _videoPlayerController!.value.isBuffering && (progress == _durationState.progress)) isBuffering = true;
 
     if (!_isSeekedToWatchedProgress && total.inSeconds != 0 && progress.inSeconds < _watchedProgress) {
       Duration watchedProgress = Duration(seconds: _watchedProgress);

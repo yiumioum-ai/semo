@@ -96,6 +96,7 @@ class Episode {
   String overview;
   String stillPath;
   int duration;
+  Duration? creditsStart;
   String? airDate;
   bool isRecentlyWatched;
   int? watchedProgress;
@@ -110,6 +111,7 @@ class Episode {
     required this.overview,
     required this.stillPath,
     required this.duration,
+    this.creditsStart,
     this.airDate,
     this.isRecentlyWatched = false,
     this.watchedProgress,

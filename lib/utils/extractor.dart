@@ -9,7 +9,6 @@ import 'package:semo/utils/extractors/auto_embed.dart';
 import 'package:semo/utils/extractors/embedsu.dart';
 import 'package:semo/utils/extractors/kisskh.dart';
 import 'package:semo/utils/extractors/rive_stream.dart';
-import 'package:semo/utils/extractors/whvx.dart';
 import 'package:semo/utils/preferences.dart';
 
 class Extractor {
@@ -20,7 +19,7 @@ class Extractor {
     Server(name: 'KissKh', extractor: KissKh()),
     //Server(name: 'MoviesApi', extractor: MoviesApi()),
     Server(name: 'RiveStream', extractor: RiveStream()),
-    Server(name: 'Whvx', extractor: Whvx()),
+    //Server(name: 'Whvx', extractor: Whvx()),
   ];
 
   Movie? movie;
@@ -61,9 +60,9 @@ class Extractor {
       extractor = server.extractor;
     }
 
-    MediaStream? stream;
+    MediaStream stream = MediaStream();
 
-    while (stream == null && servers.isNotEmpty) {
+    while (stream.url == null && servers.isNotEmpty) {
       int randomIndex = random.nextInt(servers.length);
 
       if (serverName == 'Random' && extractor == null) {
@@ -73,13 +72,13 @@ class Extractor {
 
       stream = await extractor.extract(parameters);
 
-      if (stream!.url == null) {
+      if (stream.url == null) {
         if (serverName == 'Random') servers.removeAt(randomIndex);
-        stream = null;
+        stream = MediaStream();
       }
     }
 
     if (!kReleaseMode) print('$serverName: ${stream?.url}');
-    return stream!;
+    return stream;
   }
 }

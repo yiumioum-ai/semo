@@ -1,6 +1,5 @@
+import 'package:semo/models/genre.dart';
 import 'package:semo/models/person.dart';
-
-import 'genre.dart';
 
 class Movie {
   bool adult;
@@ -19,6 +18,7 @@ class Movie {
   double voteAverage;
   int voteCount;
   int? duration;
+  Duration? creditsStart;
   bool? isRecentlyWatched;
   int? watchedProgress;
   String? trailerUrl;
@@ -41,6 +41,7 @@ class Movie {
     required this.voteAverage,
     required this.voteCount,
     this.duration,
+    this.creditsStart,
     this.isRecentlyWatched,
     this.watchedProgress,
     this.trailerUrl,

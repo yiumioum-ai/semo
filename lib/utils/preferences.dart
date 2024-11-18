@@ -27,10 +27,6 @@ class Preferences {
     await _prefs?.setInt('seekDuration', seekDuration);
   }
 
-  setAutoplayNextEpisode(bool autoplay) async {
-    await _prefs?.setBool('autoplayNextEpisode', autoplay);
-  }
-
   setSubtitlesStyle(SubtitleStyle subtitlesStyle) async {
     await _prefs?.setString('subtitleStyle', json.encode(subtitlesStyle.toJson()));
   }
@@ -41,10 +37,6 @@ class Preferences {
 
   Future<int> getSeekDuration() async {
     return _prefs?.getInt('seekDuration') ?? 15;
-  }
-
-  Future<bool> getAutoplayNextEpisode() async {
-    return _prefs?.getBool('autoplayNextEpisode') ?? true;
   }
 
   Future<SubtitleStyle> getSubtitlesStyle() async {

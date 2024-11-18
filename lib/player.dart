@@ -462,6 +462,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                     title: Text(_title!),
                     actions: [
                       if (_subtitles != null && _subtitles!.isNotEmpty) InkWell(
+                        borderRadius: BorderRadius.circular(1000),
                         onTap: () async {
                           if (_showSubtitles) {
                             if (_isPlaying) await _videoPlayerController!.pause();
@@ -473,11 +474,9 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                           }
                         },
                         onLongPress: () => setSubtitle(-1),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Ink(
-                            child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
-                          ),
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(_showSubtitles ? Icons.closed_caption_rounded : Icons.closed_caption_off),
                         ),
                       ),
                       IconButton(

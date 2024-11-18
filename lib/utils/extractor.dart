@@ -78,7 +78,7 @@ class Extractor {
       }
     }
 
-    if (!kReleaseMode) print('$serverName: ${stream?.url}');
+    if (!kReleaseMode) print('$serverName: ${stream.url}');
     return stream;
   }
 }

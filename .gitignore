@@ -3,6 +3,7 @@
 /fonts/
 /lib/utils/api_keys.dart
 /lib/firebase_options.dart
+/firebase.json
 
 .vscode/
 .idx/

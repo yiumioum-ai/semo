@@ -19,15 +19,15 @@ import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/stream.dart';
-import 'package:semo/person_media.dart';
-import 'package:semo/player.dart';
+import 'package:semo/screens/person_media.dart';
+import 'package:semo/screens/player.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
-import 'package:semo/view_all.dart';
+import 'package:semo/screens/view_all.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 

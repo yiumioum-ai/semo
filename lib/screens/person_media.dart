@@ -12,8 +12,8 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart'  as model;
-import 'package:semo/movie.dart';
-import 'package:semo/tv_show.dart';
+import 'package:semo/screens/movie.dart';
+import 'package:semo/screens/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/spinner.dart';

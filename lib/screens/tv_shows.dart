@@ -16,14 +16,14 @@ import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/streaming_platform.dart';
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/tv_show.dart';
+import 'package:semo/screens/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/pop_up_menu.dart';
 import 'package:semo/utils/spinner.dart';
 import 'package:semo/utils/urls.dart';
-import 'package:semo/view_all.dart';
+import 'package:semo/screens/view_all.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 

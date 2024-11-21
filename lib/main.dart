@@ -5,8 +5,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:semo/firebase_options.dart';
-import 'package:semo/splash.dart';
+import 'package:semo/screens/firebase_options.dart';
+import 'package:semo/screens/splash.dart';
 import 'package:semo/utils/preferences.dart';
 
 void main() async {

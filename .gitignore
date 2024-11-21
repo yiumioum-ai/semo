@@ -1,5 +1,3 @@
-/android/app/google-services.json
-/ios/Runner/GoogleService-Info.plist
 /fonts/
 /lib/utils/api_keys.dart
 /lib/firebase_options.dart

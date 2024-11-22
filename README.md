@@ -1,5 +1,7 @@
 # Semo
 
+![Semo Screenshots](https://raw.githubusercontent.com/moses-mbaga/semo/d4ed0519764b78d729cc459476086928d0a2d54b/banner.png)
+
 Semo is an open-source Flutter application designed to offer a seamless movie and TV show streaming experience. With support for multiple streaming servers, synced watch progress, and fully customizable subtitles, Semo aims to be your go-to streaming app for enjoying your favorite content.
 
 ## Features
@@ -23,8 +25,6 @@ Semo is an open-source Flutter application designed to offer a seamless movie an
 
 - Support for .srt subtitle files.
 - Fully customizable options
-
-## Screenshots
 
 ## Download ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/moses-mbaga/semo/total?link=https%3A%2F%2Fgithub.com%2Fmoses-mbaga%2Fsemo%2Freleases)
 

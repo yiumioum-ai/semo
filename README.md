@@ -34,17 +34,11 @@ Download APK
 Download IPA
 [![Download IPA](https://custom-icon-badges.demolab.com/badge/-Download-F25278?style=for-the-badge&logo=download&logoColor=white&color=AB261D)](https://github.com/moses-mbaga/semo/releases)
 
-
-
-
-
 ## Tech Stack
 
 **Client:** Flutter
 
-
 **Server:** Firebase
-
 
 ## Installation
 

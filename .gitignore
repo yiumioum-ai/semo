@@ -1,9 +1,12 @@
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
+/ios/Podfile.lock
 /fonts/
 /lib/utils/api_keys.dart
 /lib/firebase_options.dart
 /firebase.json
+/devtools_options.yaml
+/firepit-log.txt
 
 .vscode/
 .idx/

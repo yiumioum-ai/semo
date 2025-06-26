@@ -101,7 +101,7 @@ class Semo extends StatelessWidget {
           ),
         ),
         progressIndicatorTheme: ProgressIndicatorThemeData(color: Color(0xFFAB261D)),
-        tabBarTheme: TabBarTheme(
+        tabBarTheme: TabBarThemeData(
           indicatorColor: Color(0xFFAB261D),
           labelColor: Color(0xFFAB261D),
           dividerColor: Color(0xFF250604),

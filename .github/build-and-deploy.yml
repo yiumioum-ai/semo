@@ -1,0 +1,181 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: build_and_deploy
+  cancel-in-progress: false
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+
+jobs:
+  build_and_deploy:
+    name: "Build and deploy"
+    runs-on: macos-latest
+    permissions:
+      actions: read
+      contents: read
+      models: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Initialize log capture
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/github_action_logs
+          : > $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Set up Flutter
+        if: ${{ success() }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Flutter dependencies
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter pub get; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Read environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          {
+            touch .env
+            echo "${{ secrets.ENV }}" > .env
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Create environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { dart run build_runner build --delete-conflicting-outputs; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Decode keystore
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          {
+            mkdir -p android/signing
+            touch android/signing/keystore.jks
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/signing/keystore.jks
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Create key.properties
+        if: ${{ success() }}
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -o pipefail
+          {
+          cat > key.properties <<EOF
+          storeFile=../signing/keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Build app bundle
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter build appbundle --release; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Build web
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter build web --release; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Set up Python venv
+        if: ${{ always() }}
+        run: |
+          python3 -m venv .venv
+
+      - name: Install Python dependencies
+        if: ${{ always() }}
+        run: |
+          . .venv/bin/activate
+          pip install requests
+        shell: bash
+
+#      - name: Prepare Git context
+#        if: ${{ success() }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          set -o pipefail
+#          {
+#            . .venv/bin/activate
+#            python3 .github/ci-scripts/generate_git_context.py \
+#              --token "$GITHUB_TOKEN" \
+#              --workflow-file-name "build-and-deploy.yml"
+#          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+#
+#      - name: Generate changelog
+#        id: generate_changelog
+#        if: ${{ success() }}
+#        env:
+#          COMMIT_INFO: ${{ env.COMMIT_INFO }}
+#          DIFF: ${{ env.DIFF }}
+#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          set -o pipefail
+#          {
+#            . .venv/bin/activate
+#            python3 .github/scripts/generate_changelog.py \
+#              --commit-info "$COMMIT_INFO" \
+#              --diff "$DIFF" \
+#              --model "gpt-4.1-mini"
+#          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+#
+#      - name: Generate code review
+#        id: generate_code_review
+#        if: ${{ success() }}
+#        env:
+#          DIFF: ${{ env.DIFF }}
+#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          set -o pipefail
+#          {
+#            . .venv/bin/activate
+#            python3 .github/scripts/generate_code_review.py \
+#              --diff "$DIFF" \
+#              --model "gpt-4.1"
+#          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+#
+#      - name: Generate error analysis
+#        id: generate_error_analysis
+#        if: ${{ failure() }}
+#        env:
+#          REPO_NAME: ${{ github.repository }}
+#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          set -o pipefail
+#          {
+#            LOGS=$(cat $GITHUB_WORKSPACE/github_action_logs/all.log)
+#            if [ -z "$LOGS" ]; then
+#              LOGS="No logs captured. Make sure every step uses tee -a github_action_logs/all.log"
+#            fi
+#
+#            . .venv/bin/activate
+#            python3 .github/scripts/generate_error_analysis.py \
+#              --logs "$LOGS" \
+#              --model "gpt-4.1-mini"
+#          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -28,19 +30,19 @@ class _LandingState extends State<Landing> {
   googleAuthentication() async {
     _spinner!.show();
 
-    GoogleSignIn instance = GoogleSignIn();
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
 
-    GoogleSignInAccount? googleUser = await instance.signIn();
-    GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
-    var credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
       idToken: googleAuth?.idToken,
     );
 
     try {
-      FirebaseAuth auth = FirebaseAuth.instance;
-      await auth.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
       _spinner!.dismiss();
 

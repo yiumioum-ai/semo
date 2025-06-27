@@ -8,6 +8,7 @@
 /firebase.json
 /devtools_options.yaml
 /firepit-log.txt
+/pubspec.lock
 
 .vscode/
 .idx/

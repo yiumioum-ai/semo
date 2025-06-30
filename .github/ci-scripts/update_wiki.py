@@ -11,7 +11,7 @@ class WikiUpdater:
     def __init__(self, token, repo):
         self.token = token
         self.repo = repo
-        self.wiki_url = f"https://{token}@github.com/{repo}.wiki.git"
+        self.wiki_url = f"https://x-access-token:{token}@github.com/{repo}.wiki.git"
 
     def clone_wiki(self, temp_dir):
         """Clone the wiki repository"""
@@ -28,8 +28,8 @@ class WikiUpdater:
             subprocess.run(["git", "remote", "add", "origin", self.wiki_url], check=True)
 
         os.chdir(wiki_path)
-        subprocess.run(["git", "config", "user.name", "GitHub Actions"], check=True)
-        subprocess.run(["git", "config", "user.email", "actions@github.com"], check=True)
+        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
+        subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], check=True)
 
         return wiki_path
 
@@ -280,11 +280,20 @@ Welcome to the project documentation wiki!
 
         subprocess.run(["git", "commit", "-m", commit_message], check=True)
 
-        try:
-            subprocess.run(["git", "push", "origin", "master"], check=True)
-        except subprocess.CalledProcessError:
-            # Try main branch if master fails
-            subprocess.run(["git", "push", "origin", "main"], check=True)
+        # Check which branch we're on and push to that branch
+        result = subprocess.run(["git", "branch", "--show-current"],
+                                capture_output=True, text=True, check=True)
+        current_branch = result.stdout.strip()
+
+        if current_branch:
+            # Push to the current branch
+            subprocess.run(["git", "push", "origin", current_branch], check=True)
+        else:
+            # Fallback: try master first, then main
+            try:
+                subprocess.run(["git", "push", "origin", "master"], check=True)
+            except subprocess.CalledProcessError:
+                subprocess.run(["git", "push", "origin", "main"], check=True)
 
     def handle_success(self, commit_hash, changelog_file, code_review_file):
         """Handle successful build documentation"""

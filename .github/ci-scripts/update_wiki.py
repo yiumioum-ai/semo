@@ -33,20 +33,30 @@ class WikiUpdater:
 
         return wiki_path
 
-    def get_commit_info(self, commit_hash):
-        """Get commit information"""
-        result = subprocess.run([
-            "git", "log", "-1", "--format=%H|%h|%an|%s|%ci", commit_hash
-        ], capture_output=True, text=True, check=True)
+    def get_commit_info(self, commit_hash, repo_path=None):
+        """Get commit information from the specified repository path"""
+        original_cwd = os.getcwd()
 
-        full_hash, short_hash, author, message, date = result.stdout.strip().split("|", 4)
-        return {
-            "full_hash": full_hash,
-            "short_hash": short_hash,
-            "author": author,
-            "message": message,
-            "date": date
-        }
+        try:
+            # Change to the repository path if provided
+            if repo_path:
+                os.chdir(repo_path)
+
+            result = subprocess.run([
+                "git", "log", "-1", "--format=%H|%h|%an|%s|%ci", commit_hash
+            ], capture_output=True, text=True, check=True)
+
+            full_hash, short_hash, author, message, date = result.stdout.strip().split("|", 4)
+            return {
+                "full_hash": full_hash,
+                "short_hash": short_hash,
+                "author": author,
+                "message": message,
+                "date": date
+            }
+        finally:
+            # Always restore the original working directory
+            os.chdir(original_cwd)
 
     def read_json_file(self, file_path):
         """Read and parse JSON file"""
@@ -278,19 +288,19 @@ Welcome to the project documentation wiki!
 
     def handle_success(self, commit_hash, changelog_file, code_review_file):
         """Handle successful build documentation"""
+        # Store the original repository path before any directory changes
+        original_repo_path = os.getcwd()
+
+        # Get commit info from the original repository first
+        commit_info = self.get_commit_info(commit_hash, original_repo_path)
+
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             wiki_path = self.clone_wiki(temp_path)
 
-            # Get commit info (from original repo, not wiki)
-            original_cwd = os.getcwd()
-            os.chdir(original_cwd)
-            commit_info = self.get_commit_info(commit_hash)
-            os.chdir(wiki_path)
-
-            # Read generated content
-            changelog_data = self.read_json_file(changelog_file)
-            code_review_data = self.read_json_file(code_review_file)
+            # Read generated content (these files should be in the original repo path)
+            changelog_data = self.read_json_file(os.path.join(original_repo_path, changelog_file) if changelog_file else None)
+            code_review_data = self.read_json_file(os.path.join(original_repo_path, code_review_file) if code_review_file else None)
 
             changelog_content = changelog_data.get('changelog', 'No changelog generated')
             code_review_content = code_review_data.get('code_review', 'No code review generated')
@@ -313,18 +323,18 @@ Welcome to the project documentation wiki!
 
     def handle_failure(self, commit_hash, error_analysis_file, run_id):
         """Handle failed build documentation"""
+        # Store the original repository path before any directory changes
+        original_repo_path = os.getcwd()
+
+        # Get commit info from the original repository first
+        commit_info = self.get_commit_info(commit_hash, original_repo_path)
+
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             wiki_path = self.clone_wiki(temp_path)
 
-            # Get commit info (from original repo, not wiki)
-            original_cwd = os.getcwd()
-            os.chdir(original_cwd)
-            commit_info = self.get_commit_info(commit_hash)
-            os.chdir(wiki_path)
-
-            # Read error analysis
-            error_data = self.read_json_file(error_analysis_file)
+            # Read error analysis (this file should be in the original repo path)
+            error_data = self.read_json_file(os.path.join(original_repo_path, error_analysis_file) if error_analysis_file else None)
             error_content = error_data.get('error_analysis', 'Build failed but no error analysis was generated.')
 
             # Create folder structure

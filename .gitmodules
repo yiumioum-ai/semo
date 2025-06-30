@@ -1,0 +1,3 @@
+[submodule ".github/ci-scripts"]
+	path = .github/ci-scripts
+	url = https://github.com/Ones-and-Zeros-Oy/ci-scripts

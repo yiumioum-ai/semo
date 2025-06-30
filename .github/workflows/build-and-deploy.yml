@@ -11,7 +11,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -135,15 +134,15 @@ jobs:
 #        env:
 #          COMMIT_INFO: ${{ env.COMMIT_INFO }}
 #          DIFF: ${{ env.DIFF }}
-#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#          GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
 #        run: |
 #          set -o pipefail
 #          {
 #            . .venv/bin/activate
-#            python3 .github/scripts/generate_changelog.py \
+#            python3 .github/ci-scripts/generate_changelog.py \
 #              --commit-info "$COMMIT_INFO" \
 #              --diff "$DIFF" \
-#              --model "gpt-4.1-mini"
+#              --provider "github_models"
 #          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 #
 #      - name: Generate code review
@@ -151,14 +150,14 @@ jobs:
 #        if: ${{ success() }}
 #        env:
 #          DIFF: ${{ env.DIFF }}
-#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#          GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
 #        run: |
 #          set -o pipefail
 #          {
 #            . .venv/bin/activate
-#            python3 .github/scripts/generate_code_review.py \
+#            python3 .github/ci-scripts/generate_code_review.py \
 #              --diff "$DIFF" \
-#              --model "gpt-4.1"
+#              --provider "github_models"
 #          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 #
 #      - name: Generate error analysis
@@ -166,7 +165,7 @@ jobs:
 #        if: ${{ failure() }}
 #        env:
 #          REPO_NAME: ${{ github.repository }}
-#          API_KEY: ${{ secrets.GITHUB_TOKEN }}
+#          GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
 #        run: |
 #          set -o pipefail
 #          {
@@ -176,9 +175,9 @@ jobs:
 #            fi
 #
 #            . .venv/bin/activate
-#            python3 .github/scripts/generate_error_analysis.py \
+#            python3 .github/ci-scripts/generate_error_analysis.py \
 #              --logs "$LOGS" \
-#              --model "gpt-4.1-mini"
+#              --provider "github_models"
 #          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
       - name: Deploy to Vercel
@@ -186,7 +185,7 @@ jobs:
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ env.VERCEL_TOKEN }}
-          github-token: ${{ env.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-org-id: ${{ env.VERCEL_ORG_ID }}
           vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
           working-directory: ./build/web

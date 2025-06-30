@@ -46,7 +46,7 @@ def create_payload(commit_info, diff, repo):
     
     Keep each change description a single line and do not make it overly long.
     
-    Use GitHub markdown syntax in your response.
+    Use GitHub markdown syntax in your response. Do not wrap the response in ```markdown.
     """
 
     payload = {

@@ -33,7 +33,7 @@ def create_payload(diff, repo):
     Be as brief as possible and avoid long explanations.
     Do not add any closing remarks or a summary.
               
-    Use GitHub markdown syntax in your response.
+    Use GitHub markdown syntax in your response. Do not wrap the response in ```markdown.
     """
 
     payload = {

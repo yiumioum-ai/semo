@@ -33,11 +33,7 @@ def create_payload(diff, repo):
     Be as brief as possible and avoid long explanations.
     Do not add any closing remarks or a summary.
               
-    The output text is used to send a message to a Slack channel and the output must be formatted as Slack mrkdwn (do not use markdown).
-    Do not use hash sign (#) to denote headings, instead use bold text with single asterisk (*).
-    Do not use double asterisks (**) for bold text, instead use single asterisk (*).
-    Links must be output in Slack mrkdwn format, for example: <https://example.com/|Link description>
-    When adding code blocks, do not add the language identifier at the beginning of the code block.
+    Use GitHub markdown syntax in your response.
     """
 
     payload = {

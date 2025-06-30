@@ -46,10 +46,7 @@ def create_payload(commit_info, diff, repo):
     
     Keep each change description a single line and do not make it overly long.
     
-    The output text is used to send a message to a Slack channel and the output must be formatted as Slack mrkdwn (do not use markdown).
-    Do not use hash sign (#) to denote headings, instead use bold text with single asterisk (*).
-    Do not use double asterisks (**) for bold text, instead use single asterisk (*).
-    Links must be output in Slack mrkdwn format, for example: <https://example.com/|Link description>
+    Use GitHub markdown syntax in your response.
     """
 
     payload = {

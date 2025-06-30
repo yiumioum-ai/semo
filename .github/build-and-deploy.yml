@@ -3,7 +3,7 @@ name: Build and deploy
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -179,3 +180,12 @@ jobs:
 #              --logs "$LOGS" \
 #              --model "gpt-4.1-mini"
 #          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Deploy to Vercel
+        if: ${{ success() }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ env.VERCEL_TOKEN }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID}}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID}}

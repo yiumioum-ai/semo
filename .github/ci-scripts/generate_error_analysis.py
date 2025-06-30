@@ -82,4 +82,12 @@ if __name__ == "__main__":
     if response["error"] is True:
         sys.exit(1)
     else:
+        log("Adding error analysis to file", "info")
+
+        payload = { "error_analysis": f"{response["message"]}" }
+        with open("./.github/error_analysis.json", "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)
+
+        log("Error analysis added to file successfully.", "info")
+
         log("Error analysis generated.", "success")

@@ -94,4 +94,12 @@ if __name__ == "__main__":
     if response["error"] is True:
         sys.exit(1)
     else:
+        log("Adding changelog to file", "info")
+
+        payload = { "changelog": f"{response["message"]}" }
+        with open("./.github/changelog.json", "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)
+
+        log("Changelog added to file successfully.", "info")
+
         log("Changelog generated.", "success")

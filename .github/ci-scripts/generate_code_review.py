@@ -81,4 +81,12 @@ if __name__ == "__main__":
     if response["error"] is True:
         sys.exit(1)
     else:
+        log("Adding code review to file", "info")
+
+        payload = { "code_review": f"{response["message"]}" }
+        with open("./.github/code_review.json", "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False)
+
+        log("Code review added to file successfully.", "info")
+
         log("Code review generated.", "success")

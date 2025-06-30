@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -27,19 +25,12 @@ class _LandingState extends State<Landing> {
     });
   }
 
-  googleAuthentication() async {
+  signInWithGoogle() async {
     _spinner!.show();
 
-    // Trigger the authentication flow
     final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
-
-    // Obtain the auth details from the request
     final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth?.idToken,
-    );
+    final credential = GoogleAuthProvider.credential(idToken: googleAuth?.idToken);
 
     try {
       await FirebaseAuth.instance.signInWithCredential(credential);
@@ -84,9 +75,8 @@ class _LandingState extends State<Landing> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Landing',
-      );
+      await FirebaseAnalytics.instance.logScreenView(screenName: 'Landing');
+      await GoogleSignIn.instance.initialize();
     });
   }
 
@@ -159,7 +149,7 @@ class _LandingState extends State<Landing> {
           ),
         ),
         onPressed: () {
-          googleAuthentication();
+          signInWithGoogle();
         },
       ),
     );

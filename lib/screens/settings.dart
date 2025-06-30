@@ -246,19 +246,19 @@ class _SettingsState extends State<Settings> {
   reauthenticate() async {
     _spinner!.show();
 
-    GoogleSignIn instance = GoogleSignIn();
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
 
-    GoogleSignInAccount? googleUser = await instance.signIn();
-    GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
-    var credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
       idToken: googleAuth?.idToken,
     );
 
     try {
-      FirebaseAuth auth = FirebaseAuth.instance;
-      await auth.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
       _spinner!.dismiss();
 
@@ -572,7 +572,7 @@ class _SettingsState extends State<Settings> {
               icon: Icons.exit_to_app,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
               onPressed: (context) async {
-                await GoogleSignIn().signOut();
+                await GoogleSignIn.instance.signOut();
                 await FirebaseAuth.instance.signOut();
                 navigate(destination: Landing(), replace: true);
               },

@@ -85,12 +85,4 @@ if __name__ == "__main__":
     if response["error"] is True:
         sys.exit(1)
     else:
-        log("Creating payload for the message to be posted on Slack.", "info")
-
-        message = response["message"]
-        payload = { "text": f"*Who:* `{actor}`\n\n*Branch:* `{branch}`\n\n{message}" }
-        with open("./.github/slack_payload.json", "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False)
-
-        log("Payload for Slack message created successfully.", "info")
         log("Code review generated.", "success")

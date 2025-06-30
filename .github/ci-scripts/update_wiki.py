@@ -195,23 +195,26 @@ class WikiUpdater:
         commit_date = datetime.fromisoformat(commit_info['date'].replace('Z', '+00:00'))
         date_str = commit_date.strftime("%Y-%m-%d")
 
-        # Add new entries
+        # Add new entries (remove .md extension for proper wiki linking)
         if changelog_path:
             if date_str not in existing_entries["changelogs"]:
                 existing_entries["changelogs"][date_str] = []
-            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...]({changelog_path})"
+            wiki_link = changelog_path.replace('.md', '')
+            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...]({wiki_link})"
             existing_entries["changelogs"][date_str].insert(0, entry)  # Add to beginning
 
         if code_review_path:
             if date_str not in existing_entries["reviews"]:
                 existing_entries["reviews"][date_str] = []
-            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...]({code_review_path})"
+            wiki_link = code_review_path.replace('.md', '')
+            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...]({wiki_link})"
             existing_entries["reviews"][date_str].insert(0, entry)  # Add to beginning
 
         if failure_path:
             if date_str not in existing_entries["failures"]:
                 existing_entries["failures"][date_str] = []
-            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...❌]({failure_path})"
+            wiki_link = failure_path.replace('.md', '')
+            entry = f"* [{commit_info['short_hash']} - {commit_info['message'][:50]}...❌]({wiki_link})"
             existing_entries["failures"][date_str].insert(0, entry)  # Add to beginning
 
         # Build the sidebar content
@@ -251,10 +254,12 @@ class WikiUpdater:
 
         if failure_path:
             # Failed build
-            latest_link = f"[Latest Build (Failed)]({failure_path}) - {commit_info['short_hash']} ❌"
+            wiki_link = failure_path.replace('.md', '')
+            latest_link = f"[Latest Build (Failed)]({wiki_link}) - {commit_info['short_hash']} ❌"
         else:
             # Successful build
-            latest_link = f"[Latest Changelog]({changelog_path}) - {commit_info['short_hash']}"
+            wiki_link = changelog_path.replace('.md', '') if changelog_path else '#'
+            latest_link = f"[Latest Changelog]({wiki_link}) - {commit_info['short_hash']}"
 
         content = f"""# Semo Project Documentation
 

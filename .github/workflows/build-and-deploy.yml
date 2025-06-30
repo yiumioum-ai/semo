@@ -10,11 +10,6 @@ concurrency:
   group: build_and_deploy
   cancel-in-progress: false
 
-env:
-  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-
 jobs:
   build_and_deploy:
     name: "Build and deploy"
@@ -163,6 +158,10 @@ jobs:
       - name: Deploy to Vercel
         if: ${{ success() }}
         uses: amondnet/vercel-action@v25
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         with:
           vercel-token: ${{ env.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

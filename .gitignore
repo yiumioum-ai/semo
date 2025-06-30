@@ -1,10 +1,8 @@
-/android/app/google-services.json
 /android/signing/
-/ios/Runner/GoogleService-Info.plist
 /ios/Podfile.lock
 /fonts/
-/lib/utils/api_keys.dart
-/lib/firebase_options.dart
+/.env
+/lib/utils/env/env.g.dart
 /firebase.json
 /devtools_options.yaml
 /firepit-log.txt

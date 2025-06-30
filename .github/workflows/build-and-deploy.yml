@@ -49,20 +49,20 @@ jobs:
           set -o pipefail
           { flutter pub get; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
-#      - name: Read environment variables
-#        if: ${{ success() }}
-#        run: |
-#          set -o pipefail
-#          {
-#            touch .env
-#            echo "${{ secrets.ENV }}" > .env
-#          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
-#
-#      - name: Create environment variables
-#        if: ${{ success() }}
-#        run: |
-#          set -o pipefail
-#          { dart run build_runner build --delete-conflicting-outputs; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+      - name: Read environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          {
+            touch .env
+            echo "${{ secrets.ENV }}" > .env
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Create environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { dart run build_runner build --delete-conflicting-outputs; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
       - name: Decode keystore
         if: ${{ success() }}

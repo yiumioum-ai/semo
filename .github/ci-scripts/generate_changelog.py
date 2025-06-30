@@ -87,7 +87,7 @@ if __name__ == "__main__":
         response = gemini.generate_text("gemini-2.5-pro-preview-06-05", request_payload["system_instruction"], request_payload["command"], api_key)
     elif args.provider == "github_models":
         api_key = os.environ.get("GITHUB_MODELS_API_KEY")
-        response = github_models.generate_text("gpt-4.1-mini", request_payload["system_instruction"], request_payload["command"], api_key)
+        response = github_models.generate_text("openai/gpt-4.1-mini", request_payload["system_instruction"], request_payload["command"], api_key)
     else:
         log(f"Provider '{args.provider}' is currently not supported.", "error")
         sys.exit(1)

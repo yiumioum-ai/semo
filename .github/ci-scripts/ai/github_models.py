@@ -52,12 +52,9 @@ def send_request(system_instruction, command, api_key, model):
 
             try:
                 message = response_data['choices'][0]['message']['content']['description']
-
-                usage = response_data.get('usage') or {}
-                input_tokens = usage.get('prompt_tokens', "Not specified")
-                prompt_tokens_details = usage.get('prompt_tokens_details') or {}
-                cached_tokens = prompt_tokens_details.get('cached_tokens', "Not specified")
-                output_tokens = usage.get('completion_tokens', "Not specified")
+                input_tokens = response_data['usage']['prompt_tokens']
+                cached_tokens = response_data['usage']['prompt_tokens_details']['cached_tokens']
+                output_tokens = response_data['usage']['completion_tokens']
 
                 if message:
                     log(f"Model: {model}", "info")

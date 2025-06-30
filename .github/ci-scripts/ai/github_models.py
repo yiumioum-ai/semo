@@ -51,7 +51,7 @@ def send_request(system_instruction, command, api_key, model):
             response_data = response.json()
 
             try:
-                message = response_data['choices'][0]['message']['content']['description']
+                message = response_data['choices'][0]['message']['content']
                 input_tokens = response_data['usage']['prompt_tokens']
                 cached_tokens = response_data['usage']['prompt_tokens_details']['cached_tokens']
                 output_tokens = response_data['usage']['completion_tokens']

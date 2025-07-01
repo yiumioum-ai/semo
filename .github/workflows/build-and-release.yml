@@ -26,7 +26,7 @@ jobs:
       contents: read
 
     outputs:
-      build-success: ${{ steps.build-status.outputs.success }}
+      build-success: ${{ job.status == 'success' }}
 
     steps:
       - name: Checkout code
@@ -121,11 +121,6 @@ jobs:
         with:
           name: web-build
           path: build/web/
-
-      - name: Set build status
-        id: build-status
-        run: |
-          echo "success=${{ success() }}" >> $GITHUB_OUTPUT
 
   release-and-deploy:
     name: "Release and Deploy"

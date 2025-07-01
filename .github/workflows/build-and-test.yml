@@ -20,7 +20,7 @@ jobs:
       models: read
 
     outputs:
-      build-success: ${{ steps.build-status.outputs.success }}
+      build-success: ${{ job.status == 'success' }}
 
     steps:
       - name: Checkout code
@@ -115,11 +115,6 @@ jobs:
         with:
           name: web-build
           path: build/web/
-
-      - name: Set build status
-        id: build-status
-        run: |
-          echo "success=${{ success() }}" >> $GITHUB_OUTPUT
 
       - name: Upload logs artifact
         if: ${{ always() }}

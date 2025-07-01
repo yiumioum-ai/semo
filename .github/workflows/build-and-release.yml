@@ -1,0 +1,194 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes'
+        required: false
+        type: string
+        default: 'New release'
+
+concurrency:
+  group: build_and_release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: macos-latest
+    permissions:
+      actions: read
+      contents: read
+
+    outputs:
+      build-success: ${{ steps.build-status.outputs.success }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Initialize log capture
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/github_action_logs
+          : > $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Set up Flutter
+        if: ${{ success() }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Flutter dependencies
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter pub get; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Read environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          {
+            touch .env
+            echo "${{ secrets.ENV }}" > .env
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Create environment variables
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { dart run build_runner build --delete-conflicting-outputs; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Decode keystore
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          {
+            mkdir -p android/signing
+            touch android/signing/keystore.jks
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/signing/keystore.jks
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Create key.properties
+        if: ${{ success() }}
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -o pipefail
+          {
+          cat > key.properties <<EOF
+          storeFile=../signing/keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Build APK
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter build apk --release; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Build web
+        if: ${{ success() }}
+        run: |
+          set -o pipefail
+          { flutter build web --release; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
+
+      - name: Upload APK artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload web artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: build/web/
+
+      - name: Set build status
+        id: build-status
+        run: |
+          echo "success=${{ success() }}" >> $GITHUB_OUTPUT
+
+  release-and-deploy:
+    name: "Release and Deploy"
+    runs-on: macos-latest
+    needs: build
+    if: ${{ needs.build.outputs.build-success == 'true' }}
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: app-release-apk
+          path: ./artifacts/
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: ./build/web/
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.release_notes }}
+          draft: false
+          prerelease: false
+
+      - name: Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/app-release.apk
+          asset_name: app-release-${{ github.event.inputs.version }}.apk
+          asset_content_type: application/vnd.android.package-archive
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        with:
+          vercel-token: ${{ env.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
+          working-directory: ./build/web
+          vercel-args: '--prod'
+          github-comment: false

@@ -102,20 +102,6 @@ jobs:
           set -o pipefail
           { flutter build web --release; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
-      - name: Upload APK artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Upload web artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: build/web/
-
       - name: Upload logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

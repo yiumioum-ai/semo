@@ -143,7 +143,7 @@ class _MovieState extends State<Movie> {
   }
 
   Future<void> _checkRecentlyWatched() async {
-    final prog = await _recentlyWatchedService.getMovieProgress(_movie.id);
+    final prog = await _recentlyWatchedService.getMovie(_movie.id);
     if (mounted && prog != null) {
       setState(() {
         _movie.isRecentlyWatched = true;

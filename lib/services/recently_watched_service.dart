@@ -1,359 +1,258 @@
-import 'dart:math' as math;
+import "dart:math" as math;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/db_names.dart';
+import "package:cloud_firestore/cloud_firestore.dart";
+import "package:firebase_auth/firebase_auth.dart";
+import "package:logger/logger.dart";
+import "package:semo/utils/db_names.dart";
 
 class RecentlyWatchedService {
-  static final RecentlyWatchedService _instance = RecentlyWatchedService._internal();
   factory RecentlyWatchedService() => _instance;
   RecentlyWatchedService._internal();
 
+  static final RecentlyWatchedService _instance = RecentlyWatchedService._internal();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Logger _logger = Logger();
 
-  Future<int?> getMovieProgress(int movieId) async {
+  DocumentReference<Map<String, dynamic>> _getDocReference() {
     try {
-      final doc = await _firestore
+      return _firestore
           .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+          .doc(_auth.currentUser?.uid);
+    } catch (e, s) {
+      _logger.e("Error getting recently watched document reference", error: e, stackTrace: s);
+    }
+
+    throw Exception("Failed to get recently watched document reference");
+  }
+
+  Future<Map<String, dynamic>> _getRecentlyWatched() async {
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
       if (doc.exists) {
-        final data = doc.data();
-        final movies = ((data?['movies'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
-
-        final movieData = movies['$movieId'];
-        return movieData?['progress'] as int?;
+        return doc.data() ?? <String, dynamic>{};
       }
-    } catch (e) {
-      print("Error getting movie progress: $e");
+    } catch (e, s) {
+      _logger.e("Error getting recently watched", error: e, stackTrace: s);
     }
+
+    return <String, dynamic>{};
+  }
+
+  //ignore: prefer_expression_function_bodies
+  Map<String, Map<String, dynamic>> _mapDynamicDynamicToMapStringDynamic(Map<dynamic, dynamic> map) {
+    return map
+        //ignore: always_specify_types
+        .map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
+  }
+
+  Future<int?> getMovie(int movieId) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
+    try {
+      final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
+
+      final Map<String, dynamic>? movie = movies["$movieId"];
+      return movie?["progress"] as int?;
+    } catch (e, s) {
+      _logger.e("Error getting recently watched movie", error: e, stackTrace: s);
+    }
+
     return null;
   }
 
   Future<void> updateMovieProgress(int movieId, int progress) async {
-    try {
-      final data = {
-        'movies': {
-          '$movieId': {
-            'progress': progress,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }
-        }
-      };
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
-      await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .set(data, SetOptions(merge: true));
-    } catch (e) {
-      print("Error updating movie progress: $e");
+    recentlyWatched["movies"]["$movieId"] = <String, dynamic>{
+      "progress": progress,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+
+    try {
+      await _getDocReference().set(<String, dynamic>{"movies": recentlyWatched["movies"]}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error updating movie's watch progress", error: e, stackTrace: s);
     }
   }
 
-  Future<Map<String, Map<String, dynamic>>?> getTvShowProgress(int tvShowId, int seasonId) async {
+  Future<Map<String, Map<String, dynamic>>?> getEpisodes(int tvShowId, int seasonId) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      if (doc.exists) {
-        final data = doc.data();
-        final tvShows = ((data?['tv_shows'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
+      if (tvShows.containsKey("$tvShowId")) {
+        final Map<String, Map<String, dynamic>> tvShow = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
+        final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShow);
 
-        if (tvShows.containsKey('$tvShowId')) {
-          final showData = tvShows['$tvShowId']!;
-          showData.remove('visibleInMenu');
-
-          final seasons = showData.map<String, Map<String, dynamic>>((key, value) {
-            return MapEntry(key, Map<String, dynamic>.from(value));
-          });
-
-          if (seasons.containsKey('$seasonId')) {
-            return ((seasons['$seasonId'] ?? {}) as Map<dynamic, dynamic>)
-                .map<String, Map<String, dynamic>>((key, value) {
-              return MapEntry(key, Map<String, dynamic>.from(value));
-            });
-          }
+        if (seasons.containsKey("$seasonId")) {
+          return _mapDynamicDynamicToMapStringDynamic(seasons["$seasonId"] ?? <String, dynamic>{});
         }
       }
-    } catch (e) {
-      print("Error getting TV show progress: $e");
+    } catch (e, s) {
+      _logger.e("Error getting recently watched episodes for the TV show", error: e, stackTrace: s);
     }
+
     return null;
   }
 
-  Future<void> updateEpisodeProgress(
-      int tvShowId,
-      int seasonId,
-      int episodeId,
-      int progress,
-      ) async {
+  Future<void> updateEpisodeProgress(int tvShowId, int seasonId, int episodeId, int progress) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+    Map<String, Map<String, dynamic>> watchedEpisodes = await getEpisodes(tvShowId, seasonId) ?? <String, Map<String, dynamic>>{};
+    final Map<String, dynamic> updatedEpisodeData = <String, dynamic>{
+      "progress": progress,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+
     try {
-      // Get current data
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      Map<String, Map<String, dynamic>> tvShows = {};
-
-      if (doc.exists) {
-        final data = doc.data();
-        tvShows = ((data?['tv_shows'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
+      if (!tvShows.containsKey("$tvShowId")) {
+        tvShows["$tvShowId"] = <String, dynamic>{};
       }
 
-      // Update episode data
-      final episodeData = {
-        'progress': progress,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      if (!tvShows["$tvShowId"]!.containsKey("$seasonId")) {
+        tvShows["$tvShowId"]!["$seasonId"] = <String, dynamic>{};
+      }
+
+      watchedEpisodes["$episodeId"] = updatedEpisodeData;
+      tvShows["$tvShowId"]!["$seasonId"] = watchedEpisodes;
+      tvShows["$tvShowId"] = <String, dynamic>{
+        "visibleInMenu": true,
+        ...tvShows["$tvShowId"]!
       };
 
-      if (tvShows.containsKey('$tvShowId')) {
-        final showData = tvShows['$tvShowId']!;
-        showData.remove('visibleInMenu');
-
-        final seasons = showData.map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
-
-        if (seasons.containsKey('$seasonId')) {
-          final episodes = ((seasons['$seasonId'] ?? {}) as Map<dynamic, dynamic>)
-              .map<String, Map<String, dynamic>>((key, value) {
-            return MapEntry(key, Map<String, dynamic>.from(value));
-          });
-
-          episodes['$episodeId'] = episodeData;
-          seasons['$seasonId'] = episodes;
-        } else {
-          seasons['$seasonId'] = {'$episodeId': episodeData};
-        }
-
-        tvShows['$tvShowId'] = {'visibleInMenu': true, ...seasons};
-      } else {
-        tvShows['$tvShowId'] = {
-          'visibleInMenu': true,
-          '$seasonId': {'$episodeId': episodeData},
-        };
-      }
-
-      await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .set({'tv_shows': tvShows}, SetOptions(merge: true));
-    } catch (e) {
-      print("Error updating episode progress: $e");
+      await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error updating episode's watch progress", error: e, stackTrace: s);
     }
   }
 
-  Future<void> removeEpisodeProgress(
-      int tvShowId,
-      int seasonId,
-      int episodeId,
-      ) async {
+  Future<void> removeEpisodeProgress(int tvShowId, int seasonId, int episodeId) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+    Map<String, Map<String, dynamic>> watchedEpisodes = await getEpisodes(tvShowId, seasonId) ?? <String, Map<String, dynamic>>{};
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      if (!doc.exists) return;
-
-      final data = doc.data();
-      final tvShows = ((data?['tv_shows'] ?? {}) as Map<dynamic, dynamic>)
-          .map<String, Map<String, dynamic>>((key, value) {
-        return MapEntry(key, Map<String, dynamic>.from(value));
-      });
-
-      if (tvShows.containsKey('$tvShowId')) {
-        final showData = tvShows['$tvShowId']!;
-        showData.remove('visibleInMenu');
-
-        final seasons = showData.map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
-
-        if (seasons.containsKey('$seasonId')) {
-          final episodes = ((seasons['$seasonId'] ?? {}) as Map<dynamic, dynamic>)
-              .map<String, Map<String, dynamic>>((key, value) {
-            return MapEntry(key, Map<String, dynamic>.from(value));
-          });
-
-          episodes.remove('$episodeId');
-
-          if (episodes.isEmpty) {
-            seasons.remove('$seasonId');
-          } else {
-            seasons['$seasonId'] = episodes;
-          }
-        }
-
-        if (seasons.isEmpty) {
-          tvShows.remove('$tvShowId');
-        } else {
-          tvShows['$tvShowId'] = {'visibleInMenu': true, ...seasons};
-        }
-
-        await _firestore
-            .collection(DB.recentlyWatched)
-            .doc(_auth.currentUser!.uid)
-            .set({'tv_shows': tvShows}, SetOptions(merge: true));
+      if (!tvShows.containsKey("$tvShowId")) {
+        tvShows["$tvShowId"] = <String, dynamic>{};
       }
-    } catch (e) {
-      print("Error removing episode progress: $e");
+
+      if (!tvShows["$tvShowId"]!.containsKey("$seasonId")) {
+        tvShows["$tvShowId"]!["$seasonId"] = <String, dynamic>{};
+      }
+
+      watchedEpisodes.remove("$episodeId");
+
+      tvShows["$tvShowId"]!["$seasonId"] = watchedEpisodes;
+      tvShows["$tvShowId"] = <String, dynamic>{
+        "visibleInMenu": true,
+        ...tvShows["$tvShowId"]!
+      };
+
+      await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error removing episode's watch progress", error: e, stackTrace: s);
     }
   }
 
   Future<List<int>> getRecentlyWatchedMovieIds() async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      if (doc.exists) {
-        final data = doc.data();
-        final movies = ((data?['movies'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
+      // Sort by timestamp (most recent first)
+      final List<MapEntry<String, Map<String, dynamic>>> sortedEntries = movies.entries.toList()..sort((MapEntry<String, Map<String, dynamic>> a, MapEntry<String, Map<String, dynamic>> b) {
+        final int timestampA = a.value["timestamp"] ?? 0;
+        final int timestampB = b.value["timestamp"] ?? 0;
+        return timestampB.compareTo(timestampA);
+      });
 
-        // Sort by timestamp (most recent first)
-        final sortedEntries = movies.entries.toList()
-          ..sort((a, b) {
-            final timestampA = a.value['timestamp'] ?? 0;
-            final timestampB = b.value['timestamp'] ?? 0;
-            return timestampB.compareTo(timestampA);
-          });
-
-        return sortedEntries.map((entry) => int.parse(entry.key)).toList();
-      }
-    } catch (e) {
-      print("Error getting recently watched movie IDs: $e");
+      return sortedEntries.map((MapEntry<String, Map<String, dynamic>> entry) => int.parse(entry.key)).toList();
+    } catch (e, s) {
+      _logger.e("Error getting recently watched movie IDs", error: e, stackTrace: s);
     }
-    return [];
+
+    return <int>[];
   }
 
   Future<void> removeMovieFromRecentlyWatched(int movieId) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
-
-      if (doc.exists) {
-        final data = doc.data();
-        final movies = ((data?['movies'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
-
-        movies.remove('$movieId');
-
-        await _firestore
-            .collection(DB.recentlyWatched)
-            .doc(_auth.currentUser!.uid)
-            .set({'movies': movies}, SetOptions(merge: true));
-      }
-    } catch (e) {
-      print("Error removing movie from recently watched: $e");
+      final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
+      movies.remove("$movieId");
+      await _getDocReference().set(<String, dynamic>{"movies": movies}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error removing movie from recently watched", error: e, stackTrace: s);
     }
   }
 
   Future<List<int>> getRecentlyWatchedTvShowIds() async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      if (doc.exists) {
-        final data = doc.data();
-        final tvShows = ((data?['tv_shows'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
+      // Filter only visible shows and sort by timestamp
+      final List<MapEntry<String, Map<String, dynamic>>> visibleShows = tvShows.entries
+          .where((MapEntry<String, Map<String, dynamic>> entry) => entry.value["visibleInMenu"] == true)
+          .toList();
 
-        // Filter only visible shows and sort by timestamp
-        final visibleShows = tvShows.entries
-            .where((entry) => entry.value['visibleInMenu'] != false)
-            .toList();
+      visibleShows.sort((MapEntry<String, Map<String, dynamic>> a, MapEntry<String, Map<String, dynamic>> b) {
+        // Get the latest timestamp from any episode in the show
+        final Map<String, dynamic> aSeasons = Map<String, dynamic>.from(a.value)..remove("visibleInMenu");
+        final Map<String, dynamic> bSeasons = Map<String, dynamic>.from(b.value)..remove("visibleInMenu");
 
-        visibleShows.sort((a, b) {
-          // Get the latest timestamp from any episode in the show
-          final aSeasons = Map<String, dynamic>.from(a.value)..remove('visibleInMenu');
-          final bSeasons = Map<String, dynamic>.from(b.value)..remove('visibleInMenu');
+        int aLatest = 0;
+        int bLatest = 0;
 
-          int aLatest = 0;
-          int bLatest = 0;
-
-          for (final season in aSeasons.values) {
-            if (season is Map) {
-              for (final episode in season.values) {
-                if (episode is Map && episode['timestamp'] != null) {
-                  aLatest = math.max(aLatest, episode['timestamp'] as int);
-                }
+        for (final dynamic season in aSeasons.values) {
+          if (season is Map) {
+            for (final dynamic episode in season.values) {
+              if (episode is Map && episode["timestamp"] != null) {
+                aLatest = math.max(aLatest, episode["timestamp"] as int);
               }
             }
           }
+        }
 
-          for (final season in bSeasons.values) {
-            if (season is Map) {
-              for (final episode in season.values) {
-                if (episode is Map && episode['timestamp'] != null) {
-                  bLatest = math.max(bLatest, episode['timestamp'] as int);
-                }
-              }
-            }
+        for (final dynamic season in bSeasons.values) {
+          if (season is Map) {
+            for (final dynamic episode in season.values) {if (episode is Map && episode["timestamp"] != null) {
+              bLatest = math.max(bLatest, episode["timestamp"] as int);
+            }}
           }
+        }
 
-          return bLatest.compareTo(aLatest);
-        });
+        return bLatest.compareTo(aLatest);
+      });
 
-        return visibleShows.map((entry) => int.parse(entry.key)).toList();
-      }
-    } catch (e) {
-      print("Error getting recently watched TV show IDs: $e");
+      return visibleShows.map((MapEntry<String, Map<String, dynamic>> entry) => int.parse(entry.key)).toList();
+    } catch (e, s) {
+      _logger.e("Error getting recently watched TV show IDs", error: e, stackTrace: s);
     }
-    return [];
+
+    return <int>[];
   }
 
   Future<void> removeTvShowFromRecentlyWatched(int tvShowId) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
     try {
-      final doc = await _firestore
-          .collection(DB.recentlyWatched)
-          .doc(_auth.currentUser!.uid)
-          .get();
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
-      if (doc.exists) {
-        final data = doc.data();
-        final tvShows = ((data?['tv_shows'] ?? {}) as Map<dynamic, dynamic>)
-            .map<String, Map<String, dynamic>>((key, value) {
-          return MapEntry(key, Map<String, dynamic>.from(value));
-        });
-
-        if (tvShows.containsKey('$tvShowId')) {
-          tvShows['$tvShowId']!['visibleInMenu'] = false;
-
-          await _firestore
-              .collection(DB.recentlyWatched)
-              .doc(_auth.currentUser!.uid)
-              .set({'tv_shows': tvShows}, SetOptions(merge: true));
-        }
+      if (tvShows.containsKey("$tvShowId")) {
+        tvShows["$tvShowId"]!["visibleInMenu"] = false;
+        await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
       }
-    } catch (e) {
-      print("Error removing TV show from recently watched: $e");
+    } catch (e, s) {
+      _logger.e("Error removing TV show from recently watched", error: e, stackTrace: s);
     }
   }
 }

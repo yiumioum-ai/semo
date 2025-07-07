@@ -169,8 +169,7 @@ class _TvShowState extends State<TvShow> {
         season.number,
         _tvShow.name,
       );
-      final recentlyWatched =
-      await _recentlyWatchedService.getTvShowProgress(
+      final recentlyWatched = await _recentlyWatchedService.getEpisodes(
         _tvShow.id,
         season.id,
       );

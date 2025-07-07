@@ -11,7 +11,6 @@ import "package:semo/utils/preferences.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
   await Preferences.init();
   await initializeFirebase();
   runApp(const Semo());

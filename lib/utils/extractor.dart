@@ -1,6 +1,7 @@
 import "dart:math";
 
 import "package:flutter/foundation.dart";
+import "package:logger/logger.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/server.dart";
 import "package:semo/models/stream.dart";
@@ -75,7 +76,8 @@ class Extractor {
     }
 
     if (!kReleaseMode) {
-      print("$serverName: ${stream.url}");
+      Logger logger = Logger();
+      logger.i("Stream found.\nServer: $serverName\nUrl: ${stream.url}");
     }
 
     return stream;

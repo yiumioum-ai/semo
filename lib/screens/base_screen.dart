@@ -2,6 +2,7 @@ import "dart:async";
 import "package:firebase_analytics/firebase_analytics.dart";
 import "package:flutter/material.dart";
 import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
+import "package:logger/logger.dart";
 import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
@@ -10,10 +11,10 @@ abstract class BaseScreen extends StatefulWidget {
 
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-
-  // Connectivity management
   StreamSubscription<InternetStatus>? _connectionSubscription;
   bool _isConnectedToInternet = true;
+
+  final Logger logger = Logger();
 
   /// Override this method to provide the screen name for Firebase Analytics
   String get screenName;
@@ -99,8 +100,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
         screenName: screenName,
         screenClass: widget.runtimeType.toString(),
       );
-    } catch (e) {
-      print("Failed to log screen view: $e");
+    } catch (e, s) {
+      logger.e("Failed to log screen view", error: e, stackTrace: s);
     }
   }
 
@@ -111,8 +112,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
         name: eventName,
         parameters: parameters,
       );
-    } catch (e) {
-      print("Failed to log analytics event: $e");
+    } catch (e, s) {
+      logger.e("Failed to log analytics event", error: e, stackTrace: s);
     }
   }
 

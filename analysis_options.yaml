@@ -59,6 +59,13 @@ linter:
     unnecessary_to_list_in_spreads: true
     unnecessary_underscores: true
     use_named_constants: true
+    use_string_in_part_of_directives: true
+    implementation_imports: true
+    avoid_relative_lib_imports: true
+    prefer_adjacent_string_concatenation: true
+    prefer_interpolation_to_compose_strings: true
+    prefer_collection_literals: true
+    avoid_function_literals_in_foreach_calls: true
 
     #Disabled
     non_constant_identifier_names: false

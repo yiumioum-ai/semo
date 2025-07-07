@@ -1,9 +1,9 @@
 class Server {
-  String name;
-  var extractor;
-
   Server({
     required this.name,
-    required this.extractor,
+    this.extractor,
   });
+
+  String name;
+  dynamic extractor;
 }

@@ -157,7 +157,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
 
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      PageType pageType = _tabController.index == 0 ? PageType.movies : PageType.tv_shows;
+      PageType pageType = _tabController.index == 0 ? PageType.movies : PageType.tvShows;
       setState(() => _pageType = pageType);
     });
 

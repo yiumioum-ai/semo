@@ -52,7 +52,7 @@ class _TvShowState extends State<TvShow> {
       final result = await _tmdbService.getRecommendations(
         _tvShow.id,
         pageKey,
-        PageType.tv_shows,
+        PageType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -64,7 +64,7 @@ class _TvShowState extends State<TvShow> {
       final result = await _tmdbService.getSimilar(
         _tvShow.id,
         pageKey,
-        PageType.tv_shows,
+        PageType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -249,7 +249,7 @@ class _TvShowState extends State<TvShow> {
             title: episode.name,
             stream: stream,
             subtitles: subs,
-            pageType: PageType.tv_shows,
+            pageType: PageType.tvShows,
           ),
         );
         if (result != null) _handlePlayerResult(result);
@@ -488,7 +488,7 @@ class _TvShowState extends State<TvShow> {
                           ViewAll(
                             title: 'Recommendations',
                             source: Urls.getTvShowRecommendations(_tvShow.id),
-                            pageType: PageType.tv_shows,
+                            pageType: PageType.tvShows,
                           ),
                         ),
                       ),
@@ -517,7 +517,7 @@ class _TvShowState extends State<TvShow> {
                           ViewAll(
                             title: 'Similar',
                             source: Urls.getTvShowSimilar(_tvShow.id),
-                            pageType: PageType.tv_shows,
+                            pageType: PageType.tvShows,
                           ),
                         ),
                       ),

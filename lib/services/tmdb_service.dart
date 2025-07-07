@@ -170,7 +170,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.tv_shows,
+          PageType.tvShows,
           json.decode(response.body),
         );
       }
@@ -425,7 +425,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.tv_shows,
+          PageType.tvShows,
           json.decode(response.body),
         );
       }

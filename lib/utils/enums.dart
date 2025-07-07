@@ -1,6 +1,6 @@
 enum PageType {
   movies,
-  tv_shows,
+  tvShows,
   favorites,
   settings
 }

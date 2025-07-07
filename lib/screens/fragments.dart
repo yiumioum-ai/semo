@@ -78,7 +78,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           icon: Icons.video_library,
           title: 'TV Shows',
           widget: TvShows(),
-          pageType: PageType.tv_shows,
+          pageType: PageType.tvShows,
         ),
         NavigationPage(
           icon: Icons.favorite,
@@ -87,7 +87,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
             controller: _tabController,
             children: [
               Favorites(pageType: PageType.movies),
-              Favorites(pageType: PageType.tv_shows),
+              Favorites(pageType: PageType.tvShows),
             ],
           ),
           pageType: PageType.favorites,

@@ -28,7 +28,7 @@ class MediaCard extends StatelessWidget {
       children: [
         Expanded(
           child: CachedNetworkImage(
-            imageUrl: '${Urls.imageBase_w185}$posterPath',
+            imageUrl: '${Urls.image185}$posterPath',
             placeholder: (context, url) {
               return Container(
                 width: MediaQuery.of(context).size.width * 0.3,

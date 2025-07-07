@@ -162,12 +162,12 @@ class _FavoritesState extends State<Favorites> {
     double voteAverage;
 
     if (_pageType == PageType.movies) {
-      posterUrl = '${Urls.imageBase_w185}${movie!.posterPath}';
+      posterUrl = '${Urls.image185}${movie!.posterPath}';
       title = movie.title;
       releaseDate = movie.releaseDate;
       voteAverage = movie.voteAverage;
     } else {
-      posterUrl = '${Urls.imageBase_w185}${tvShow!.posterPath}';
+      posterUrl = '${Urls.image185}${tvShow!.posterPath}';
       title = tvShow.name;
       releaseDate = tvShow.firstAirDate;
       voteAverage = tvShow.voteAverage;

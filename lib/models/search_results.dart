@@ -1,7 +1,7 @@
 import 'package:semo/models/movie.dart';
 import 'package:semo/models/person.dart';
 import 'package:semo/models/tv_show.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 
 class SearchResults {
   int page;
@@ -20,14 +20,14 @@ class SearchResults {
     this.cast,
   });
 
-  factory SearchResults.fromJson(PageType? pageType, Map<String, dynamic> json) {
+  factory SearchResults.fromJson(MediaType? mediaType, Map<String, dynamic> json) {
     List<Movie>? movies;
     List<TvShow>? tvShows;
     List<Person>? cast;
 
-    if (pageType != null) {
+    if (mediaType != null) {
       List results = json['results'] as List;
-      if (pageType == PageType.movies) {
+      if (mediaType == MediaType.movies) {
         movies = results.map((json) => Movie.fromJson(json)).toList();
       } else {
         tvShows = results.map((json) => TvShow.fromJson(json)).toList();

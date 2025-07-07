@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 
 class NavigationPage {
   IconData icon;
   String title;
   Widget widget;
-  PageType pageType;
+  MediaType mediaType;
 
   NavigationPage({
     required this.icon,
     required this.title,
     required this.widget,
-    required this.pageType,
+    this.mediaType = MediaType.none,
   });
 }

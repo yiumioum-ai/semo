@@ -17,7 +17,7 @@ import 'package:semo/services/favorites_service.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/subtitle_service.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
@@ -54,7 +54,7 @@ class _MovieState extends State<Movie> {
       final result = await _tmdbService.getRecommendations(
         _movie.id,
         pageKey,
-        PageType.movies,
+        MediaType.movies,
       );
       return result.movies ?? [];
     },
@@ -66,7 +66,7 @@ class _MovieState extends State<Movie> {
       final result = await _tmdbService.getSimilar(
         _movie.id,
         pageKey,
-        PageType.movies,
+        MediaType.movies,
       );
       return result.movies ?? [];
     },
@@ -202,7 +202,7 @@ class _MovieState extends State<Movie> {
             title: _movie.title,
             stream: stream,
             subtitles: subs,
-            pageType: PageType.movies,
+            mediaType: MediaType.movies,
           ),
         );
         if (result != null) _handlePlayerResult(result);
@@ -387,7 +387,7 @@ class _MovieState extends State<Movie> {
                               ViewAll(
                                 title: 'Recommendations',
                                 source: Urls.getMovieRecommendations(_movie.id),
-                                pageType: PageType.movies,
+                                mediaType: MediaType.movies,
                               ),
                             ),
                       ),
@@ -418,7 +418,7 @@ class _MovieState extends State<Movie> {
                               ViewAll(
                                 title: 'Similar',
                                 source: Urls.getMovieSimilar(_movie.id),
-                                pageType: PageType.movies,
+                                mediaType: MediaType.movies,
                               ),
                             ),
                       ),

@@ -15,7 +15,7 @@ import 'package:semo/screens/tv_show.dart';
 import 'package:semo/screens/view_all.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -316,7 +316,7 @@ class _TvShowsState extends State<TvShows> {
                           'with_watch_providers': '${_streamingPlatforms[index].id}',
                           'watch_region': 'US',
                         },
-                        pageType: PageType.tvShows,
+                        mediaType: MediaType.tvShows,
                       ),
                     ),
                   ),
@@ -363,7 +363,7 @@ class _TvShowsState extends State<TvShows> {
                         title: _genres[index].name,
                         source: Urls.discoverTvShow,
                         parameters: {'with_genres': '${_genres[index].id}'},
-                        pageType: PageType.tvShows,
+                        mediaType: MediaType.tvShows,
                       ),
                     ),
                   ),
@@ -413,7 +413,7 @@ class _TvShowsState extends State<TvShows> {
                       ViewAll(
                         title: 'Popular',
                         source: Urls.popularTvShows,
-                        pageType: PageType.tvShows,
+                        mediaType: MediaType.tvShows,
                       ),
                     ),
                   ),
@@ -438,7 +438,7 @@ class _TvShowsState extends State<TvShows> {
                       ViewAll(
                         title: 'Top Rated',
                         source: Urls.topRatedTvShows,
-                        pageType: PageType.tvShows,
+                        mediaType: MediaType.tvShows,
                       ),
                     ),
                   ),

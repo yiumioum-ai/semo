@@ -15,7 +15,7 @@ import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/db_names.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/components/pop_up_menu.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -23,10 +23,10 @@ import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
 class Favorites extends StatefulWidget {
-  PageType pageType;
+  MediaType mediaType;
 
   Favorites({
-    required this.pageType,
+    required this.mediaType,
   });
 
   @override
@@ -34,7 +34,7 @@ class Favorites extends StatefulWidget {
 }
 
 class _FavoritesState extends State<Favorites> {
-  PageType? _pageType;
+  MediaType? _mediaType;
   Spinner? _spinner;
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -67,7 +67,7 @@ class _FavoritesState extends State<Favorites> {
     final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
     await user.get().then((DocumentSnapshot doc) {
       Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
-      List<int> rawFavorites = ((data[_pageType == PageType.movies ? 'movies' : 'tv_shows'] ?? []) as List<dynamic>).cast<int>();
+      List<int> rawFavorites = ((data[_mediaType == MediaType.movies ? 'movies' : 'tv_shows'] ?? []) as List<dynamic>).cast<int>();
       setState(() => _rawFavorites = rawFavorites);
       for (int id in rawFavorites) getFavoriteDetails(id);
     }, onError: (e) {
@@ -92,7 +92,7 @@ class _FavoritesState extends State<Favorites> {
     };
 
     Uri uri = Uri.parse(
-      _pageType == PageType.movies ? Urls.getMovieDetails(id) : Urls.getTvShowDetails(id),
+      _mediaType == MediaType.movies ? Urls.getMovieDetails(id) : Urls.getTvShowDetails(id),
     );
 
     Response request = await http.get(
@@ -106,7 +106,7 @@ class _FavoritesState extends State<Favorites> {
     if (response.isNotEmpty) {
       var data = json.decode(response);
 
-      var mediaModel = _pageType == PageType.movies ? model.Movie.fromJson(data) : model.TvShow.fromJson(data);
+      var mediaModel = _mediaType == MediaType.movies ? model.Movie.fromJson(data) : model.TvShow.fromJson(data);
 
       setState(() => _favorites.add(mediaModel));
     } else {
@@ -146,7 +146,7 @@ class _FavoritesState extends State<Favorites> {
 
   @override
   void initState() {
-    _pageType = widget.pageType;
+    _mediaType = widget.mediaType;
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
@@ -161,7 +161,7 @@ class _FavoritesState extends State<Favorites> {
     String posterUrl, title, releaseDate;
     double voteAverage;
 
-    if (_pageType == PageType.movies) {
+    if (_mediaType == MediaType.movies) {
       posterUrl = '${Urls.image185}${movie!.posterPath}';
       title = movie.title;
       releaseDate = movie.releaseDate;
@@ -253,7 +253,7 @@ class _FavoritesState extends State<Favorites> {
                       ],
                     ),
                     onTap: () {
-                      if (_pageType == PageType.movies) {
+                      if (_mediaType == MediaType.movies) {
                         navigate(destination: Movie(movie!));
                       } else {
                         navigate(destination: TvShow(tvShow!));
@@ -340,7 +340,7 @@ class _FavoritesState extends State<Favorites> {
             itemCount: _favorites.length,
             itemBuilder: (context, index) {
               var mediaModel = _favorites[index];
-              if (_pageType == PageType.movies) {
+              if (_mediaType == MediaType.movies) {
                 return ResultCard(movie: mediaModel as model.Movie);
               } else {
                 return ResultCard(tvShow: mediaModel as model.TvShow);

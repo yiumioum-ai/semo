@@ -10,17 +10,17 @@ import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/services/recent_searches_service.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 
 import '../components/vertical_media_list.dart' show VerticalMediaList;
 
 class Search extends StatefulWidget {
-  final PageType pageType;
+  final MediaType mediaType;
 
   const Search({
     Key? key,
-    required this.pageType,
+    required this.mediaType,
   }) : super(key: key);
 
   @override
@@ -33,7 +33,7 @@ class _SearchState extends State<Search> {
   final RecentSearchesService _recentSearchesService = RecentSearchesService();
 
   // State
-  late PageType _pageType;
+  late MediaType _mediaType;
   bool _isSearched = false;
   bool _isConnectedToInternet = true;
 
@@ -48,11 +48,11 @@ class _SearchState extends State<Search> {
     fetchPage: (pageKey) async {
       if (_currentQuery.isEmpty) return [];
 
-      final result = _pageType == PageType.movies
+      final result = _mediaType == MediaType.movies
           ? await _tmdbService.searchMovies(_currentQuery, pageKey)
           : await _tmdbService.searchTvShows(_currentQuery, pageKey);
 
-      return _pageType == PageType.movies
+      return _mediaType == MediaType.movies
           ? (result.movies ?? [])
           : (result.tvShows ?? []);
     },
@@ -64,7 +64,7 @@ class _SearchState extends State<Search> {
   @override
   void initState() {
     super.initState();
-    _pageType = widget.pageType;
+    _mediaType = widget.mediaType;
     _initializeScreen();
   }
 
@@ -99,7 +99,7 @@ class _SearchState extends State<Search> {
   }
 
   Future<void> _loadRecentSearches() async {
-    final searches = await _recentSearchesService.getRecentSearches(_pageType);
+    final searches = await _recentSearchesService.getRecentSearches(_mediaType);
     if (mounted) {
       setState(() => _recentSearches = searches);
     }
@@ -107,7 +107,7 @@ class _SearchState extends State<Search> {
 
   Future<void> _addToRecentSearches(String query) async {
     try {
-      await _recentSearchesService.addToRecentSearches(_pageType, query);
+      await _recentSearchesService.addToRecentSearches(_mediaType, query);
       await _loadRecentSearches();
     } catch (e) {
       _showErrorSnackBar('Failed to save search');
@@ -116,7 +116,7 @@ class _SearchState extends State<Search> {
 
   Future<void> _removeFromRecentSearches(String query) async {
     try {
-      await _recentSearchesService.removeFromRecentSearches(_pageType, query);
+      await _recentSearchesService.removeFromRecentSearches(_mediaType, query);
       await _loadRecentSearches();
     } catch (e) {
       _showErrorSnackBar('Failed to remove search');
@@ -166,7 +166,7 @@ class _SearchState extends State<Search> {
   }
 
   Future<void> _navigateToMedia(dynamic media) async {
-    if (_pageType == PageType.movies) {
+    if (_mediaType == MediaType.movies) {
       await NavigationHelper.navigate(context, Movie(media as model.Movie));
     } else {
       await NavigationHelper.navigate(context, TvShow(media as model.TvShow));
@@ -221,7 +221,7 @@ class _SearchState extends State<Search> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Search for ${_pageType == PageType.movies ? 'movies' : 'TV shows'}',
+              'Search for ${_mediaType == MediaType.movies ? 'movies' : 'TV shows'}',
               style: Theme.of(context)
                   .textTheme
                   .displayMedium!
@@ -262,7 +262,7 @@ class _SearchState extends State<Search> {
     return VerticalMediaList<dynamic>(
       pagingController: _searchPagingController,
       itemBuilder: (context, media, index) {
-        if (_pageType == PageType.movies) {
+        if (_mediaType == MediaType.movies) {
           final movie = media as model.Movie;
           return MediaCard(
             posterPath: movie.posterPath,

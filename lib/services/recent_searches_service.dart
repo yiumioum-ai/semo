@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/db_names.dart';
-import '../utils/enums.dart';
+import '../enums/media_type.dart';
 
 class RecentSearchesService {
   static final RecentSearchesService _instance = RecentSearchesService._internal();
@@ -11,11 +11,11 @@ class RecentSearchesService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String _getFieldName(PageType pageType) {
-    return pageType == PageType.movies ? 'movies' : 'tv_shows';
+  String _getFieldName(MediaType mediaType) {
+    return mediaType == MediaType.movies ? 'movies' : 'tv_shows';
   }
 
-  Future<List<String>> getRecentSearches(PageType pageType) async {
+  Future<List<String>> getRecentSearches(MediaType mediaType) async {
     try {
       final doc = await _firestore
           .collection(DB.recentSearches)
@@ -24,7 +24,7 @@ class RecentSearchesService {
 
       if (doc.exists) {
         final data = doc.data();
-        final searches = ((data?[_getFieldName(pageType)] ?? []) as List<dynamic>)
+        final searches = ((data?[_getFieldName(mediaType)] ?? []) as List<dynamic>)
             .cast<String>();
 
         // Return in reverse order (most recent first)
@@ -36,10 +36,10 @@ class RecentSearchesService {
     return [];
   }
 
-  Future<void> addToRecentSearches(PageType pageType, String query) async {
+  Future<void> addToRecentSearches(MediaType mediaType, String query) async {
     try {
-      final fieldName = _getFieldName(pageType);
-      final searches = await getRecentSearches(pageType);
+      final fieldName = _getFieldName(mediaType);
+      final searches = await getRecentSearches(mediaType);
 
       // Remove if already exists to avoid duplicates
       searches.remove(query);
@@ -62,10 +62,10 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> removeFromRecentSearches(PageType pageType, String query) async {
+  Future<void> removeFromRecentSearches(MediaType mediaType, String query) async {
     try {
-      final fieldName = _getFieldName(pageType);
-      final searches = await getRecentSearches(pageType);
+      final fieldName = _getFieldName(mediaType);
+      final searches = await getRecentSearches(mediaType);
 
       searches.remove(query);
 
@@ -79,9 +79,9 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> clearRecentSearches(PageType pageType) async {
+  Future<void> clearRecentSearches(MediaType mediaType) async {
     try {
-      final fieldName = _getFieldName(pageType);
+      final fieldName = _getFieldName(mediaType);
 
       await _firestore
           .collection(DB.recentSearches)

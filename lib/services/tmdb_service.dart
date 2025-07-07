@@ -9,7 +9,7 @@ import '../models/tv_show.dart';
 import '../models/person.dart';
 import '../models/search_results.dart';
 import '../utils/api_keys.dart';
-import '../utils/enums.dart';
+import '../enums/media_type.dart';
 import '../utils/urls.dart';
 
 class TMDBService {
@@ -78,7 +78,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.movies,
+          MediaType.movies,
           json.decode(response.body),
         );
       }
@@ -170,7 +170,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.tvShows,
+          MediaType.tvShows,
           json.decode(response.body),
         );
       }
@@ -281,13 +281,13 @@ class TMDBService {
   Future<SearchResults> getRecommendations(
       int id,
       int page,
-      PageType pageType,
+      MediaType mediaType,
       ) async {
-    final url = pageType == PageType.movies
+    final url = mediaType == MediaType.movies
         ? Urls.getMovieRecommendations(id)
         : Urls.getTvShowRecommendations(id);
 
-    return pageType == PageType.movies
+    return mediaType == MediaType.movies
         ? _getMovies(url, page)
         : _getTvShows(url, page);
   }
@@ -295,13 +295,13 @@ class TMDBService {
   Future<SearchResults> getSimilar(
       int id,
       int page,
-      PageType pageType,
+      MediaType mediaType,
       ) async {
-    final url = pageType == PageType.movies
+    final url = mediaType == MediaType.movies
         ? Urls.getMovieSimilar(id)
         : Urls.getTvShowSimilar(id);
 
-    return pageType == PageType.movies
+    return mediaType == MediaType.movies
         ? _getMovies(url, page)
         : _getTvShows(url, page);
   }
@@ -402,7 +402,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.movies,
+          MediaType.movies,
           json.decode(response.body),
         );
       }
@@ -425,7 +425,7 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         return SearchResults.fromJson(
-          PageType.tvShows,
+          MediaType.tvShows,
           json.decode(response.body),
         );
       }

@@ -1,119 +1,98 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:semo/screens/favorites.dart';
-import 'package:semo/screens/landing.dart';
-import 'package:semo/models/navigation_page.dart';
-import 'package:semo/screens/movies.dart';
-import 'package:semo/screens/search.dart';
-import 'package:semo/screens/settings.dart';
-import 'package:semo/screens/tv_shows.dart';
-import 'package:semo/utils/enums.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
+import "package:firebase_auth/firebase_auth.dart";
+import "package:flutter/material.dart";
+import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
+import "package:semo/screens/favorites.dart";
+import "package:semo/screens/landing.dart";
+import "package:semo/models/navigation_page.dart";
+import "package:semo/screens/movies.dart";
+import "package:semo/screens/search.dart";
+import "package:semo/screens/settings.dart";
+import "package:semo/screens/tv_shows.dart";
+import "package:semo/enums/media_type.dart";
+import "package:semo/utils/navigation_helper.dart";
 
-//ignore: must_be_immutable
 class Fragments extends StatefulWidget {
-  int initialPageIndex, initialFavoritesTabIndex;
-
-  Fragments({
+  const Fragments({
+    super.key,
     this.initialPageIndex = 0,
     this.initialFavoritesTabIndex = 0,
   });
+  
+  final int initialPageIndex;
+  final int initialFavoritesTabIndex;
 
   @override
   _FragmentsState createState() => _FragmentsState();
 }
 
 class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
-  late int _selectedPageIndex;
-  List<NavigationPage> _navigationPages = [];
+  int _selectedPageIndex = 0;
+  List<NavigationPage> _navigationPages = <NavigationPage>[];
   late TabController _tabController;
+  late StreamSubscription<dynamic> _connectionSubscription;
   bool _isConnectedToInternet = true;
-  late StreamSubscription _connectionSubscription;
 
-  navigate({required Widget destination, bool replace = false}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        pageTransition,
-      );
-    } else {
-      await Navigator.push(
-        context,
-        pageTransition,
-      );
-    }
-  }
-
-  checkUserSession() async {
-    await FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-        navigate(
-          destination: Landing(),
+  void checkUserSession() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (mounted && user == null) {
+        NavigationHelper.navigate(
+          context,
+          Landing(),
           replace: true,
         );
       }
     });
   }
 
-  populatePages() {
-    _selectedPageIndex = widget.initialPageIndex;
-    _tabController = TabController(length: 2, initialIndex: widget.initialFavoritesTabIndex, vsync: this);
+  void populatePages() {
     setState(() {
-      _navigationPages = [
+      _navigationPages = <NavigationPage>[
         NavigationPage(
           icon: Icons.movie,
-          title: 'Movies',
-          widget: Movies(),
-          pageType: PageType.movies,
+          title: "Movies",
+          widget: const Movies(),
+          mediaType: MediaType.movies,
         ),
         NavigationPage(
           icon: Icons.video_library,
-          title: 'TV Shows',
-          widget: TvShows(),
-          pageType: PageType.tvShows,
+          title: "TV Shows",
+          widget: const TvShows(),
+          mediaType: MediaType.tvShows,
         ),
         NavigationPage(
           icon: Icons.favorite,
-          title: 'Favorites',
+          title: "Favorites",
           widget: TabBarView(
             controller: _tabController,
-            children: [
-              Favorites(pageType: PageType.movies),
-              Favorites(pageType: PageType.tvShows),
+            children: <Widget>[
+              Favorites(mediaType: MediaType.movies),
+              Favorites(mediaType: MediaType.tvShows),
             ],
-          ),
-          pageType: PageType.favorites,
+          )
         ),
         NavigationPage(
           icon: Icons.settings,
-          title: 'Settings',
-          widget: Settings(),
-          pageType: PageType.settings,
+          title: "Settings",
+          widget: Settings()
         ),
       ];
     });
   }
 
-  initConnectivity() async {
+  Future<void> initConnectivity() async {
     bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
     setState(() => _isConnectedToInternet = isConnectedToInternet);
 
     _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) async {
-      switch (status) {
-        case InternetStatus.connected:
-          if (mounted) setState(() => _isConnectedToInternet = true);
-          break;
-        case InternetStatus.disconnected:
-          if (mounted) setState(() => _isConnectedToInternet = false);
-          break;
+      if (mounted) {
+        switch (status) {
+          case InternetStatus.connected:
+            setState(() => _isConnectedToInternet = true);
+          case InternetStatus.disconnected:
+            setState(() => _isConnectedToInternet = false);
+        }
       }
     });
   }
@@ -121,6 +100,12 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _selectedPageIndex = widget.initialPageIndex;
+    _tabController = TabController(
+      length: 2,
+      initialIndex: widget.initialFavoritesTabIndex,
+      vsync: this,
+    );
     initConnectivity();
     checkUserSession();
     populatePages();
@@ -132,9 +117,8 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Widget NavigationTile(int index) {
-    return Container(
-      margin: EdgeInsets.symmetric(
+  Widget NavigationTile(int index) => Container(
+      margin: const EdgeInsets.symmetric(
         horizontal: 18,
       ),
       child: ListTile(
@@ -148,7 +132,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         selected: _selectedPageIndex == index,
         leading: Icon(_navigationPages[index].icon),
         title: Container(
-          padding: _selectedPageIndex == index ? EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
+          padding: _selectedPageIndex == index ? const EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
           child: Text(_navigationPages[index].title),
         ),
         onTap: () {
@@ -157,66 +141,63 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         },
       ),
     );
-  }
 
-  Widget NoInternet() {
-    return Container(
+  Widget NoInternet() => Container(
       width: double.infinity,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
+        children: <Widget>[
+          const Icon(
             Icons.wifi_off_sharp,
             color: Colors.white54,
             size: 80,
           ),
           Container(
-            margin: EdgeInsets.only(top: 10),
+            margin: const EdgeInsets.only(top: 10),
             child: Text(
-              'You have lost internet connection',
+              "You have lost internet connection",
               style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
             ),
           ),
         ],
       ),
     );
-  }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(_navigationPages[_selectedPageIndex].title),
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu),
+          builder: (BuildContext context) => IconButton(
+            icon: const Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         bottom: _isConnectedToInternet && _selectedPageIndex == 2 ? TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const <Tab>[
             Tab(
               icon: Icon(Icons.movie),
-              text: 'Movies',
+              text: "Movies",
             ),
             Tab(
               icon: Icon(Icons.video_library),
-              text: 'TV Shows',
+              text: "TV Shows",
             ),
           ],
         ) : null,
-        actions: [
+        actions: <Widget>[
           (_isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.search,
               color: Colors.white,
             ),
             onPressed: () {
-              navigate(
-                destination: Search(pageType: _navigationPages[_selectedPageIndex].pageType),
+              NavigationHelper.navigate(
+                context,
+                Search(mediaType: _navigationPages[_selectedPageIndex].mediaType),
               );
             },
           ) : Container(),
@@ -232,26 +213,25 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           child: ListView(
             padding: EdgeInsets.zero,
-            children: [
+            children: <Widget>[
               Container(
                 height: 200,
                 child: Center(
                   child: Image.asset(
-                  'assets/icon.png',
+                  "assets/icon.png",
                     width: 80,
                     height: 80,
                   ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Divider(color: Theme.of(context).cardColor),
               ),
-              for (final (index, _) in _navigationPages.indexed) NavigationTile(index),
+              for (final (int index, _) in _navigationPages.indexed) NavigationTile(index),
             ],
           ),
         ),
       ),
     );
-  }
 }

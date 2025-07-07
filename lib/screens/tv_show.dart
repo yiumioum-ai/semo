@@ -18,7 +18,7 @@ import 'package:semo/services/favorites_service.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/subtitle_service.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
@@ -52,7 +52,7 @@ class _TvShowState extends State<TvShow> {
       final result = await _tmdbService.getRecommendations(
         _tvShow.id,
         pageKey,
-        PageType.tvShows,
+        MediaType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -64,7 +64,7 @@ class _TvShowState extends State<TvShow> {
       final result = await _tmdbService.getSimilar(
         _tvShow.id,
         pageKey,
-        PageType.tvShows,
+        MediaType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -249,7 +249,7 @@ class _TvShowState extends State<TvShow> {
             title: episode.name,
             stream: stream,
             subtitles: subs,
-            pageType: PageType.tvShows,
+            mediaType: MediaType.tvShows,
           ),
         );
         if (result != null) _handlePlayerResult(result);
@@ -488,7 +488,7 @@ class _TvShowState extends State<TvShow> {
                           ViewAll(
                             title: 'Recommendations',
                             source: Urls.getTvShowRecommendations(_tvShow.id),
-                            pageType: PageType.tvShows,
+                            mediaType: MediaType.tvShows,
                           ),
                         ),
                       ),
@@ -517,7 +517,7 @@ class _TvShowState extends State<TvShow> {
                           ViewAll(
                             title: 'Similar',
                             source: Urls.getTvShowSimilar(_tvShow.id),
-                            pageType: PageType.tvShows,
+                            mediaType: MediaType.tvShows,
                           ),
                         ),
                       ),

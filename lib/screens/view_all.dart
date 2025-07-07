@@ -16,21 +16,21 @@ import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/utils/api_keys.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 
 class ViewAll extends StatefulWidget {
   final String title;
   final String source;
   final Map<String, String>? parameters;
-  final PageType pageType;
+  final MediaType mediaType;
 
   const ViewAll({
     Key? key,
     required this.title,
     required this.source,
     this.parameters,
-    required this.pageType,
+    required this.mediaType,
   }) : super(key: key);
 
   @override
@@ -48,7 +48,7 @@ class _ViewAllState extends State<ViewAll> {
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       await _fetchData(pageKey);
-      return widget.pageType == PageType.movies
+      return widget.mediaType == MediaType.movies
           ? (_searchResults.movies ?? [])
           : (_searchResults.tvShows ?? []);
     },
@@ -108,7 +108,7 @@ class _ViewAllState extends State<ViewAll> {
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         final searchResults = model.SearchResults.fromJson(
-          widget.pageType,
+          widget.mediaType,
           json.decode(response.body),
         );
 
@@ -123,7 +123,7 @@ class _ViewAllState extends State<ViewAll> {
   }
 
   Future<void> _navigateToMedia(dynamic media) async {
-    if (widget.pageType == PageType.movies) {
+    if (widget.mediaType == MediaType.movies) {
       await NavigationHelper.navigate(context, Movie(media as model.Movie));
     } else {
       await NavigationHelper.navigate(context, TvShow(media as model.TvShow));
@@ -134,7 +134,7 @@ class _ViewAllState extends State<ViewAll> {
     return VerticalMediaList<dynamic>(
       pagingController: _pagingController,
       itemBuilder: (context, media, index) {
-        if (widget.pageType == PageType.movies) {
+        if (widget.mediaType == MediaType.movies) {
           final movie = media as model.Movie;
           return MediaCard(
             posterPath: movie.posterPath,
@@ -159,8 +159,8 @@ class _ViewAllState extends State<ViewAll> {
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
       padding: EdgeInsets.zero,
-      emptyStateMessage: 'No ${widget.pageType == PageType.movies ? 'movies' : 'TV shows'} found',
-      errorMessage: 'Failed to load ${widget.pageType == PageType.movies ? 'movies' : 'TV shows'}',
+      emptyStateMessage: 'No ${widget.mediaType == MediaType.movies ? 'movies' : 'TV shows'} found',
+      errorMessage: 'Failed to load ${widget.mediaType == MediaType.movies ? 'movies' : 'TV shows'}',
     );
   }
 

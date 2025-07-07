@@ -15,7 +15,7 @@ import 'package:semo/models/tv_show.dart'  as model;
 import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
@@ -35,7 +35,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
   List<model.Movie> _movies = [];
   List<model.TvShow> _tvShows = [];
   late TabController _tabController;
-  PageType _pageType = PageType.movies;
+  MediaType _mediaType = MediaType.movies;
   Spinner? _spinner;
   bool _isConnectedToInternet = true;
   late StreamSubscription _connectionSubscription;
@@ -157,8 +157,8 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
 
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      PageType pageType = _tabController.index == 0 ? PageType.movies : PageType.tvShows;
-      setState(() => _pageType = pageType);
+      MediaType mediaType = _tabController.index == 0 ? MediaType.movies : MediaType.tvShows;
+      setState(() => _mediaType = mediaType);
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -228,7 +228,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
     String posterUrl, title, releaseDate;
     double voteAverage;
 
-    if (_pageType == PageType.movies) {
+    if (_mediaType == MediaType.movies) {
       posterUrl = '${Urls.image185}${movie!.posterPath}';
       title = movie.title;
       releaseDate = movie.releaseDate;
@@ -305,7 +305,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
                     ],
                   ),
                   onTap: () {
-                    if (_pageType == PageType.movies) {
+                    if (_mediaType == MediaType.movies) {
                       navigate(destination: Movie(movie!));
                     } else {
                       navigate(destination: TvShow(tvShow!));

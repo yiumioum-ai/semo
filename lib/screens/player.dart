@@ -10,7 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:semo/models/duration_state.dart';
 import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/preferences.dart';
 import 'package:semo/models/subtitle_style.dart' as local;
 import 'package:subtitle_wrapper_package/subtitle_wrapper_package.dart';
@@ -25,7 +25,7 @@ class Player extends StatefulWidget {
   String title;
   MediaStream stream;
   List<File>? subtitles;
-  PageType pageType;
+  MediaType mediaType;
 
   Player({
     required this.id,
@@ -34,7 +34,7 @@ class Player extends StatefulWidget {
     required this.title,
     required this.stream,
     this.subtitles,
-    required this.pageType,
+    required this.mediaType,
   });
 
   @override
@@ -46,7 +46,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
   String? _title;
   MediaStream? _stream;
   List<File>? _subtitles;
-  PageType? _pageType;
+  MediaType? _mediaType;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
   VideoPlayerController? _videoPlayerController;
@@ -94,7 +94,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
       var recentlyWatched;
 
-      if (_pageType == PageType.movies) {
+      if (_mediaType == MediaType.movies) {
         recentlyWatched = ((data['movies'] ?? {}) as Map<dynamic, dynamic>).map<String, Map<String, dynamic>>((key, value) {
           return MapEntry(key, Map<String, dynamic>.from(value));
         });
@@ -175,8 +175,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       }
 
       user.set({
-        _pageType!.name: recentlyWatched,
-      }, SetOptions(mergeFields: [_pageType!.name]));
+        _mediaType!.name: recentlyWatched,
+      }, SetOptions(mergeFields: [_mediaType!.name]));
     }, onError: (e) => print("Error getting user: $e"));
   }
 
@@ -388,7 +388,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
     _title = widget.title;
     _stream = widget.stream;
     _subtitles = widget.subtitles;
-    _pageType = widget.pageType;
+    _mediaType = widget.mediaType;
 
     super.initState();
 

@@ -15,7 +15,7 @@ import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/view_all.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/enums.dart';
+import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -326,7 +326,7 @@ class _MoviesState extends State<Movies> {
                           'with_watch_providers': '${_streamingPlatforms[index].id}',
                           'watch_region': 'US',
                         },
-                        pageType: PageType.movies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -373,7 +373,7 @@ class _MoviesState extends State<Movies> {
                         title: _genres[index].name,
                         source: Urls.discoverMovie,
                         parameters: {'with_genres': '${_genres[index].id}'},
-                        pageType: PageType.movies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -423,7 +423,7 @@ class _MoviesState extends State<Movies> {
                       ViewAll(
                         title: 'Trending',
                         source: Urls.trendingMovies,
-                        pageType: PageType.movies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -448,7 +448,7 @@ class _MoviesState extends State<Movies> {
                       ViewAll(
                         title: 'Popular',
                         source: Urls.popularMovies,
-                        pageType: PageType.movies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -473,7 +473,7 @@ class _MoviesState extends State<Movies> {
                       ViewAll(
                         title: 'Top Rated',
                         source: Urls.topRatedMovies,
-                        pageType: PageType.movies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),

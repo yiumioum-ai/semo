@@ -14,7 +14,7 @@ import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart'  as model;
 import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
-import 'package:semo/utils/api_keys.dart';
+import 'package:semo/utils/secrets.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -70,7 +70,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
 
   Future<void> getMovies() async {
     Map<String, String> headers = {
-      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+      HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
     };
 
     Uri uri = Uri.parse(Urls.getPersonMovies(_person!.id));
@@ -102,7 +102,7 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
 
   Future<void> getTvShows() async {
     Map<String, String> headers = {
-      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+      HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
     };
 
     Uri uri = Uri.parse(Urls.getPersonTvShows(_person!.id));

@@ -8,7 +8,7 @@ import '../models/movie.dart';
 import '../models/tv_show.dart';
 import '../models/person.dart';
 import '../models/search_results.dart';
-import '../utils/api_keys.dart';
+import '../utils/secrets.dart';
 import '../enums/media_type.dart';
 import '../utils/urls.dart';
 
@@ -18,7 +18,7 @@ class TMDBService {
   TMDBService._internal();
 
   final Map<String, String> _headers = {
-    HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+    HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
   };
 
   Map<String, String> getHeaders() {

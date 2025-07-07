@@ -4,7 +4,7 @@ import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import '../utils/api_keys.dart';
+import '../utils/secrets.dart';
 import '../utils/urls.dart';
 
 class SubtitleService {
@@ -29,7 +29,7 @@ class SubtitleService {
 
     try {
       final parameters = <String, dynamic>{
-        'api_key': APIKeys.subdl,
+        'api_key': Secrets.subdlApiKey,
         'tmdb_id': '$tmdbId',
         'languages': 'EN',
         'subs_per_page': '5',

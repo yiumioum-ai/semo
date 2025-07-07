@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +15,6 @@ import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/services/tmdb_service.dart';
-import 'package:semo/utils/api_keys.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 

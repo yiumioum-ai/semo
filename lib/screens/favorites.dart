@@ -13,7 +13,7 @@ import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
-import 'package:semo/utils/api_keys.dart';
+import 'package:semo/utils/secrets.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/components/pop_up_menu.dart';
@@ -88,7 +88,7 @@ class _FavoritesState extends State<Favorites> {
 
   Future<void> getFavoriteDetails(int id) async {
     Map<String, String> headers = {
-      HttpHeaders.authorizationHeader: 'Bearer ${APIKeys.tmdbAccessTokenAuth}',
+      HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
     };
 
     Uri uri = Uri.parse(

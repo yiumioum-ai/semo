@@ -17,7 +17,7 @@ import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/navigation_helper.dart';
-import 'package:semo/utils/spinner.dart';
+import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 

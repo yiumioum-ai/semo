@@ -16,7 +16,7 @@ import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/tv_show.dart';
 import 'package:semo/utils/api_keys.dart';
 import 'package:semo/utils/enums.dart';
-import 'package:semo/utils/spinner.dart';
+import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 

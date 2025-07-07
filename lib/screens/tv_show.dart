@@ -21,7 +21,7 @@ import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/utils/enums.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/navigation_helper.dart';
-import 'package:semo/utils/spinner.dart';
+import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
 class TvShow extends StatefulWidget {

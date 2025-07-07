@@ -16,7 +16,7 @@ import 'package:semo/screens/subtitles_preferences.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/preferences.dart';
-import 'package:semo/utils/spinner.dart';
+import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';

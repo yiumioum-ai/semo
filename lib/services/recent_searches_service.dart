@@ -43,41 +43,42 @@ class RecentSearchesService {
     } catch (e, s) {
       _logger.e("Error getting recent searches", error: e, stackTrace: s);
     }
+
     return <String>[];
   }
 
   Future<void> addToRecentSearches(MediaType mediaType, String query) async {
-    try {
-      final String fieldName = _getFieldName(mediaType);
-      final List<String> searches = await getRecentSearches(mediaType);
+    final String fieldName = _getFieldName(mediaType);
+    final List<String> searches = await getRecentSearches(mediaType);
 
-      if (!searches.contains(query)) {
-        // Add to beginning
-        searches.insert(0, query);
+    if (!searches.contains(query)) {
+      // Add to beginning
+      searches.insert(0, query);
 
-        // Limit to 20 recent searches
-        if (searches.length > 20) {
-          searches.removeRange(20, searches.length);
-        }
-
-        await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
+      // Limit to 20 recent searches
+      if (searches.length > 20) {
+        searches.removeRange(20, searches.length);
       }
-    } catch (e, s) {
-      _logger.e("Error adding query to recent searches", error: e, stackTrace: s);
+
+      try {
+        await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
+      } catch (e, s) {
+        _logger.e("Error adding query to recent searches", error: e, stackTrace: s);
+      }
     }
   }
 
   Future<void> removeFromRecentSearches(MediaType mediaType, String query) async {
-    try {
-      final String fieldName = _getFieldName(mediaType);
-      final List<String> searches = await getRecentSearches(mediaType);
+    final String fieldName = _getFieldName(mediaType);
+    final List<String> searches = await getRecentSearches(mediaType);
 
-      if (searches.contains(query)) {
-        searches.remove(query);
+    if (searches.contains(query)) {
+      searches.remove(query);
+      try {
         await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
+      } catch (e, s) {
+        _logger.e("Error removing query from recent searches", error: e, stackTrace: s);
       }
-    } catch (e, s) {
-      _logger.e("Error removing query from recent searches", error: e, stackTrace: s);
     }
   }
 

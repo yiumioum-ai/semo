@@ -51,20 +51,23 @@ class RecentSearchesService {
     final String fieldName = _getFieldName(mediaType);
     final List<String> searches = await getRecentSearches(mediaType);
 
-    if (!searches.contains(query)) {
-      // Add to beginning
-      searches.insert(0, query);
+    // Remove duplicate entry
+    if (searches.contains(query)) {
+      searches.remove(query);
+    }
 
-      // Limit to 20 recent searches
-      if (searches.length > 20) {
-        searches.removeRange(20, searches.length);
-      }
+    // Add to beginning
+    searches.insert(0, query);
 
-      try {
-        await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
-      } catch (e, s) {
-        _logger.e("Error adding query to recent searches", error: e, stackTrace: s);
-      }
+    // Limit to 20 recent searches
+    if (searches.length > 20) {
+      searches.removeRange(20, searches.length);
+    }
+
+    try {
+      await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error adding query to recent searches", error: e, stackTrace: s);
     }
   }
 

@@ -27,7 +27,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   /// Override this method to handle dispose logic
   /// Called after dispose
-  Future<void> handleDispose() async {}
+  void handleDispose() {}
 
   /// Override this method to customize the no internet widget
   Widget buildNoInternetWidget() => Center(

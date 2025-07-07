@@ -47,7 +47,7 @@ jobs:
           set -o pipefail
           { flutter pub get; } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
-      - name: Read environment variables
+      - name: Create environment variables
         if: ${{ success() }}
         run: |
           set -o pipefail
@@ -56,7 +56,7 @@ jobs:
             echo "${{ secrets.ENV }}" > .env
           } 2>&1 | tee -a $GITHUB_WORKSPACE/github_action_logs/all.log
 
-      - name: Create environment variables
+      - name: Generate code with build_runner
         if: ${{ success() }}
         run: |
           set -o pipefail

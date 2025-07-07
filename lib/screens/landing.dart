@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import "package:semo/gen/assets.gen.dart";
 import 'package:semo/screens/fragments.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
@@ -18,7 +19,7 @@ class _LandingState extends State<Landing> {
   Spinner? _spinner;
 
   initializeVideo() {
-    _controller = VideoPlayerController.asset('assets/cover_portrait.mp4');
+    _controller = VideoPlayerController.asset(Assets.videos.coverPortrait);
     _controller!.initialize().then((_) {
       _controller!.play();
       _controller!.setLooping(true);

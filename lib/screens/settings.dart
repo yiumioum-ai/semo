@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import "package:semo/gen/assets.gen.dart";
 import 'package:semo/screens/landing.dart';
 import 'package:semo/models/server.dart';
 import 'package:semo/screens/open_source_libraries.dart';
@@ -148,8 +149,7 @@ class _SettingsState extends State<Settings> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/icon.png',
+                Assets.images.appIcon.image(
                   width: 200,
                   height: 200,
                 ),

@@ -27,7 +27,7 @@ class StreamingPlatformCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           child: Image.asset(
-            'assets${platform.logoPath}',
+            '${platform.logoPath}',
             width: MediaQuery.of(context).size.width * .4,
             color: Colors.white,
           ),

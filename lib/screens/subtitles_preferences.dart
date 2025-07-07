@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
+import "package:semo/gen/assets.gen.dart";
 import 'package:semo/models/subtitle_style.dart';
 import 'package:semo/utils/preferences.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
@@ -75,7 +76,7 @@ class _SubtitlesPreferencesState extends State<SubtitlesPreferences> {
       height: MediaQuery.of(context).size.height * 0.25,
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/subtitles_poster.jpg'),
+          image: Assets.images.subtitlesPoster.provider(),
           fit: BoxFit.cover,
         ),
       ),

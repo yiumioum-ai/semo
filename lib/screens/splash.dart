@@ -6,6 +6,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import "package:semo/gen/assets.gen.dart";
 import 'package:semo/screens/fragments.dart';
 import 'package:semo/screens/landing.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
@@ -99,8 +100,7 @@ class _SplashState extends State<Splash> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/icon.png',
+                  Assets.images.appIcon.image(
                     width: 200,
                     height: 200,
                   ),

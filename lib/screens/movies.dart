@@ -8,6 +8,7 @@ import 'package:semo/components/genre_card.dart';
 import 'package:semo/components/horizontal_media_list.dart';
 import 'package:semo/components/media_card.dart';
 import 'package:semo/components/streaming_platform_card.dart';
+import "package:semo/gen/assets.gen.dart";
 import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/streaming_platform.dart';
@@ -48,11 +49,11 @@ class _MoviesState extends State<Movies> {
   // Genres and Streaming Platforms
   List<model.Genre> _genres = [];
   final List<StreamingPlatform> _streamingPlatforms = [
-    StreamingPlatform(id: 8, logoPath: '/netflix.png', name: 'Netflix'),
-    StreamingPlatform(id: 9, logoPath: '/amazon_prime_video.png', name: 'Amazon Prime Video'),
-    StreamingPlatform(id: 2, logoPath: '/apple_tv.png', name: 'Apple TV'),
-    StreamingPlatform(id: 337, logoPath: '/disney_plus.png', name: 'Disney+'),
-    StreamingPlatform(id: 15, logoPath: '/hulu.png', name: 'Hulu'),
+    StreamingPlatform(id: 8, logoPath: Assets.images.netflixLogo.path, name: 'Netflix'),
+    StreamingPlatform(id: 9, logoPath: Assets.images.amazonPrimeVideoLogo.path, name: 'Amazon Prime Video'),
+    StreamingPlatform(id: 2, logoPath: Assets.images.appleTvLogo.path, name: 'Apple TV'),
+    StreamingPlatform(id: 337, logoPath: Assets.images.disneyPlusLogo.path, name: 'Disney+'),
+    StreamingPlatform(id: 15, logoPath: Assets.images.huluLogo.path, name: 'Hulu'),
   ];
 
   // Pagination Controllers using v5.x API

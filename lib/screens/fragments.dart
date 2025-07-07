@@ -3,6 +3,7 @@ import "dart:async";
 import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
+import "package:semo/gen/assets.gen.dart";
 import "package:semo/screens/favorites.dart";
 import "package:semo/screens/landing.dart";
 import "package:semo/models/navigation_page.dart";
@@ -217,8 +218,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
               Container(
                 height: 200,
                 child: Center(
-                  child: Image.asset(
-                  "assets/icon.png",
+                  child: Assets.images.appIcon.image(
                     width: 80,
                     height: 80,
                   ),

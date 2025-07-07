@@ -1,6 +1,7 @@
 /android/signing/
 /ios/Podfile.lock
 /fonts/
+/lib/gen/
 /.env
 /lib/utils/env/env.g.dart
 /firebase.json

@@ -27,9 +27,9 @@ class SubtitleService {
   );
 
   Future<List<File>> _getSubtitles({required int tmdbId, int? seasonNumber, int? episodeNumber}) async {
-    final List<File> srtFiles = <File>[];
-
     try {
+      final List<File> srtFiles = <File>[];
+
       final Map<String, dynamic> parameters = <String, dynamic>{
         "api_key": Secrets.subdlApiKey,
         "tmdb_id": "$tmdbId",
@@ -80,11 +80,11 @@ class SubtitleService {
           }
         }
       }
+
+      return srtFiles;
     } catch (e, s) {
       _logger.e("Error getting subtitles", error: e, stackTrace: s);
       rethrow;
     }
-
-    return srtFiles;
   }
 }

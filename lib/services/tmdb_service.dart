@@ -1,4 +1,3 @@
-import "dart:convert";
 import "dart:io";
 import "dart:math";
 
@@ -68,7 +67,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        return Movie.fromJson(json.decode(response.data));
+        return Movie.fromJson(response.data);
       }
 
       throw Exception("Failed to get movie details for ID: $id");
@@ -83,7 +82,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final Map<String, dynamic> details = json.decode(response.data) as Map<String, dynamic>;
+        final Map<String, dynamic> details = response.data as Map<String, dynamic>;
         return details["runtime"] as int?;
       }
 
@@ -115,7 +114,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(Urls.getTvShowDetails(id));
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        return TvShow.fromJson(json.decode(response.data));
+        return TvShow.fromJson(response.data);
       }
 
       throw Exception("Error getting TV show details for ID: $id");
@@ -130,7 +129,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(Urls.getTvShowDetails(id));
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final List<Map<String, dynamic>> seasonsMap = (json.decode(response.data)["seasons"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> seasonsMap = (response.data["seasons"] as List<dynamic>).cast<Map<String, dynamic>>();
         final List<Season> seasons = <Season>[];
 
         for (final Map<String, dynamic> seasonMap in seasonsMap) {
@@ -155,7 +154,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(Urls.getEpisodes(showId, seasonNumber));
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final List<Map<String, dynamic>> episodesMap = (json.decode(response.data)["episodes"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> episodesMap = (response.data["episodes"] as List<dynamic>).cast<Map<String, dynamic>>();
         final List<Episode> episodes = <Episode>[];
 
         for (Map<String, dynamic> episodeMap in episodesMap) {
@@ -187,7 +186,7 @@ class TMDBService {
       if (response.statusCode == 200 && response.data.isNotEmpty) {
         return SearchResults.fromJson(
           mediaType,
-          json.decode(response.data),
+          response.data,
         );
       }
 
@@ -207,7 +206,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(url);
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final List<Map<String, dynamic>> data = (json.decode(response.data)["genres"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> data = (response.data["genres"] as List<dynamic>).cast<Map<String, dynamic>>();
         return data.map((Map<String, dynamic> json) => Genre.fromJson(json)).toList();
       }
 
@@ -241,7 +240,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(url);
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final List<Map<String, dynamic>> videos = (json.decode(response.data)["results"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> videos = (response.data["results"] as List<dynamic>).cast<Map<String, dynamic>>();
         final List<Map<String, dynamic>> youtubeVideos = videos
             .where((Map<String, dynamic> video) => video["site"] == "YouTube" && video["type"] == "Trailer" && video["official"] == true)
             .toList();
@@ -269,7 +268,7 @@ class TMDBService {
       final Response<dynamic> response = await _dio.get(url);
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final List<Map<String, dynamic>> data = (json.decode(response.data)["cast"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> data = (response.data["cast"] as List<dynamic>).cast<Map<String, dynamic>>();
         final List<Person> allCast = data.map((Map<String, dynamic> json) => Person.fromJson(json)).toList();
         return allCast.where((Person person) => person.department == "Acting").toList();
       }

@@ -37,7 +37,7 @@ class ViewAll extends StatefulWidget {
 class _ViewAllState extends State<ViewAll> {
   // State
   bool _isConnectedToInternet = true;
-  final model.SearchResults _searchResults = model.SearchResults();
+  model.SearchResults _searchResults = model.SearchResults();
   final TMDBService _tmdbService = TMDBService();
 
   // Pagination Controller using v5.x API
@@ -45,10 +45,11 @@ class _ViewAllState extends State<ViewAll> {
   PagingController<int, dynamic>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
-      await _tmdbService.searchFromUrl(widget.mediaType, widget.source, pageKey, widget.parameters);
+      model.SearchResults results = await _tmdbService.searchFromUrl(widget.mediaType, widget.source, pageKey, widget.parameters);
+      setState(() => _searchResults = results);
       return widget.mediaType == MediaType.movies
-          ? (_searchResults.movies ?? [])
-          : (_searchResults.tvShows ?? []);
+          ? (results.movies ?? <model.Movie>[])
+          : (results.tvShows ?? <model.TvShow>[]);
     },
   );
 

@@ -133,6 +133,18 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     }
   }
 
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        backgroundColor: Theme.of(context).cardColor,
+      ),
+    );
+  }
+
   /// Get current connectivity status
   bool get isConnectedToInternet => _isConnectedToInternet;
 

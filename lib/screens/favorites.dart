@@ -1,359 +1,149 @@
-import 'dart:convert';
-import 'dart:io';
+import "package:flutter/material.dart";
+import "package:semo/components/media_card.dart";
+import "package:semo/components/vertical_media_list.dart";
+import "package:semo/models/movie.dart" as model;
+import "package:semo/models/tv_show.dart" as model;
+import "package:semo/screens/base_screen.dart";
+import "package:semo/screens/movie.dart";
+import "package:semo/screens/tv_show.dart";
+import "package:semo/services/favorites_service.dart";
+import "package:semo/services/tmdb_service.dart";
+import "package:semo/enums/media_type.dart";
+import "package:semo/components/pop_up_menu.dart";
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
-import 'package:semo/models/movie.dart' as model;
-import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/screens/movie.dart';
-import 'package:semo/screens/tv_show.dart';
-import 'package:semo/utils/secrets.dart';
-import 'package:semo/utils/db_names.dart';
-import 'package:semo/enums/media_type.dart';
-import 'package:semo/components/pop_up_menu.dart';
-import 'package:semo/components/spinner.dart';
-import 'package:semo/utils/urls.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
-
-//ignore: must_be_immutable
-class Favorites extends StatefulWidget {
-  MediaType mediaType;
-
-  Favorites({
+class Favorites extends BaseScreen {
+  const Favorites({
+    super.key,
     required this.mediaType,
   });
+  
+  final MediaType mediaType;
 
   @override
-  _FavoritesState createState() => _FavoritesState();
+  FavoritesState createState() => FavoritesState();
 }
 
-class _FavoritesState extends State<Favorites> {
-  MediaType? _mediaType;
-  Spinner? _spinner;
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  List<dynamic> _favorites = [];
-  List<int> _rawFavorites = [];
+class FavoritesState extends BaseScreenState<Favorites> {
+  List<dynamic> _favorites = <dynamic>[];
+  final FavoritesService _favoritesService = FavoritesService();
+  final TMDBService _tmdbService = TMDBService();
+  
+  @override
+  String get screenName => "Favorites";
 
-  navigate({required Widget destination, bool replace = false}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        pageTransition,
-      );
-    } else {
-      await Navigator.push(
-        context,
-        pageTransition,
-      ).then((task) {
-        if (task != null && task == 'refresh') refresh();
-      });
+  Future<void> _getFavorites() async {
+    final List<int> favoritesIds = widget.mediaType == MediaType.movies
+        ? await _favoritesService.getFavoriteMovies()
+        : await _favoritesService.getFavoriteTvShows();
+    List<dynamic> favorites = <dynamic>[];
+
+    try {
+      if (widget.mediaType == MediaType.movies) {
+        for (int id in favoritesIds) {
+          model.Movie? movie = await _tmdbService.getMovieDetails(id);
+          if (movie != null) {
+            favorites.add(movie);
+          }
+        }
+      } else if (widget.mediaType == MediaType.tvShows) {
+        for (int id in favoritesIds) {
+          model.TvShow? tvShow = await _tmdbService.getTvShowDetails(id);
+          if (tvShow != null) {
+            favorites.add(tvShow);
+          }
+        }
+      }
+    } catch (_) {
+      showSnackBar("An error occurred.");
     }
+
+    setState(() => _favorites = favorites);
   }
 
-  Future<void> getFavorites() async {
-    _spinner!.show();
+  Future<void> _removeFromRecentlyWatched(int id) async {
+    List<dynamic> favorites = _favorites;
 
-    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
-    await user.get().then((DocumentSnapshot doc) {
-      Map<dynamic, dynamic> data = (doc.data() ?? {}) as Map<dynamic, dynamic>;
-      List<int> rawFavorites = ((data[_mediaType == MediaType.movies ? 'movies' : 'tv_shows'] ?? []) as List<dynamic>).cast<int>();
-      setState(() => _rawFavorites = rawFavorites);
-      for (int id in rawFavorites) getFavoriteDetails(id);
-    }, onError: (e) {
-      print("Error getting favorites: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to get favorites',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
-      );
-    });
+    try {
+      if (widget.mediaType == MediaType.movies) {
+        await _favoritesService.removeMovieFromFavorites(id);
+      } else if (widget.mediaType == MediaType.tvShows) {
+        await _favoritesService.removeTvShowFromFavorites(id);
+      }
 
-    _spinner!.dismiss();
-  }
-
-  Future<void> getFavoriteDetails(int id) async {
-    Map<String, String> headers = {
-      HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
-    };
-
-    Uri uri = Uri.parse(
-      _mediaType == MediaType.movies ? Urls.getMovieDetails(id) : Urls.getTvShowDetails(id),
-    );
-
-    Response request = await http.get(
-      uri,
-      headers: headers,
-    );
-
-    String response = request.body;
-    if (!kReleaseMode) print(response);
-
-    if (response.isNotEmpty) {
-      var data = json.decode(response);
-
-      var mediaModel = _mediaType == MediaType.movies ? model.Movie.fromJson(data) : model.TvShow.fromJson(data);
-
-      setState(() => _favorites.add(mediaModel));
-    } else {
-      print('Failed to get favorite details: $id');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to get movie details',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
-      );
+      //ignore: always_specify_types
+      favorites.removeWhere((media) => media.id == id);
+      setState(() => _favorites = favorites);
+    } catch (_) {
+      showSnackBar("An error occurred.");
     }
-  }
-
-  removeFromRecentlyWatched(var mediaModel) async {
-    List<int> rawFavorites = _rawFavorites;
-    rawFavorites.removeWhere((id) => id == mediaModel.id);
-
-    final user = _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid);
-    await user.set({
-      'movies': rawFavorites,
-    }, SetOptions(merge: true));
-
-    setState(() {
-      _favorites.remove(mediaModel);
-      _rawFavorites = rawFavorites;
-    });
-  }
-
-  refresh() async {
-    _favorites = [];
-    _rawFavorites = [];
-    await getFavorites();
   }
 
   @override
-  void initState() {
-    _mediaType = widget.mediaType;
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _spinner = Spinner(context);
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Favorites',
-      );
-      getFavorites();
-    });
+  Future<void> initializeScreen() async {
+    await _getFavorites();
   }
 
-  Widget ResultCard({model.Movie? movie, model.TvShow? tvShow}) {
-    String posterUrl, title, releaseDate;
-    double voteAverage;
+  @override
+  Widget buildContent(BuildContext context) => Scaffold(
+      body: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(18),
+          child: VerticalMediaList<dynamic>(
+            items: _favorites,
+            //ignore: always_specify_types
+            itemBuilder: (BuildContext context, media, int index) {
+              late MediaCard mediaCard;
 
-    if (_mediaType == MediaType.movies) {
-      posterUrl = '${Urls.image185}${movie!.posterPath}';
-      title = movie.title;
-      releaseDate = movie.releaseDate;
-      voteAverage = movie.voteAverage;
-    } else {
-      posterUrl = '${Urls.image185}${tvShow!.posterPath}';
-      title = tvShow.name;
-      releaseDate = tvShow.firstAirDate;
-      voteAverage = tvShow.voteAverage;
-    }
+              if (widget.mediaType == MediaType.movies) {
+                final model.Movie movie = media as model.Movie;
+                mediaCard = MediaCard(
+                  posterPath: movie.posterPath,
+                  title: movie.title,
+                  year: movie.releaseDate.split("-")[0],
+                  voteAverage: movie.voteAverage,
+                  onTap: () => navigate(Movie(media)),
+                );
+              } else {
+                final model.TvShow tvShow = media as model.TvShow;
+                mediaCard = MediaCard(
+                  posterPath: tvShow.posterPath,
+                  title: tvShow.name,
+                  year: tvShow.firstAirDate.split("-")[0],
+                  voteAverage: tvShow.voteAverage,
+                  onTap: () => navigate(TvShow(media)),
+                );
+              }
 
-    List<String> releaseDateContent = releaseDate.split('-');
-    releaseDate = releaseDateContent[0];
-
-    return Column(
-      children: [
-        Expanded(
-          child: CachedNetworkImage(
-            imageUrl: posterUrl,
-            placeholder: (context, url) {
-              return Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            },
-            imageBuilder: (context, image) {
               return PopupMenuContainer<String>(
-                items: [
-                  PopupMenuItem(
-                    value: 'remove',
+                items: <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    value: "remove",
                     child: Text(
-                      'Remove',
+                      "Remove",
                       style: Theme.of(context).textTheme.displaySmall,
                     ),
                   ),
                 ],
-                onItemSelected: (action) async {
+                onItemSelected: (String? action) async {
                   if (action != null) {
-                    if (action == 'remove') removeFromRecentlyWatched(movie);
+                    if (action == "remove") {
+                      await _removeFromRecentlyWatched(media.id);
+                    }
                   }
                 },
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: image,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: InkWell(
-                    customBorder: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Spacer(),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 5,
-                                horizontal: 8,
-                              ),
-                              margin: EdgeInsets.only(
-                                top: 5,
-                                right: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(100),
-                                color: Theme.of(context).primaryColor,
-                              ),
-                              child: Text(
-                                '$voteAverage',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                      ],
-                    ),
-                    onTap: () {
-                      if (_mediaType == MediaType.movies) {
-                        navigate(destination: Movie(movie!));
-                      } else {
-                        navigate(destination: TvShow(tvShow!));
-                      }
-                    },
-                  ),
-                ),
+                child: mediaCard,
               );
             },
-            errorWidget: (context, url, error) {
-              return Container(
-                width: MediaQuery.of(context).size.width * 0.3,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Icon(Icons.error, color: Colors.white54),
-                ),
-              );
-            },
+            crossAxisCount: 3,
+            childAspectRatio: 0.5,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            emptyStateMessage: "You don't have any favorites",
+            errorMessage: "Failed to load search results",
+            shrinkWrap: false,
+            physics: const AlwaysScrollableScrollPhysics(),
           ),
-        ),
-        Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(top: 10),
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(
-            top: 5,
-            bottom: 10,
-          ),
-          child: Text(
-            releaseDate,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget NoContent() {
-    return Container(
-      width: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.new_releases_outlined,
-            color: Colors.white54,
-            size: 80,
-          ),
-          Container(
-            margin: EdgeInsets.only(top: 10),
-            child: Text(
-              'You don\'t have any favorites',
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          margin: EdgeInsets.all(18),
-          child: _favorites.isNotEmpty ? GridView.builder(
-            itemCount: _favorites.length,
-            itemBuilder: (context, index) {
-              var mediaModel = _favorites[index];
-              if (_mediaType == MediaType.movies) {
-                return ResultCard(movie: mediaModel as model.Movie);
-              } else {
-                return ResultCard(tvShow: mediaModel as model.TvShow);
-              }
-            },
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1/2,
-            ),
-          ) : NoContent(),
         ),
       ),
     );
-  }
 }

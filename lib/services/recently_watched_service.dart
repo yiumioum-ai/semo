@@ -85,11 +85,10 @@ class RecentlyWatchedService {
       final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
       if (tvShows.containsKey("$tvShowId")) {
-        final Map<String, Map<String, dynamic>> tvShow = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
-        final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShow);
+        final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
 
         if (seasons.containsKey("$seasonId")) {
-          return _mapDynamicDynamicToMapStringDynamic(seasons["$seasonId"] ?? <String, dynamic>{});
+          return (seasons["$seasonId"] ?? <String, dynamic>{}) as Map<String, Map<String, dynamic>>;
         }
       }
     } catch (e, s) {
@@ -224,9 +223,11 @@ class RecentlyWatchedService {
 
         for (final dynamic season in bSeasons.values) {
           if (season is Map) {
-            for (final dynamic episode in season.values) {if (episode is Map && episode["timestamp"] != null) {
-              bLatest = math.max(bLatest, episode["timestamp"] as int);
-            }}
+            for (final dynamic episode in season.values) {
+              if (episode is Map && episode["timestamp"] != null) {
+                bLatest = math.max(bLatest, episode["timestamp"] as int);
+              }
+            }
           }
         }
 

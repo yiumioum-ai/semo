@@ -3,6 +3,7 @@ import "package:firebase_analytics/firebase_analytics.dart";
 import "package:flutter/material.dart";
 import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
 import "package:logger/logger.dart";
+import "package:semo/components/spinner.dart";
 import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   bool _isConnectedToInternet = true;
 
   final Logger logger = Logger();
+  late Spinner spinner;
 
   /// Override this method to provide the screen name for Firebase Analytics
   String get screenName;
@@ -145,6 +147,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
       }
 
       if (mounted) {
+        spinner = Spinner(context);
         await initializeScreen();
       }
     });

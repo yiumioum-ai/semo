@@ -16,29 +16,33 @@ class RecentlyWatchedService {
   final Logger _logger = Logger();
 
   DocumentReference<Map<String, dynamic>> _getDocReference() {
+    if (_auth.currentUser == null) {
+      throw Exception("User isn't authenticated");
+    }
+
     try {
       return _firestore
           .collection(DB.recentlyWatched)
           .doc(_auth.currentUser?.uid);
     } catch (e, s) {
       _logger.e("Error getting recently watched document reference", error: e, stackTrace: s);
+      rethrow;
     }
-
-    throw Exception("Failed to get recently watched document reference");
   }
 
   Future<Map<String, dynamic>> _getRecentlyWatched() async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
-      if (doc.exists) {
-        return doc.data() ?? <String, dynamic>{};
+      if (!doc.exists) {
+        throw Exception("Recently watched doc not found");
       }
+
+      return doc.data() ?? <String, dynamic>{};
     } catch (e, s) {
       _logger.e("Error getting recently watched", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <String, dynamic>{};
   }
 
   //ignore: prefer_expression_function_bodies
@@ -58,9 +62,8 @@ class RecentlyWatchedService {
       return movie?["progress"] as int?;
     } catch (e, s) {
       _logger.e("Error getting recently watched movie", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return null;
   }
 
   Future<void> updateMovieProgress(int movieId, int progress) async {
@@ -75,6 +78,7 @@ class RecentlyWatchedService {
       await _getDocReference().set(<String, dynamic>{"movies": recentlyWatched["movies"]}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error updating movie's watch progress", error: e, stackTrace: s);
+      rethrow;
     }
   }
 
@@ -93,6 +97,7 @@ class RecentlyWatchedService {
       }
     } catch (e, s) {
       _logger.e("Error getting recently watched episodes for the TV show", error: e, stackTrace: s);
+      rethrow;
     }
 
     return null;
@@ -127,6 +132,7 @@ class RecentlyWatchedService {
       await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error updating episode's watch progress", error: e, stackTrace: s);
+      rethrow;
     }
   }
 
@@ -156,6 +162,7 @@ class RecentlyWatchedService {
       await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error removing episode's watch progress", error: e, stackTrace: s);
+      rethrow;
     }
   }
 
@@ -175,9 +182,8 @@ class RecentlyWatchedService {
       return sortedEntries.map((MapEntry<String, Map<String, dynamic>> entry) => int.parse(entry.key)).toList();
     } catch (e, s) {
       _logger.e("Error getting recently watched movie IDs", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <int>[];
   }
 
   Future<void> removeMovieFromRecentlyWatched(int movieId) async {
@@ -189,6 +195,7 @@ class RecentlyWatchedService {
       await _getDocReference().set(<String, dynamic>{"movies": movies}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error removing movie from recently watched", error: e, stackTrace: s);
+      rethrow;
     }
   }
 
@@ -237,9 +244,8 @@ class RecentlyWatchedService {
       return visibleShows.map((MapEntry<String, Map<String, dynamic>> entry) => int.parse(entry.key)).toList();
     } catch (e, s) {
       _logger.e("Error getting recently watched TV show IDs", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <int>[];
   }
 
   Future<void> removeTvShowFromRecentlyWatched(int tvShowId) async {
@@ -254,6 +260,7 @@ class RecentlyWatchedService {
       }
     } catch (e, s) {
       _logger.e("Error removing TV show from recently watched", error: e, stackTrace: s);
+      rethrow;
     }
   }
 }

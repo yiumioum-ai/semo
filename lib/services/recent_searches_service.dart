@@ -17,34 +17,38 @@ class RecentSearchesService {
   String _getFieldName(MediaType mediaType) => mediaType == MediaType.movies ? "movies" : "tv_shows";
 
   DocumentReference<Map<String, dynamic>> _getDocReference() {
+    if (_auth.currentUser == null) {
+      throw Exception("User isn't authenticated");
+    }
+
     try {
       return _firestore
           .collection(DB.recentSearches)
           .doc(_auth.currentUser?.uid);
     } catch (e, s) {
-      _logger.e("Error getting recent searches' document reference", error: e, stackTrace: s);
+      _logger.e("Error getting recent searches document reference", error: e, stackTrace: s);
+      rethrow;
     }
-
-    throw Exception("Failed to get recent searches' document reference");
   }
 
   Future<List<String>> getRecentSearches(MediaType mediaType) async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
-      if (doc.exists) {
-        final Map<String, dynamic> data = doc.data() ?? <String, dynamic>{};
-        final String fieldName = _getFieldName(mediaType);
-        final List<String> searches = ((data[fieldName] ?? <dynamic>[]) as List<dynamic>).cast<String>();
-
-        // Return in reverse order (most recent first)
-        return searches.reversed.toList();
+      if (!doc.exists) {
+        throw Exception("Recent searches doc not found");
       }
+
+      final Map<String, dynamic> data = doc.data() ?? <String, dynamic>{};
+      final String fieldName = _getFieldName(mediaType);
+      final List<String> searches = ((data[fieldName] ?? <dynamic>[]) as List<dynamic>).cast<String>();
+
+      // Return in reverse order (most recent first)
+      return searches.reversed.toList();
     } catch (e, s) {
       _logger.e("Error getting recent searches", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <String>[];
   }
 
   Future<void> addToRecentSearches(MediaType mediaType, String query) async {
@@ -68,6 +72,7 @@ class RecentSearchesService {
       await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error adding query to recent searches", error: e, stackTrace: s);
+      rethrow;
     }
   }
 
@@ -81,6 +86,7 @@ class RecentSearchesService {
         await _getDocReference().set(<String, dynamic>{fieldName: searches}, SetOptions(merge: true));
       } catch (e, s) {
         _logger.e("Error removing query from recent searches", error: e, stackTrace: s);
+        rethrow;
       }
     }
   }
@@ -91,6 +97,7 @@ class RecentSearchesService {
       await _getDocReference().set(<String, dynamic>{fieldName: <dynamic>[]}, SetOptions(merge: true));
     } catch (e, s) {
       _logger.e("Error clearing recent searches", error: e, stackTrace: s);
+      rethrow;
     }
   }
 }

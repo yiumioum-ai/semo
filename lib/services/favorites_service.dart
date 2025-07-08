@@ -14,29 +14,33 @@ class FavoritesService {
   final Logger _logger = Logger();
 
   DocumentReference<Map<String, dynamic>> _getDocReference() {
+    if (_auth.currentUser == null) {
+      throw Exception("User isn't authenticated");
+    }
+
     try {
       return _firestore
           .collection(DB.favorites)
           .doc(_auth.currentUser?.uid);
     } catch (e, s) {
-      _logger.e("Error getting favorites' document reference", error: e, stackTrace: s);
+      _logger.e("Error getting favorites document reference", error: e, stackTrace: s);
+      rethrow;
     }
-
-    throw Exception("Failed to get favorites' document reference");
   }
 
   Future<Map<String, dynamic>> _getFavorites() async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
-      if (doc.exists) {
-        return doc.data() ?? <String, dynamic>{};
+      if (!doc.exists) {
+        throw Exception("Favorites doc not found");
       }
+
+      return doc.data() ?? <String, dynamic>{};
     } catch (e, s) {
       _logger.e("Error getting favorites", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <String, dynamic>{};
   }
 
   Future<List<int>> getFavoriteMovies() async {
@@ -46,9 +50,8 @@ class FavoritesService {
       return ((favorites["movies"] ?? <dynamic>[]) as List<dynamic>).cast<int>();
     } catch (e, s) {
       _logger.e("Error getting favorite movies", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <int>[];
   }
 
   Future<List<int>> getFavoriteTvShows() async {
@@ -58,9 +61,8 @@ class FavoritesService {
       return ((favorites["tv_shows"] ?? <dynamic>[]) as List<dynamic>).cast<int>();
     } catch (e, s) {
       _logger.e("Error getting favorite TV shows", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return <int>[];
   }
 
   Future<void> addMovieToFavorites(int movieId) async {
@@ -72,6 +74,7 @@ class FavoritesService {
         await _getDocReference().set(<String, dynamic>{"movies": favorites}, SetOptions(merge: true));
       } catch (e, s) {
         _logger.e("Error adding movie to favorites", error: e, stackTrace: s);
+        rethrow;
       }
     }
   }
@@ -85,6 +88,7 @@ class FavoritesService {
         await _getDocReference().set(<String, dynamic>{"tv_shows": favorites}, SetOptions(merge: true));
       } catch (e, s) {
         _logger.e("Error adding TV show to favorites", error: e, stackTrace: s);
+        rethrow;
       }
     }
   }
@@ -98,6 +102,7 @@ class FavoritesService {
         await _getDocReference().set(<String, dynamic>{"movies": favorites}, SetOptions(merge: true));
       } catch (e, s) {
         _logger.e("Error removing movie from favorites", error: e, stackTrace: s);
+        rethrow;
       }
     }
   }
@@ -111,6 +116,7 @@ class FavoritesService {
         await _getDocReference().set(<String, dynamic>{"tv_shows": favorites}, SetOptions(merge: true));
       } catch (e, s) {
         _logger.e("Error removing TV show from favorites", error: e, stackTrace: s);
+        rethrow;
       }
     }
   }

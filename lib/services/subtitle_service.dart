@@ -3,7 +3,7 @@ import "dart:io";
 import "dart:typed_data";
 
 import "package:archive/archive.dart";
-import "package:http/http.dart" as http;
+import "package:dio/dio.dart";
 import "package:logger/logger.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
@@ -44,11 +44,11 @@ class SubtitleService {
         parameters["episode_number"] = "$episodeNumber";
       }
 
-      final Uri uri = Uri.parse(Urls.subtitles).replace(queryParameters: parameters);
-      final http.Response response = await http.get(uri);
+      Dio dio = Dio();
+      final Response<dynamic> response = await dio.get(Urls.subtitles, queryParameters: parameters);
 
       if (response.statusCode == 200) {
-        final dynamic subtitlesData = jsonDecode(response.body);
+        final dynamic subtitlesData = jsonDecode(response.data);
         final List<dynamic> subtitles = subtitlesData["subtitles"] as List<dynamic>;
 
         final Directory directory = await getTemporaryDirectory();
@@ -58,10 +58,13 @@ class SubtitleService {
           final String zipUrl = subtitle["url"] as String;
           final String fullZipUrl = Urls.subdlDownloadBase + zipUrl;
 
-          final http.Response zipResponse = await http.get(Uri.parse(fullZipUrl));
+          final Response<dynamic> zipResponse = await dio.get<List<int>>(
+            fullZipUrl,
+            options: Options(responseType: ResponseType.bytes),
+          );
 
           if (zipResponse.statusCode == 200) {
-            final Uint8List bytes = zipResponse.bodyBytes;
+            final Uint8List bytes = Uint8List.fromList(zipResponse.data);
             final Archive archive = ZipDecoder().decodeBytes(bytes);
 
             for (final dynamic file in archive) {

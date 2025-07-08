@@ -92,7 +92,8 @@ class RecentlyWatchedService {
         final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
 
         if (seasons.containsKey("$seasonId")) {
-          return (seasons["$seasonId"] ?? <String, dynamic>{}) as Map<String, Map<String, dynamic>>;
+          final Map<String, dynamic> episodes = seasons["$seasonId"] ?? <String, dynamic>{};
+          return _mapDynamicDynamicToMapStringDynamic(episodes as Map<dynamic, dynamic>);
         }
       }
     } catch (e, s) {

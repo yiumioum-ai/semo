@@ -50,9 +50,9 @@ class _TvShowState extends State<TvShow> {
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getRecommendations(
+        MediaType.tvShows,
         _tvShow.id,
         pageKey,
-        MediaType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -62,9 +62,9 @@ class _TvShowState extends State<TvShow> {
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getSimilar(
+        MediaType.tvShows,
         _tvShow.id,
         pageKey,
-        MediaType.tvShows,
       );
       return result.tvShows ?? [];
     },
@@ -193,20 +193,14 @@ class _TvShowState extends State<TvShow> {
   }
 
   Future<void> _loadTrailer() async {
-    final url = await _tmdbService.getTrailerUrl(
-      _tvShow.id,
-      isMovie: false,
-    );
+    final url = await _tmdbService.getTrailerUrl(MediaType.tvShows, _tvShow.id);
     if (mounted && url != null) {
       setState(() => _tvShow.trailerUrl = url);
     }
   }
 
   Future<void> _loadCast() async {
-    final cast = await _tmdbService.getCast(
-      _tvShow.id,
-      isMovie: false,
-    );
+    final cast = await _tmdbService.getCast(MediaType.tvShows, _tvShow.id);
     if (mounted) {
       setState(() => _tvShow.cast = cast);
     }

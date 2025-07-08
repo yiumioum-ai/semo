@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/components/media_card.dart';
@@ -19,17 +17,17 @@ import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 
 class ViewAll extends StatefulWidget {
+  final MediaType mediaType;
   final String title;
   final String source;
   final Map<String, String>? parameters;
-  final MediaType mediaType;
 
   const ViewAll({
     Key? key,
+    required this.mediaType,
     required this.title,
     required this.source,
     this.parameters,
-    required this.mediaType,
   }) : super(key: key);
 
   @override
@@ -39,14 +37,15 @@ class ViewAll extends StatefulWidget {
 class _ViewAllState extends State<ViewAll> {
   // State
   bool _isConnectedToInternet = true;
-  model.SearchResults _searchResults = model.SearchResults(page: 0, totalPages: 0, totalResults: 0);
+  final model.SearchResults _searchResults = model.SearchResults();
+  final TMDBService _tmdbService = TMDBService();
 
   // Pagination Controller using v5.x API
   late final PagingController<int, dynamic> _pagingController =
   PagingController<int, dynamic>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
-      await _fetchData(pageKey);
+      await _tmdbService.searchFromUrl(widget.mediaType, widget.source, pageKey, widget.parameters);
       return widget.mediaType == MediaType.movies
           ? (_searchResults.movies ?? [])
           : (_searchResults.tvShows ?? []);
@@ -90,35 +89,6 @@ class _ViewAllState extends State<ViewAll> {
         }
       },
     );
-  }
-
-  Future<void> _fetchData(int pageKey) async {
-    try {
-      final parameters = <String, String>{
-        'page': '${_searchResults.page + 1}',
-        ...?widget.parameters,
-      };
-
-      TMDBService tmdbService = TMDBService();
-      final uri = Uri.parse(widget.source).replace(queryParameters: parameters);
-      final response = await http.get(uri, headers: tmdbService.getHeaders());
-
-      if (!kReleaseMode) print(response.body);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final searchResults = model.SearchResults.fromJson(
-          widget.mediaType,
-          json.decode(response.body),
-        );
-
-        setState(() => _searchResults = searchResults);
-      } else {
-        throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error fetching data: $e');
-      throw e;
-    }
   }
 
   Future<void> _navigateToMedia(dynamic media) async {

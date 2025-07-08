@@ -52,9 +52,9 @@ class _MovieState extends State<Movie> {
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getRecommendations(
+        MediaType.movies,
         _movie.id,
         pageKey,
-        MediaType.movies,
       );
       return result.movies ?? [];
     },
@@ -64,9 +64,9 @@ class _MovieState extends State<Movie> {
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getSimilar(
+        MediaType.movies,
         _movie.id,
         pageKey,
-        MediaType.movies,
       );
       return result.movies ?? [];
     },
@@ -153,7 +153,7 @@ class _MovieState extends State<Movie> {
   }
 
   Future<void> _loadTrailer() async {
-    final url = await _tmdbService.getTrailerUrl(_movie.id);
+    final url = await _tmdbService.getTrailerUrl(MediaType.movies, _movie.id);
     if (mounted && url != null) {
       setState(() => _movie.trailerUrl = url);
     }
@@ -167,7 +167,7 @@ class _MovieState extends State<Movie> {
   }
 
   Future<void> _loadCast() async {
-    final cast = await _tmdbService.getCast(_movie.id);
+    final cast = await _tmdbService.getCast(MediaType.movies, _movie.id);
     if (mounted) {
       setState(() => _movie.cast = cast);
     }
@@ -416,9 +416,9 @@ class _MovieState extends State<Movie> {
                             NavigationHelper.navigate(
                               context,
                               ViewAll(
+                                mediaType: MediaType.movies,
                                 title: 'Similar',
                                 source: Urls.getMovieSimilar(_movie.id),
-                                mediaType: MediaType.movies,
                               ),
                             ),
                       ),

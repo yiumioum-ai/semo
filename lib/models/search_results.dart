@@ -12,9 +12,9 @@ class SearchResults {
   List<Person>? cast;
 
   SearchResults({
-    required this.page,
-    required this.totalPages,
-    required this.totalResults,
+    this.page = 0,
+    this.totalPages = 0,
+    this.totalResults = 0,
     this.movies,
     this.tvShows,
     this.cast,

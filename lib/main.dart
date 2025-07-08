@@ -7,12 +7,14 @@ import "package:flutter/foundation.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:semo/firebase_options.dart";
 import "package:semo/screens/splash.dart";
+import "package:semo/services/tmdb_service.dart";
 import "package:semo/utils/preferences.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Preferences.init();
   await initializeFirebase();
+  TMDBService.init();
   runApp(const Semo());
 }
 

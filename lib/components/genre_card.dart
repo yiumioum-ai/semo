@@ -1,25 +1,26 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import "package:semo/enums/media_type.dart";
 import '../models/genre.dart' as model;
 import '../services/tmdb_service.dart';
 import '../utils/urls.dart';
 
 class GenreCard extends StatelessWidget {
   final model.Genre genre;
-  final bool isMovie;
+  final MediaType mediaType;
   final VoidCallback? onTap;
 
   const GenreCard({
     Key? key,
+    required this.mediaType,
     required this.genre,
-    required this.isMovie,
     this.onTap,
   }) : super(key: key);
 
   Future<String> _getGenreBackdrop() async {
     try {
       final tmdbService = TMDBService();
-      return await tmdbService.getGenreBackdrop(genre, isMovie: isMovie);
+      return await tmdbService.getGenreBackdrop(mediaType, genre);
     } catch (e) {
       print('Error getting genre backdrop: $e');
       return '';

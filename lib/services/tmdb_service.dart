@@ -1,437 +1,313 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../models/genre.dart';
-import '../models/movie.dart';
-import '../models/tv_show.dart';
-import '../models/person.dart';
-import '../models/search_results.dart';
-import '../utils/secrets.dart';
-import '../enums/media_type.dart';
-import '../utils/urls.dart';
+import "dart:convert";
+import "dart:io";
+import "dart:math";
+
+import "package:dio/dio.dart";
+import "package:flutter/foundation.dart";
+import "package:logger/logger.dart";
+import "package:pretty_dio_logger/pretty_dio_logger.dart";
+import "package:semo/models/genre.dart";
+import "package:semo/models/movie.dart";
+import "package:semo/models/tv_show.dart";
+import "package:semo/models/person.dart";
+import "package:semo/models/search_results.dart";
+import "package:semo/utils/secrets.dart";
+import "package:semo/enums/media_type.dart";
+import "package:semo/utils/urls.dart";
 
 class TMDBService {
-  static final TMDBService _instance = TMDBService._internal();
   factory TMDBService() => _instance;
   TMDBService._internal();
 
-  final Map<String, String> _headers = {
-    HttpHeaders.authorizationHeader: 'Bearer ${Secrets.tmdbAccessToken}',
-  };
+  static final TMDBService _instance = TMDBService._internal();
 
-  Map<String, String> getHeaders() {
-    return _headers;
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: <String, String>{
+        HttpHeaders.authorizationHeader: "Bearer ${Secrets.tmdbAccessToken}",
+      },
+    ),
+  );
+  final Logger _logger = Logger();
+
+  static void init() {
+    _dio.interceptors.add(
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        responseHeader: false,
+        error: true,
+        compact: true,
+        enabled: kDebugMode,
+      ),
+    );
   }
 
   // Movie Methods
-  Future<List<Movie>> getNowPlayingMovies() async {
-    try {
-      final response = await http.get(
-        Uri.parse(Urls.nowPlayingMovies),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final data = json.decode(response.body)['results'] as List;
-        return data.map((json) => Movie.fromJson(json)).toList();
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting now playing movies: $e');
-    }
-    return [];
-  }
-
-  Future<SearchResults> getTrendingMovies(int page) async {
-    return _getMovies(Urls.trendingMovies, page);
-  }
-
-  Future<SearchResults> getPopularMovies(int page) async {
-    return _getMovies(Urls.popularMovies, page);
-  }
-
-  Future<SearchResults> getTopRatedMovies(int page) async {
-    return _getMovies(Urls.topRatedMovies, page);
-  }
-
-  Future<SearchResults> discoverMovies(
-      int page, {
-        Map<String, String>? parameters,
-      }) async {
-    return _getMovies(Urls.discoverMovie, page, parameters: parameters);
-  }
-
-  Future<SearchResults> _getMovies(
-      String url,
-      int page, {
-        Map<String, String>? parameters,
-      }) async {
-    try {
-      final queryParams = {
-        'page': '$page',
-        ...?parameters,
-      };
-
-      final uri = Uri.parse(url).replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return SearchResults.fromJson(
-          MediaType.movies,
-          json.decode(response.body),
-        );
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting movies from $url: $e');
-    }
-    return SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  }
+  Future<SearchResults> getNowPlayingMovies() => _search(MediaType.movies, Urls.nowPlayingMovies, 1);
+  Future<SearchResults> getTrendingMovies(int page) => _search(MediaType.movies, Urls.trendingMovies, page);
+  Future<SearchResults> getPopularMovies(int page) => _search(MediaType.movies, Urls.popularMovies, page);
+  Future<SearchResults> getTopRatedMovies(int page) async => _search(MediaType.movies, Urls.topRatedMovies, page);
+  Future<SearchResults> discoverMovies(int page, {Map<String, String>? parameters}) => _search(MediaType.movies, Urls.discoverMovie, page, parameters: parameters);
+  Future<SearchResults> searchMovies(String query, int page) => _search(
+    MediaType.movies,
+    Urls.searchMovies,
+    page,
+    parameters: <String, String>{
+      "query": query,
+      "include_adult": "false",
+    },
+  );
+  Future<List<Genre>> getMovieGenres() => _getGenres(MediaType.movies);
 
   Future<Movie?> getMovieDetails(int id) async {
     try {
-      final response = await http.get(
-        Uri.parse(Urls.getMovieDetails(id)),
-        headers: _headers,
-      );
+      final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return Movie.fromJson(json.decode(response.body));
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        return Movie.fromJson(json.decode(response.data));
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting movie details for $id: $e');
+
+      throw Exception("Failed to get movie details for ID: $id");
+    } catch (e, s) {
+      _logger.e("Error getting movie details for ID: $id", error: e, stackTrace: s);
+      rethrow;
     }
-    return null;
-  }
-
-  Future<List<Genre>> getMovieGenres() async {
-    try {
-      final response = await http.get(
-        Uri.parse(Urls.movieGenres),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final data = json.decode(response.body)['genres'] as List;
-        return data.map((json) => Genre.fromJson(json)).toList();
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting movie genres: $e');
-    }
-    return [];
-  }
-
-  // TV Show Methods
-  Future<List<TvShow>> getOnTheAirTvShows() async {
-    try {
-      final response = await http.get(
-        Uri.parse(Urls.onTheAirTvShows),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final data = json.decode(response.body)['results'] as List;
-        return data.map((json) => TvShow.fromJson(json)).toList();
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting on the air TV shows: $e');
-    }
-    return [];
-  }
-
-  Future<SearchResults> getPopularTvShows(int page) async {
-    return _getTvShows(Urls.popularTvShows, page);
-  }
-
-  Future<SearchResults> getTopRatedTvShows(int page) async {
-    return _getTvShows(Urls.topRatedTvShows, page);
-  }
-
-  Future<SearchResults> discoverTvShows(
-      int page, {
-        Map<String, String>? parameters,
-      }) async {
-    return _getTvShows(Urls.discoverTvShow, page, parameters: parameters);
-  }
-
-  Future<SearchResults> _getTvShows(
-      String url,
-      int page, {
-        Map<String, String>? parameters,
-      }) async {
-    try {
-      final queryParams = {
-        'page': '$page',
-        ...?parameters,
-      };
-
-      final uri = Uri.parse(url).replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return SearchResults.fromJson(
-          MediaType.tvShows,
-          json.decode(response.body),
-        );
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting TV shows from $url: $e');
-    }
-    return SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  }
-
-  Future<TvShow?> getTvShowDetails(int id) async {
-    try {
-      final response = await http.get(
-        Uri.parse(Urls.getTvShowDetails(id)),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return TvShow.fromJson(json.decode(response.body));
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting TV show details for $id: $e');
-    }
-    return null;
-  }
-
-  Future<List<Genre>> getTvShowGenres() async {
-    try {
-      final response = await http.get(
-        Uri.parse(Urls.tvShowGenres),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final data = json.decode(response.body)['genres'] as List;
-        return data.map((json) => Genre.fromJson(json)).toList();
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting TV show genres: $e');
-    }
-    return [];
-  }
-
-  // Common methods for both movies and TV shows
-  Future<String?> getTrailerUrl(int id, {bool isMovie = true}) async {
-    try {
-      final url = isMovie
-          ? Urls.getMovieVideosUrl(id)
-          : Urls.getTvShowVideosUrl(id);
-
-      final response = await http.get(Uri.parse(url), headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final videos = json.decode(response.body)['results'] as List;
-        final youtubeVideos = videos.where((video) {
-          return video['site'] == 'YouTube' &&
-              video['type'] == 'Trailer' &&
-              video['official'] == true;
-        }).toList();
-
-        if (youtubeVideos.isNotEmpty) {
-          youtubeVideos.sort((a, b) => b['size'].compareTo(a['size']));
-          final youtubeId = youtubeVideos[0]['key'] ?? '';
-          return 'https://www.youtube.com/watch?v=$youtubeId';
-        }
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting trailer: $e');
-    }
-    return null;
   }
 
   Future<int?> getMovieDuration(int id) async {
     try {
-      final response = await http.get(
-        Uri.parse(Urls.getMovieDetails(id)),
-        headers: _headers,
-      );
+      final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final details = json.decode(response.body) as Map<String, dynamic>;
-        return details['runtime'] as int?;
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final Map<String, dynamic> details = json.decode(response.data) as Map<String, dynamic>;
+        return details["runtime"] as int?;
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting movie duration: $e');
+
+      throw Exception("Failed to get movie duration for ID: $id");
+    } catch (e, s) {
+      _logger.e("Error getting movie duration for ID: $id", error: e, stackTrace: s);
+      rethrow;
     }
-    return null;
   }
 
-  Future<List<Person>> getCast(int id, {bool isMovie = true}) async {
+  // TV Show Methods
+  Future<SearchResults> getOnTheAirTvShows() => _search(MediaType.tvShows, Urls.onTheAirTvShows, 1);
+  Future<SearchResults> getPopularTvShows(int page) => _search(MediaType.tvShows, Urls.popularTvShows, page);
+  Future<SearchResults> getTopRatedTvShows(int page) => _search(MediaType.tvShows, Urls.topRatedTvShows, page);
+  Future<SearchResults> discoverTvShows(int page, {Map<String, String>? parameters}) => _search(MediaType.tvShows, Urls.discoverTvShow, page, parameters: parameters);
+  Future<SearchResults> searchTvShows(String query, int page) => _search(
+    MediaType.tvShows,
+    Urls.searchTvShows,
+    page,
+    parameters: <String, String>{
+      "query": query,
+      "include_adult": "false",
+    },
+  );
+  Future<List<Genre>> getTvShowGenres() => _getGenres(MediaType.tvShows);
+
+  Future<TvShow?> getTvShowDetails(int id) async {
     try {
-      final url = isMovie
-          ? Urls.getMovieCast(id)
-          : Urls.getTvShowCast(id);
+      final Response<dynamic> response = await _dio.get(Urls.getTvShowDetails(id));
 
-      final response = await http.get(Uri.parse(url), headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final data = json.decode(response.body)['cast'] as List;
-        final allCast = data.map((json) => Person.fromJson(json)).toList();
-        return allCast.where((person) => person.department == 'Acting').toList();
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        return TvShow.fromJson(json.decode(response.data));
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting cast: $e');
+
+      throw Exception("Error getting TV show details for ID: $id");
+    } catch (e, s) {
+      _logger.e("Error getting TV show details for ID: $id", error: e, stackTrace: s);
+      rethrow;
     }
-    return [];
-  }
-
-  Future<SearchResults> getRecommendations(
-      int id,
-      int page,
-      MediaType mediaType,
-      ) async {
-    final url = mediaType == MediaType.movies
-        ? Urls.getMovieRecommendations(id)
-        : Urls.getTvShowRecommendations(id);
-
-    return mediaType == MediaType.movies
-        ? _getMovies(url, page)
-        : _getTvShows(url, page);
-  }
-
-  Future<SearchResults> getSimilar(
-      int id,
-      int page,
-      MediaType mediaType,
-      ) async {
-    final url = mediaType == MediaType.movies
-        ? Urls.getMovieSimilar(id)
-        : Urls.getTvShowSimilar(id);
-
-    return mediaType == MediaType.movies
-        ? _getMovies(url, page)
-        : _getTvShows(url, page);
   }
 
   Future<List<Season>> getTvShowSeasons(int id) async {
     try {
-      final response = await http.get(
-        Uri.parse(Urls.getTvShowDetails(id)),
-        headers: _headers,
-      );
+      final Response<dynamic> response = await _dio.get(Urls.getTvShowDetails(id));
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final seasonsData = (json.decode(response.body)['seasons'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final List<Map<String, dynamic>> seasonsMap = (json.decode(response.data)["seasons"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Season> seasons = <Season>[];
 
-        final seasons = <Season>[];
-        for (final seasonData in seasonsData) {
-          final season = Season.fromJson(seasonData);
+        for (final Map<String, dynamic> seasonMap in seasonsMap) {
+          final Season season = Season.fromJson(seasonMap);
           if (season.number > 0 && season.airDate != null) {
             seasons.add(season);
           }
         }
+
         return seasons;
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting TV show seasons: $e');
+
+      throw Exception("Error getting TV show seasons for ID: $id");
+    } catch (e, s) {
+      _logger.e("Error getting TV show seasons for ID: $id", error: e, stackTrace: s);
+      rethrow;
     }
-    return [];
   }
 
   Future<List<Episode>> getEpisodes(int showId, int seasonNumber, String showName) async {
     try {
-      final response = await http.get(
-        Uri.parse(Urls.getEpisodes(showId, seasonNumber)),
-        headers: _headers,
-      );
+      final Response<dynamic> response = await _dio.get(Urls.getEpisodes(showId, seasonNumber));
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final episodesData = json.decode(response.body)['episodes'] as List;
-        final episodes = <Episode>[];
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final List<Map<String, dynamic>> episodesMap = (json.decode(response.data)["episodes"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Episode> episodes = <Episode>[];
 
-        for (var episodeData in episodesData) {
-          episodeData['show_name'] = showName;
-          final episode = Episode.fromJson(episodeData);
+        for (Map<String, dynamic> episodeMap in episodesMap) {
+          episodeMap["show_name"] = showName;
+          final Episode episode = Episode.fromJson(episodeMap);
           if (episode.airDate != null) {
             episodes.add(episode);
           }
         }
+
         return episodes;
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting episodes: $e');
+
+      throw Exception("Error getting episodes for season $seasonNumber in TV show with ID $showId");
+    } catch (e, s) {
+      _logger.e("Error getting episodes for season $seasonNumber in TV show with ID $showId", error: e, stackTrace: s);
+      rethrow;
     }
-    return [];
   }
 
-  // Genre backdrop helper
-  Future<String> getGenreBackdrop(Genre genre, {bool isMovie = true}) async {
-    if (genre.backdropPath != null) {
+  // Common methods for both movies and TV shows
+  Future<SearchResults> _search(MediaType mediaType, String url, int page, {Map<String, String>? parameters}) async {
+    try {
+      final Response<dynamic> response = await _dio.get(url, queryParameters: <String, String>{
+        "page": "$page",
+        ...?parameters,
+      });
+
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        return SearchResults.fromJson(
+          mediaType,
+          json.decode(response.data),
+        );
+      }
+
+      throw Exception("Failed to get ${mediaType.toString()} search results");
+    } catch (e, s) {
+      _logger.e("Error getting ${mediaType.toString()} search results", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<SearchResults> searchFromUrl(MediaType mediaType, String url, int page, Map<String, String>? parameters) => _search(mediaType, url, page, parameters: parameters);
+
+  Future<List<Genre>> _getGenres(MediaType mediaType) async {
+    String url = mediaType == MediaType.movies ? Urls.movieGenres : Urls.tvShowGenres;
+
+    try {
+      final Response<dynamic> response = await _dio.get(url);
+
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final List<Map<String, dynamic>> data = (json.decode(response.data)["genres"] as List<dynamic>).cast<Map<String, dynamic>>();
+        return data.map((Map<String, dynamic> json) => Genre.fromJson(json)).toList();
+      }
+
+      throw Exception("Failed to get genres");
+    } catch (e, s) {
+      _logger.e("Error getting genres", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<SearchResults> getRecommendations(MediaType mediaType, int id, int page) {
+    final String url = mediaType == MediaType.movies
+        ? Urls.getMovieRecommendations(id)
+        : Urls.getTvShowRecommendations(id);
+    return _search(mediaType, url, page);
+  }
+
+  Future<SearchResults> getSimilar(MediaType mediaType, int id, int page) {
+    final String url = mediaType == MediaType.movies
+        ? Urls.getMovieSimilar(id)
+        : Urls.getTvShowSimilar(id);
+    return _search(mediaType, url, page);
+  }
+  
+  Future<String?> getTrailerUrl(MediaType mediaType, int mediaId) async {
+    try {
+      final String url = mediaType == MediaType.movies
+          ? Urls.getMovieVideosUrl(mediaId)
+          : Urls.getTvShowVideosUrl(mediaId);
+
+      final Response<dynamic> response = await _dio.get(url);
+
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final List<Map<String, dynamic>> videos = (json.decode(response.data)["results"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> youtubeVideos = videos
+            .where((Map<String, dynamic> video) => video["site"] == "YouTube" && video["type"] == "Trailer" && video["official"] == true)
+            .toList();
+
+        if (youtubeVideos.isNotEmpty) {
+          youtubeVideos.sort((Map<String, dynamic> a, Map<String, dynamic> b) => b["size"].compareTo(a["size"]));
+          final String youtubeId = youtubeVideos[0]["key"] ?? "";
+          return "https://www.youtube.com/watch?v=$youtubeId";
+        }
+      }
+
+      throw Exception("Error getting ${mediaType.toString()} trailer for ID: $mediaId");
+    } catch (e, s) {
+      _logger.e("Error getting ${mediaType.toString()} trailer for ID: $mediaId", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<List<Person>> getCast(MediaType mediaType, int mediaId) async {
+    try {
+      final String url = mediaType == MediaType.movies
+          ? Urls.getMovieCast(mediaId)
+          : Urls.getTvShowCast(mediaId);
+
+      final Response<dynamic> response = await _dio.get(url);
+
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        final List<Map<String, dynamic>> data = (json.decode(response.data)["cast"] as List<dynamic>).cast<Map<String, dynamic>>();
+        final List<Person> allCast = data.map((Map<String, dynamic> json) => Person.fromJson(json)).toList();
+        return allCast.where((Person person) => person.department == "Acting").toList();
+      }
+
+      throw Exception("Error getting ${mediaType.toString()} cast for ID: $mediaId");
+    } catch (e, s) {
+      _logger.e("Error getting ${mediaType.toString()} cast for ID: $mediaId", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<String> getGenreBackdrop(MediaType mediaType, Genre genre) async {
+    if (genre.backdropPath != null && genre.backdropPath!.isNotEmpty) {
       return genre.backdropPath!;
     }
 
-    try {
-      final result = isMovie
-          ? await discoverMovies(1, parameters: {'with_genres': '${genre.id}'})
-          : await discoverTvShows(1, parameters: {'with_genres': '${genre.id}'});
+    bool isMovie = mediaType == MediaType.movies;
 
-      if ((isMovie ? result.movies : result.tvShows) != null &&
-          (isMovie ? result.movies!.isNotEmpty : result.tvShows!.isNotEmpty)) {
-        final random = Random();
-        final items = isMovie ? result.movies! : result.tvShows!;
-        final randomIndex = random.nextInt(items.length);
-        final backdropPath = isMovie
+    try {
+      final SearchResults result = isMovie
+          ? await discoverMovies(1, parameters: <String, String>{"with_genres": "${genre.id}"})
+          : await discoverTvShows(1, parameters: <String, String>{"with_genres": "${genre.id}"});
+
+      if ((isMovie ? result.movies : result.tvShows) != null && (isMovie ? result.movies!.isNotEmpty : result.tvShows!.isNotEmpty)) {
+        final Random random = Random();
+        final List<dynamic> items = isMovie ? result.movies! : result.tvShows!;
+        final int randomIndex = random.nextInt(items.length);
+        final String backdropPath = isMovie
             ? (items[randomIndex] as Movie).backdropPath
             : (items[randomIndex] as TvShow).backdropPath;
 
-        // Cache the backdrop path for future use
-        genre.backdropPath = backdropPath;
         return backdropPath;
       }
-    } catch (e) {
-      if (!kReleaseMode) print('Error getting genre backdrop: $e');
+
+      throw Exception("Error getting genre backdrop for name: ${genre.name}");
+    } catch (e, s) {
+      _logger.e("Error getting genre backdrop for name: ${genre.name}", error: e, stackTrace: s);
+      rethrow;
     }
-
-    return '';
-  }
-
-  Future<SearchResults> searchMovies(String query, int page) async {
-    try {
-      final queryParams = {
-        'query': query,
-        'include_adult': 'false',
-        'page': '$page',
-      };
-
-      final uri = Uri.parse(Urls.searchMovies).replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return SearchResults.fromJson(
-          MediaType.movies,
-          json.decode(response.body),
-        );
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error searching movies: $e');
-    }
-    return SearchResults(page: 0, totalPages: 0, totalResults: 0);
-  }
-
-  Future<SearchResults> searchTvShows(String query, int page) async {
-    try {
-      final queryParams = {
-        'query': query,
-        'include_adult': 'false',
-        'page': '$page',
-      };
-
-      final uri = Uri.parse(Urls.searchTvShows).replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers);
-
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        return SearchResults.fromJson(
-          MediaType.tvShows,
-          json.decode(response.body),
-        );
-      }
-    } catch (e) {
-      if (!kReleaseMode) print('Error searching TV shows: $e');
-    }
-    return SearchResults(page: 0, totalPages: 0, totalResults: 0);
   }
 }

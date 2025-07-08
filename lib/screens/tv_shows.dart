@@ -10,6 +10,7 @@ import 'package:semo/components/media_card.dart';
 import 'package:semo/components/streaming_platform_card.dart';
 import "package:semo/gen/assets.gen.dart";
 import 'package:semo/models/genre.dart' as model;
+import "package:semo/models/search_results.dart";
 import 'package:semo/models/streaming_platform.dart';
 import 'package:semo/models/tv_show.dart' as model;
 import 'package:semo/screens/tv_show.dart';
@@ -114,7 +115,8 @@ class _TvShowsState extends State<TvShows> {
   }
 
   Future<void> _loadOnTheAir() async {
-    final tvShows = await _tmdbService.getOnTheAirTvShows();
+    final SearchResults results = await _tmdbService.getOnTheAirTvShows();
+    final List<model.TvShow> tvShows = results.tvShows ?? <model.TvShow>[];
     if (mounted) {
       setState(() {
         _onTheAir = tvShows.length > 10 ? tvShows.sublist(0, 10) : tvShows;
@@ -356,8 +358,8 @@ class _TvShowsState extends State<TvShows> {
                     right: index < _genres.length - 1 ? 18 : 0,
                   ),
                   child: GenreCard(
+                    mediaType: MediaType.tvShows,
                     genre: _genres[index],
-                    isMovie: false,
                     onTap: () => NavigationHelper.navigate(
                       context,
                       ViewAll(

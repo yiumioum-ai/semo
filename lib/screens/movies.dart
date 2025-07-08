@@ -11,6 +11,7 @@ import 'package:semo/components/streaming_platform_card.dart';
 import "package:semo/gen/assets.gen.dart";
 import 'package:semo/models/genre.dart' as model;
 import 'package:semo/models/movie.dart' as model;
+import "package:semo/models/search_results.dart";
 import 'package:semo/models/streaming_platform.dart';
 import 'package:semo/screens/movie.dart';
 import 'package:semo/screens/view_all.dart';
@@ -123,7 +124,8 @@ class _MoviesState extends State<Movies> {
   }
 
   Future<void> _loadNowPlaying() async {
-    final movies = await _tmdbService.getNowPlayingMovies();
+    final SearchResults results = await _tmdbService.getNowPlayingMovies();
+    final List<model.Movie> movies = results.movies ?? <model.Movie>[];
     if (mounted) {
       setState(() {
         _nowPlaying = movies.length > 10 ? movies.sublist(0, 10) : movies;
@@ -366,8 +368,8 @@ class _MoviesState extends State<Movies> {
                     right: index < _genres.length - 1 ? 18 : 0,
                   ),
                   child: GenreCard(
+                    mediaType: MediaType.movies,
                     genre: _genres[index],
-                    isMovie: true,
                     onTap: () => NavigationHelper.navigate(
                       context,
                       ViewAll(

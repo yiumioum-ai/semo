@@ -65,7 +65,7 @@ class SubtitleService {
             final Archive archive = ZipDecoder().decodeBytes(bytes);
 
             for (final dynamic file in archive) {
-              if (file.isFile) {
+              if (file.isFile && file.content != null) {
                 final String fileName = file.name;
                 final String extension = path.extension(fileName);
 
@@ -83,8 +83,9 @@ class SubtitleService {
 
       return srtFiles;
     } catch (e, s) {
-      _logger.e("Error getting subtitles", error: e, stackTrace: s);
-      rethrow;
+      _logger.w("Error getting subtitles", error: e, stackTrace: s);
     }
+
+    return <File>[];
   }
 }

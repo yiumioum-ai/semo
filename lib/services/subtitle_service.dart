@@ -1,75 +1,77 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:archive/archive.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
-import '../utils/secrets.dart';
-import '../utils/urls.dart';
+import "dart:convert";
+import "dart:io";
+import "dart:typed_data";
+
+import "package:archive/archive.dart";
+import "package:http/http.dart" as http;
+import "package:logger/logger.dart";
+import "package:path/path.dart" as path;
+import "package:path_provider/path_provider.dart";
+import "package:semo/utils/secrets.dart";
+import "package:semo/utils/urls.dart";
 
 class SubtitleService {
-  static final SubtitleService _instance = SubtitleService._internal();
   factory SubtitleService() => _instance;
   SubtitleService._internal();
 
-  Future<List<File>> getMovieSubtitles(int tmdbId) async {
-    return await _getSubtitles(tmdbId: tmdbId);
-  }
+  static final SubtitleService _instance = SubtitleService._internal();
 
-  Future<List<File>> getTvShowSubtitles(int tmdbId, int seasonNumber, int episodeNumber) async {
-    return await _getSubtitles(
-      tmdbId: tmdbId,
-      seasonNumber: seasonNumber,
-      episodeNumber: episodeNumber,
-    );
-  }
+  final Logger _logger = Logger();
+
+  Future<List<File>> getMovieSubtitles(int tmdbId) => _getSubtitles(tmdbId: tmdbId);
+
+  Future<List<File>> getTvShowSubtitles(int tmdbId, int seasonNumber, int episodeNumber) => _getSubtitles(
+    tmdbId: tmdbId,
+    seasonNumber: seasonNumber,
+    episodeNumber: episodeNumber,
+  );
 
   Future<List<File>> _getSubtitles({required int tmdbId, int? seasonNumber, int? episodeNumber}) async {
-    final srtFiles = <File>[];
+    final List<File> srtFiles = <File>[];
 
     try {
-      final parameters = <String, dynamic>{
-        'api_key': Secrets.subdlApiKey,
-        'tmdb_id': '$tmdbId',
-        'languages': 'EN',
-        'subs_per_page': '5',
+      final Map<String, dynamic> parameters = <String, dynamic>{
+        "api_key": Secrets.subdlApiKey,
+        "tmdb_id": "$tmdbId",
+        "languages": "EN",
+        "subs_per_page": "5",
       };
 
       if (seasonNumber != null) {
-        parameters['season_number'] = '$seasonNumber';
+        parameters["season_number"] = "$seasonNumber";
       }
       if (episodeNumber != null) {
-        parameters['episode_number'] = '$episodeNumber';
+        parameters["episode_number"] = "$episodeNumber";
       }
 
-      final uri = Uri.parse(Urls.subtitles).replace(queryParameters: parameters);
-      final response = await http.get(uri);
+      final Uri uri = Uri.parse(Urls.subtitles).replace(queryParameters: parameters);
+      final http.Response response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        final subtitlesData = jsonDecode(response.body);
-        final subtitles = subtitlesData['subtitles'] as List;
+        final dynamic subtitlesData = jsonDecode(response.body);
+        final List<dynamic> subtitles = subtitlesData["subtitles"] as List<dynamic>;
 
-        final directory = await getTemporaryDirectory();
-        final destinationDirectory = directory.path;
+        final Directory directory = await getTemporaryDirectory();
+        final String destinationDirectory = directory.path;
 
-        for (final subtitle in subtitles) {
-          final zipUrl = subtitle['url'] as String;
-          final fullZipUrl = Urls.subdlDownloadBase + zipUrl;
+        for (final dynamic subtitle in subtitles) {
+          final String zipUrl = subtitle["url"] as String;
+          final String fullZipUrl = Urls.subdlDownloadBase + zipUrl;
 
-          final zipResponse = await http.get(Uri.parse(fullZipUrl));
+          final http.Response zipResponse = await http.get(Uri.parse(fullZipUrl));
 
           if (zipResponse.statusCode == 200) {
-            final bytes = zipResponse.bodyBytes;
-            final archive = ZipDecoder().decodeBytes(bytes);
+            final Uint8List bytes = zipResponse.bodyBytes;
+            final Archive archive = ZipDecoder().decodeBytes(bytes);
 
-            for (final file in archive) {
+            for (final dynamic file in archive) {
               if (file.isFile) {
-                final fileName = file.name;
-                final extension = path.extension(fileName);
+                final String fileName = file.name;
+                final String extension = path.extension(fileName);
 
-                if (extension == '.srt') {
-                  final data = file.content as List<int>;
-                  final srtFile = File('$destinationDirectory/$fileName');
+                if (extension == ".srt") {
+                  final List<int> data = file.content as List<int>;
+                  final File srtFile = File("$destinationDirectory/$fileName");
                   await srtFile.writeAsBytes(data);
                   srtFiles.add(srtFile);
                 }
@@ -78,8 +80,9 @@ class SubtitleService {
           }
         }
       }
-    } catch (e) {
-      print('Error getting subtitles: $e');
+    } catch (e, s) {
+      _logger.e("Error getting subtitles", error: e, stackTrace: s);
+      rethrow;
     }
 
     return srtFiles;

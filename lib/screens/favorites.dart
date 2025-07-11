@@ -32,12 +32,13 @@ class FavoritesState extends BaseScreenState<Favorites> {
   String get screenName => "Favorites";
 
   Future<void> _getFavorites() async {
-    final List<int> favoritesIds = widget.mediaType == MediaType.movies
-        ? await _favoritesService.getFavoriteMovies()
-        : await _favoritesService.getFavoriteTvShows();
     List<dynamic> favorites = <dynamic>[];
 
     try {
+      final List<int> favoritesIds = widget.mediaType == MediaType.movies
+          ? await _favoritesService.getFavoriteMovies()
+          : await _favoritesService.getFavoriteTvShows();
+
       if (widget.mediaType == MediaType.movies) {
         for (int id in favoritesIds) {
           model.Movie? movie = await _tmdbService.getMovieDetails(id);

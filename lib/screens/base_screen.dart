@@ -20,6 +20,7 @@ abstract class BaseScreen extends StatefulWidget {
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  final InternetConnection _internetConnection = InternetConnection();
   late StreamSubscription<InternetStatus> _connectionSubscription;
   StreamSubscription<User?>? _authSubscription;
   bool _isConnectedToInternet = true;
@@ -77,7 +78,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   Future<void> _initConnectivity() async {
     await _checkConnectivity();
 
-    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) async {
+    _connectionSubscription = _internetConnection.onStatusChange.listen((InternetStatus status) async {
         if (mounted) {
           switch (status) {
             case InternetStatus.connected:
@@ -93,7 +94,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   /// Check current connectivity status
   Future<void> _checkConnectivity() async {
     try {
-      final bool isConnected = await InternetConnection().hasInternetAccess;
+      final bool isConnected = await _internetConnection.hasInternetAccess;
       if (mounted) {
         setState(() => _isConnectedToInternet = isConnected);
       }

@@ -1,40 +1,37 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import '../utils/urls.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:semo/utils/urls.dart";
 
 class CarouselPoster extends StatelessWidget {
+
+  const CarouselPoster({
+    super.key,
+    required this.backdropPath,
+    required this.title,
+    this.onTap,
+  });
+  
   final String backdropPath;
   final String title;
   final VoidCallback? onTap;
 
-  const CarouselPoster({
-    Key? key,
-    required this.backdropPath,
-    required this.title,
-    this.onTap,
-  }) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
+  Widget build(BuildContext context) => ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Stack(
-        children: [
+        children: <Widget>[
           Positioned.fill(
             child: CachedNetworkImage(
-              imageUrl: '${Urls.getBestImageUrl(context)}${backdropPath}',
+              imageUrl: "${Urls.getBestImageUrl(context)}$backdropPath",
               fit: BoxFit.cover,
-              placeholder: (context, url) {
-                return Container(
+              placeholder: (BuildContext context, String url) => Container(
                   decoration: BoxDecoration(color: Theme.of(context).cardColor),
                   child: const Align(
                     alignment: Alignment.center,
                     child: CircularProgressIndicator(),
                   ),
-                );
-              },
-              errorWidget: (context, url, error) {
-                return Container(
+                ),
+              errorWidget: (BuildContext context, String url, Object error) => Container(
                   decoration: BoxDecoration(color: Theme.of(context).cardColor),
                   child: const Align(
                     alignment: Alignment.center,
@@ -43,8 +40,7 @@ class CarouselPoster extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                );
-              },
+                ),
             ),
           ),
           Positioned(
@@ -55,7 +51,7 @@ class CarouselPoster extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
+                  colors: <Color>[
                     Theme.of(context).primaryColor,
                     Colors.transparent,
                     Theme.of(context).primaryColor.withOpacity(.1),
@@ -65,7 +61,7 @@ class CarouselPoster extends StatelessWidget {
                 ),
               ),
               child: Column(
-                children: [
+                children: <Widget>[
                   const Spacer(),
                   Container(
                     width: double.infinity,
@@ -96,5 +92,4 @@ class CarouselPoster extends StatelessWidget {
         ],
       ),
     );
-  }
 }

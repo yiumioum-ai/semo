@@ -93,7 +93,7 @@ class _LandingState extends State<Landing> {
 
   Widget BackgroundTint() {
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(.5),
+      color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .5),
     );
   }
 

@@ -73,7 +73,7 @@ class _SettingsState extends State<Settings> {
                 return ListTile(
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
-                  selectedTileColor: Theme.of(context).primaryColor.withOpacity(.2),
+                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
                   titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -112,7 +112,7 @@ class _SettingsState extends State<Settings> {
                 return ListTile(
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
-                  selectedTileColor: Theme.of(context).primaryColor.withOpacity(.2),
+                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
                   titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),

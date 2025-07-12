@@ -60,7 +60,7 @@ class Spinner {
       context: context,
       useRootNavigator: useRootNavigator!,
       barrierDismissible: false,
-      barrierColor: barrierColor.withOpacity(barrierOpacity),
+      barrierColor: barrierColor.withValues(alpha: barrierOpacity),
       transitionDuration: transitionDuration,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Container();

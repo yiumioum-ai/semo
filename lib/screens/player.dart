@@ -439,7 +439,7 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
       child: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Theme.of(context).scaffoldBackgroundColor.withOpacity(.5),
+        color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .5),
         child: Stack(
           children: [
             Positioned.fill(
@@ -554,8 +554,8 @@ class _PlayerState extends State<Player> with TickerProviderStateMixin {
                       progress: _durationState.progress,
                       total: _durationState.total,
                       progressBarColor: Theme.of(context).primaryColor,
-                      baseBarColor: Theme.of(context).primaryColor.withOpacity(.2),
-                      bufferedBarColor: Theme.of(context).primaryColor.withOpacity(.5),
+                      baseBarColor: Theme.of(context).primaryColor.withValues(alpha: .2),
+                      bufferedBarColor: Theme.of(context).primaryColor.withValues(alpha: .5),
                       thumbColor: Theme.of(context).primaryColor,
                       timeLabelTextStyle: Theme.of(context).textTheme.displaySmall,
                       timeLabelPadding: 10,

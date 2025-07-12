@@ -263,7 +263,7 @@ class _SearchScreenState extends State<SearchScreen> {
       pagingController: _searchPagingController,
       itemBuilder: (context, media, index) {
         if (_mediaType == MediaType.movies) {
-          final movie = media.Movie;
+          final movie = media as Movie;
           return MediaCard(
             posterPath: movie.posterPath,
             title: movie.title,
@@ -272,7 +272,7 @@ class _SearchScreenState extends State<SearchScreen> {
             onTap: () => _navigateToMedia(movie),
           );
         } else {
-          final tvShow = media.TvShow;
+          final tvShow = media as TvShow;
           return MediaCard(
             posterPath: tvShow.posterPath,
             title: tvShow.name,

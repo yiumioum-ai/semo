@@ -93,26 +93,26 @@ class FavoritesState extends BaseScreenState<Favorites> {
             items: _favorites,
             //ignore: always_specify_types
             itemBuilder: (BuildContext context, media, int index) {
-              late MediaCard mediaCard;
+              String posterPath;
+              String title;
+              String year;
+              double voteAverage;
+              VoidCallback onTap;
 
               if (widget.mediaType == MediaType.movies) {
                 final model.Movie movie = media as model.Movie;
-                mediaCard = MediaCard(
-                  posterPath: movie.posterPath,
-                  title: movie.title,
-                  year: movie.releaseDate.split("-")[0],
-                  voteAverage: movie.voteAverage,
-                  onTap: () => navigate(Movie(media)),
-                );
+                posterPath = movie.posterPath;
+                title = movie.title;
+                year = movie.releaseDate.split("-")[0];
+                voteAverage = movie.voteAverage;
+                onTap = () => navigate(Movie(media));
               } else {
                 final model.TvShow tvShow = media as model.TvShow;
-                mediaCard = MediaCard(
-                  posterPath: tvShow.posterPath,
-                  title: tvShow.name,
-                  year: tvShow.firstAirDate.split("-")[0],
-                  voteAverage: tvShow.voteAverage,
-                  onTap: () => navigate(TvShow(media)),
-                );
+                posterPath = tvShow.posterPath;
+                title = tvShow.name;
+                year = tvShow.firstAirDate.split("-")[0];
+                voteAverage = tvShow.voteAverage;
+                onTap = () => navigate(TvShow(media));
               }
 
               return PopupMenuContainer<String>(
@@ -132,7 +132,13 @@ class FavoritesState extends BaseScreenState<Favorites> {
                     }
                   }
                 },
-                child: mediaCard,
+                child: MediaCard(
+                  posterPath: posterPath,
+                  title: title,
+                  year: year,
+                  voteAverage: voteAverage,
+                  onTap: onTap,
+                ),
               );
             },
             crossAxisCount: 3,

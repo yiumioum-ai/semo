@@ -101,14 +101,14 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
       title = movie.title;
       year = movie.releaseDate.split("-")[0];
       voteAverage = movie.voteAverage;
-      onTap = () => navigate(MovieScreen(media));
+      onTap = () => navigate(MovieScreen(movie));
     } else {
       final TvShow tvShow = media as TvShow;
       posterPath = tvShow.posterPath;
       title = tvShow.name;
       year = tvShow.firstAirDate.split("-")[0];
       voteAverage = tvShow.voteAverage;
-      onTap = () => navigate(TvShowScreen(media));
+      onTap = () => navigate(TvShowScreen(tvShow));
     }
 
     return PopupMenuContainer<String>(

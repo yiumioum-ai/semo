@@ -136,7 +136,7 @@ class _MovieScreenState extends State<MovieScreen> {
   }
 
   Future<void> _checkIfFavorite() async {
-    final favs = await _favoritesService.getFavoriteMovies();
+    final favs = await _favoritesService.getMovies();
     if (mounted) {
       setState(() => _isFavorite = favs.contains(_movie.id));
     }
@@ -176,9 +176,9 @@ class _MovieScreenState extends State<MovieScreen> {
   Future<void> _toggleFavorite() async {
     try {
       if (_isFavorite) {
-        await _favoritesService.removeMovieFromFavorites(_movie.id);
+        await _favoritesService.removeMovie(_movie.id);
       } else {
-        await _favoritesService.addMovieToFavorites(_movie.id);
+        await _favoritesService.addMovie(_movie.id);
       }
       if (mounted) setState(() => _isFavorite = !_isFavorite);
     } catch (_) {

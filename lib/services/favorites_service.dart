@@ -43,7 +43,7 @@ class FavoritesService {
     }
   }
 
-  Future<List<int>> getFavoriteMovies() async {
+  Future<List<int>> getMovies() async {
     final Map<String, dynamic> favorites = await _getFavorites();
 
     try {
@@ -54,7 +54,7 @@ class FavoritesService {
     }
   }
 
-  Future<List<int>> getFavoriteTvShows() async {
+  Future<List<int>> getTvShows() async {
     final Map<String, dynamic> favorites = await _getFavorites();
 
     try {
@@ -65,8 +65,8 @@ class FavoritesService {
     }
   }
 
-  Future<void> addMovieToFavorites(int movieId) async {
-    final List<int> favorites = await getFavoriteMovies();
+  Future<void> addMovie(int movieId) async {
+    final List<int> favorites = await getMovies();
 
     if (!favorites.contains(movieId)) {
       favorites.add(movieId);
@@ -79,8 +79,8 @@ class FavoritesService {
     }
   }
 
-  Future<void> addTvShowToFavorites(int tvShowId) async {
-    final List<int> favorites = await getFavoriteTvShows();
+  Future<void> addTvShow(int tvShowId) async {
+    final List<int> favorites = await getTvShows();
 
     if (!favorites.contains(tvShowId)) {
       favorites.add(tvShowId);
@@ -93,8 +93,8 @@ class FavoritesService {
     }
   }
 
-  Future<void> removeMovieFromFavorites(int movieId) async {
-    final List<int> favorites = await getFavoriteMovies();
+  Future<void> removeMovie(int movieId) async {
+    final List<int> favorites = await getMovies();
 
     if (favorites.contains(movieId)) {
       favorites.remove(movieId);
@@ -107,8 +107,8 @@ class FavoritesService {
     }
   }
 
-  Future<void> removeTvShowFromFavorites(int tvShowId) async {
-    final List<int> favorites = await getFavoriteTvShows();
+  Future<void> removeTvShow(int tvShowId) async {
+    final List<int> favorites = await getTvShows();
 
     if (favorites.contains(tvShowId)) {
       favorites.remove(tvShowId);

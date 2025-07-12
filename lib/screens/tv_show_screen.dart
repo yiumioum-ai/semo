@@ -143,7 +143,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
   }
 
   Future<void> _checkIfFavorite() async {
-    final favs = await _favoritesService.getFavoriteTvShows();
+    final favs = await _favoritesService.getTvShows();
     if (mounted) {
       setState(() => _isFavorite = favs.contains(_tvShow.id));
     }
@@ -209,9 +209,9 @@ class _TvShowScreenState extends State<TvShowScreen> {
   Future<void> _toggleFavorite() async {
     try {
       if (_isFavorite) {
-        await _favoritesService.removeTvShowFromFavorites(_tvShow.id);
+        await _favoritesService.removeTvShow(_tvShow.id);
       } else {
-        await _favoritesService.addTvShowToFavorites(_tvShow.id);
+        await _favoritesService.addTvShow(_tvShow.id);
       }
       if (mounted) setState(() => _isFavorite = !_isFavorite);
     } catch (_) {

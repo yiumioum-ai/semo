@@ -37,8 +37,8 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
     try {
       final List<int> favoritesIds = widget.mediaType == MediaType.movies
-          ? await _favoritesService.getFavoriteMovies()
-          : await _favoritesService.getFavoriteTvShows();
+          ? await _favoritesService.getMovies()
+          : await _favoritesService.getTvShows();
 
       if (widget.mediaType == MediaType.movies) {
         for (int id in favoritesIds) {
@@ -69,9 +69,9 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
     try {
       if (widget.mediaType == MediaType.movies) {
-        await _favoritesService.removeMovieFromFavorites(id);
+        await _favoritesService.removeMovie(id);
       } else if (widget.mediaType == MediaType.tvShows) {
-        await _favoritesService.removeTvShowFromFavorites(id);
+        await _favoritesService.removeTvShow(id);
       }
 
       //ignore: always_specify_types

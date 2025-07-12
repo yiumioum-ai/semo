@@ -134,7 +134,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
   }
 
   Future<void> _loadRecentlyWatched() async {
-    final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedMovieIds();
+    final recentlyWatchedIds = await _recentlyWatchedService.getMovieIds();
     final movies = <Movie>[];
 
     for (final id in recentlyWatchedIds) {
@@ -162,7 +162,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
   Future<void> _removeFromRecentlyWatched(Movie movie) async {
     try {
-      await _recentlyWatchedService.removeMovieFromRecentlyWatched(movie.id);
+      await _recentlyWatchedService.removeMovie(movie.id);
       setState(() {
         _recentlyWatched.removeWhere((m) => m.id == movie.id);
       });

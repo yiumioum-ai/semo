@@ -167,7 +167,7 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<List<int>> getRecentlyWatchedMovieIds() async {
+  Future<List<int>> getMovieIds() async {
     final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
     try {
@@ -187,7 +187,7 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<void> removeMovieFromRecentlyWatched(int movieId) async {
+  Future<void> removeMovie(int movieId) async {
     final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
     try {
@@ -200,7 +200,7 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<List<int>> getRecentlyWatchedTvShowIds() async {
+  Future<List<int>> getTvShowIds() async {
     final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
     try {
@@ -249,7 +249,7 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<void> removeTvShowFromRecentlyWatched(int tvShowId) async {
+  Future<void> removeTvShow(int tvShowId) async {
     final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
     try {

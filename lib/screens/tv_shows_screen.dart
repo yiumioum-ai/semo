@@ -125,7 +125,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
   }
 
   Future<void> _loadRecentlyWatched() async {
-    final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedTvShowIds();
+    final recentlyWatchedIds = await _recentlyWatchedService.getTvShowIds();
     final tvShows = <TvShow>[];
 
     for (final id in recentlyWatchedIds) {
@@ -153,7 +153,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
 
   Future<void> _removeFromRecentlyWatched(TvShow tvShow) async {
     try {
-      await _recentlyWatchedService.removeTvShowFromRecentlyWatched(tvShow.id);
+      await _recentlyWatchedService.removeTvShow(tvShow.id);
       setState(() {
         _recentlyWatched.removeWhere((tv) => tv.id == tvShow.id);
       });

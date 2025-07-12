@@ -94,9 +94,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (widget.mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, MovieScreen(media.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media as Movie));
     } else {
-      await NavigationHelper.navigate(context, TvShowScreen(media.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media as TvShow));
     }
   }
 
@@ -105,7 +105,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       pagingController: _pagingController,
       itemBuilder: (context, media, index) {
         if (widget.mediaType == MediaType.movies) {
-          final movie = media.Movie;
+          final movie = media as Movie;
           return MediaCard(
             posterPath: movie.posterPath,
             title: movie.title,
@@ -114,7 +114,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             onTap: () => _navigateToMedia(movie),
           );
         } else {
-          final tvShow = media.TvShow;
+          final tvShow = media as TvShow;
           return MediaCard(
             posterPath: tvShow.posterPath,
             title: tvShow.name,

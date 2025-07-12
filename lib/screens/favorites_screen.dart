@@ -64,7 +64,7 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _removeFromRecentlyWatched(int id) async {
+  Future<void> _removeFromFavorites(int id) async {
     List<dynamic> favorites = _favorites;
 
     try {
@@ -124,7 +124,7 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
       onItemSelected: (String? action) async {
         if (action != null) {
           if (action == "remove") {
-            await _removeFromRecentlyWatched(media.id);
+            await _removeFromFavorites(media.id);
           }
         }
       },

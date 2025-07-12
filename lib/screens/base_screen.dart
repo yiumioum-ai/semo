@@ -20,7 +20,8 @@ abstract class BaseScreen extends StatefulWidget {
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  StreamSubscription<InternetStatus>? _connectionSubscription;
+  late StreamSubscription<InternetStatus> _connectionSubscription;
+  StreamSubscription<User?>? _authSubscription;
   bool _isConnectedToInternet = true;
 
   final Logger logger = Logger();
@@ -154,7 +155,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   }
 
   void _verifyAuthSession() {
-    _auth.authStateChanges().listen((User? user) async {
+    _authSubscription = _auth.authStateChanges().listen((User? user) async {
       if (user == null) {
         await navigate(
           LandingScreen(),
@@ -189,9 +190,9 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   @override
   void dispose() {
-    _connectionSubscription?.cancel();
+    _connectionSubscription.cancel();
     if (widget.shouldVerifySession) {
-      _auth.authStateChanges().listen((User? user) {}).cancel();
+      _authSubscription?.cancel();
     }
     handleDispose();
     super.dispose();

@@ -191,7 +191,7 @@ class _MovieScreenState extends State<MovieScreen> {
     try {
       final extractor = Extractor(movie: _movie);
       final stream = await extractor.getStream();
-      final subs = await _subtitleService.getMovieSubtitles(_movie.id);
+      final subs = await _subtitleService.getSubtitles(_movie.id);
       _spinner.dismiss();
 
       if (stream.url != null) {

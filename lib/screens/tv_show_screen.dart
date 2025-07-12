@@ -225,10 +225,10 @@ class _TvShowScreenState extends State<TvShowScreen> {
     try {
       final extractor = Extractor(episode: episode);
       final stream = await extractor.getStream();
-      final subs = await _subtitleService.getTvShowSubtitles(
+      final subs = await _subtitleService.getSubtitles(
         _tvShow.id,
-        episode.season,
-        episode.number,
+        seasonNumber: episode.season,
+        episodeNumber: episode.number,
       );
       _spinner.dismiss();
 

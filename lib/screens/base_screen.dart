@@ -9,7 +9,12 @@ import "package:semo/screens/landing_screen.dart";
 import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
-  const BaseScreen({super.key});
+  const BaseScreen({
+    super.key,
+    this.shouldVerifySession = true
+  });
+
+  final bool shouldVerifySession;
 }
 
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
@@ -174,7 +179,9 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
       if (mounted) {
         spinner = Spinner(context);
-        _verifyAuthSession();
+        if (widget.shouldVerifySession) {
+          _verifyAuthSession();
+        }
         await initializeScreen();
       }
     });

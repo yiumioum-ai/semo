@@ -1,9 +1,11 @@
 import "dart:async";
 import "package:firebase_analytics/firebase_analytics.dart";
+import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
 import "package:logger/logger.dart";
 import "package:semo/components/spinner.dart";
+import "package:semo/screens/landing_screen.dart";
 import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
@@ -11,6 +13,7 @@ abstract class BaseScreen extends StatefulWidget {
 }
 
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
   StreamSubscription<InternetStatus>? _connectionSubscription;
   bool _isConnectedToInternet = true;
@@ -145,6 +148,17 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     );
   }
 
+  void _verifyAuthSession() {
+    _auth.authStateChanges().listen((User? user) async {
+      if (user == null) {
+        await navigate(
+          LandingScreen(),
+          replace: true,
+        );
+      }
+    });
+  }
+
   /// Get current connectivity status
   bool get isConnectedToInternet => _isConnectedToInternet;
 
@@ -160,6 +174,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
       if (mounted) {
         spinner = Spinner(context);
+        _verifyAuthSession();
         await initializeScreen();
       }
     });

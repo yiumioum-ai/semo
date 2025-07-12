@@ -10,10 +10,10 @@ import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/landing.dart';
+import 'package:semo/screens/landing_screen.dart';
 import 'package:semo/models/server.dart';
-import 'package:semo/screens/open_source_libraries.dart';
-import 'package:semo/screens/subtitles_preferences.dart';
+import 'package:semo/screens/open_source_libraries_screen.dart';
+import 'package:semo/screens/subtitles_preferences_screen.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/preferences.dart';
@@ -22,12 +22,12 @@ import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class Settings extends StatefulWidget {
+class SettingsScreen extends StatefulWidget {
   @override
-  _SettingsState createState() => _SettingsState();
+  _SettingsScreenState createState() => _SettingsScreenState();
 }
 
-class _SettingsState extends State<Settings> {
+class _SettingsScreenState extends State<SettingsScreen> {
   Preferences _preferences = Preferences();
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
@@ -304,7 +304,7 @@ class _SettingsState extends State<Settings> {
       ),
     );
 
-    navigate(destination: Landing(), replace: true);
+    navigate(destination: LandingScreen(), replace: true);
   }
 
   Future<void> clearRecentSearches({bool showSpinner = true, bool showSnackBar = true}) async {
@@ -508,7 +508,7 @@ class _SettingsState extends State<Settings> {
               description: 'Customize the subtitles style to fit your preference',
               icon: Icons.subtitles_outlined,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => navigate(destination: SubtitlesPreferences()),
+              onPressed: (context) => navigate(destination: SubtitlesPreferencesScreen()),
             ),
             SectionTile(
               title: 'Seek duration',
@@ -532,7 +532,7 @@ class _SettingsState extends State<Settings> {
               title: 'Open Source libraries',
               icon: Icons.description_outlined,
               trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => navigate(destination: OpenSourceLibraries()),
+              onPressed: (context) => navigate(destination: OpenSourceLibrariesScreen()),
             ),
           ],
         ),
@@ -574,7 +574,7 @@ class _SettingsState extends State<Settings> {
               onPressed: (context) async {
                 await GoogleSignIn.instance.signOut();
                 await FirebaseAuth.instance.signOut();
-                navigate(destination: Landing(), replace: true);
+                navigate(destination: LandingScreen(), replace: true);
               },
             ),
           ],

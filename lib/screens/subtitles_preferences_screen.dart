@@ -8,12 +8,12 @@ import 'package:semo/models/subtitle_style.dart';
 import 'package:semo/utils/preferences.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
-class SubtitlesPreferences extends StatefulWidget {
+class SubtitlesPreferencesScreen extends StatefulWidget {
   @override
-  _SubtitlesPreferencesState createState() => _SubtitlesPreferencesState();
+  _SubtitlesPreferencesScreenState createState() => _SubtitlesPreferencesScreenState();
 }
 
-class _SubtitlesPreferencesState extends State<SubtitlesPreferences> {
+class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen> {
   Preferences _preferences = Preferences();
   SubtitleStyle? _subtitleStyle;
 

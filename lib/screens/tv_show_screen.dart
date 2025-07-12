@@ -11,9 +11,9 @@ import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
 import 'package:semo/components/season_selector.dart';
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/screens/person_media.dart';
-import 'package:semo/screens/player.dart';
-import 'package:semo/screens/view_all.dart';
+import 'package:semo/screens/person_media_screen.dart';
+import 'package:semo/screens/player_screen.dart';
+import 'package:semo/screens/view_all_screen.dart';
 import 'package:semo/services/favorites_service.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/subtitle_service.dart';
@@ -24,16 +24,16 @@ import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
-class TvShow extends StatefulWidget {
+class TvShowScreen extends StatefulWidget {
   final model.TvShow tvShow;
 
-  const TvShow(this.tvShow, {Key? key}) : super(key: key);
+  const TvShowScreen(this.tvShow, {Key? key}) : super(key: key);
 
   @override
-  _TvShowState createState() => _TvShowState();
+  _TvShowScreenState createState() => _TvShowScreenState();
 }
 
-class _TvShowState extends State<TvShow> {
+class _TvShowScreenState extends State<TvShowScreen> {
   late model.TvShow _tvShow;
   late Spinner _spinner;
   final TMDBService _tmdbService = TMDBService();
@@ -235,7 +235,7 @@ class _TvShowState extends State<TvShow> {
       if (stream.url != null) {
         final result = await NavigationHelper.navigate(
           context,
-          Player(
+          PlayerScreen(
             id: _tvShow.id,
             seasonId: season.id,
             episodeId: episode.id,
@@ -388,7 +388,7 @@ class _TvShowState extends State<TvShow> {
                 person: _tvShow.cast![i],
                 onTap: () => NavigationHelper.navigate(
                   context,
-                  PersonMedia(_tvShow.cast![i]),
+                  PersonMediaScreen(_tvShow.cast![i]),
                 ),
               ),
             ),
@@ -472,13 +472,13 @@ class _TvShowState extends State<TvShow> {
                             voteAverage: show.voteAverage,
                             onTap: () => NavigationHelper.navigate(
                               context,
-                              TvShow(show),
+                              TvShowScreen(show),
                             ),
                           ),
                         ),
                         onViewAllTap: () => NavigationHelper.navigate(
                           context,
-                          ViewAll(
+                          ViewAllScreen(
                             title: 'Recommendations',
                             source: Urls.getTvShowRecommendations(_tvShow.id),
                             mediaType: MediaType.tvShows,
@@ -501,13 +501,13 @@ class _TvShowState extends State<TvShow> {
                             voteAverage: show.voteAverage,
                             onTap: () => NavigationHelper.navigate(
                               context,
-                              TvShow(show),
+                              TvShowScreen(show),
                             ),
                           ),
                         ),
                         onViewAllTap: () => NavigationHelper.navigate(
                           context,
-                          ViewAll(
+                          ViewAllScreen(
                             title: 'Similar',
                             source: Urls.getTvShowSimilar(_tvShow.id),
                             mediaType: MediaType.tvShows,

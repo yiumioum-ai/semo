@@ -10,19 +10,19 @@ import 'package:semo/components/vertical_media_list.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/search_results.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/screens/movie.dart';
-import 'package:semo/screens/tv_show.dart';
+import 'package:semo/screens/movie_screen.dart';
+import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/navigation_helper.dart';
 
-class ViewAll extends StatefulWidget {
+class ViewAllScreen extends StatefulWidget {
   final MediaType mediaType;
   final String title;
   final String source;
   final Map<String, String>? parameters;
 
-  const ViewAll({
+  const ViewAllScreen({
     Key? key,
     required this.mediaType,
     required this.title,
@@ -31,10 +31,10 @@ class ViewAll extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ViewAllState createState() => _ViewAllState();
+  _ViewAllScreenState createState() => _ViewAllScreenState();
 }
 
-class _ViewAllState extends State<ViewAll> {
+class _ViewAllScreenState extends State<ViewAllScreen> {
   // State
   bool _isConnectedToInternet = true;
   model.SearchResults _searchResults = model.SearchResults();
@@ -94,9 +94,9 @@ class _ViewAllState extends State<ViewAll> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (widget.mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, Movie(media as model.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media as model.Movie));
     } else {
-      await NavigationHelper.navigate(context, TvShow(media as model.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media as model.TvShow));
     }
   }
 

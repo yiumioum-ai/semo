@@ -10,11 +10,11 @@ import 'package:semo/components/media_card.dart';
 import 'package:semo/components/streaming_platform_card.dart';
 import "package:semo/gen/assets.gen.dart";
 import 'package:semo/models/genre.dart' as model;
+import 'package:semo/models/movie.dart' as model;
 import "package:semo/models/search_results.dart";
 import 'package:semo/models/streaming_platform.dart';
-import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/screens/tv_show.dart';
-import 'package:semo/screens/view_all.dart';
+import 'package:semo/screens/movie_screen.dart';
+import 'package:semo/screens/view_all_screen.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/enums/media_type.dart';
@@ -23,14 +23,14 @@ import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-class TvShows extends StatefulWidget {
-  const TvShows({Key? key}) : super(key: key);
+class MoviesScreen extends StatefulWidget {
+  const MoviesScreen({Key? key}) : super(key: key);
 
   @override
-  _TvShowsState createState() => _TvShowsState();
+  _MoviesScreenState createState() => _MoviesScreenState();
 }
 
-class _TvShowsState extends State<TvShows> {
+class _MoviesScreenState extends State<MoviesScreen> {
   // Services
   final TMDBService _tmdbService = TMDBService();
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
@@ -39,13 +39,13 @@ class _TvShowsState extends State<TvShows> {
   late Spinner _spinner;
   bool _isLoading = true;
 
-  // On The Air
-  List<model.TvShow> _onTheAir = [];
-  final CarouselSliderController _onTheAirController = CarouselSliderController();
-  int _currentOnTheAirIndex = 0;
+  // Now Playing
+  List<model.Movie> _nowPlaying = [];
+  final CarouselSliderController _nowPlayingController = CarouselSliderController();
+  int _currentNowPlayingIndex = 0;
 
   // Recently Watched
-  List<model.TvShow> _recentlyWatched = [];
+  List<model.Movie> _recentlyWatched = [];
 
   // Genres and Streaming Platforms
   List<model.Genre> _genres = [];
@@ -58,19 +58,27 @@ class _TvShowsState extends State<TvShows> {
   ];
 
   // Pagination Controllers using v5.x API
-  late final PagingController<int, model.TvShow> _popularController = PagingController<int, model.TvShow>(
+  late final PagingController<int, model.Movie> _trendingController = PagingController<int, model.Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
-      final result = await _tmdbService.getPopularTvShows(pageKey);
-      return result.tvShows ?? [];
+      final result = await _tmdbService.getTrendingMovies(pageKey);
+      return result.movies ?? [];
     },
   );
 
-  late final PagingController<int, model.TvShow> _topRatedController = PagingController<int, model.TvShow>(
+  late final PagingController<int, model.Movie> _popularController = PagingController<int, model.Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
-      final result = await _tmdbService.getTopRatedTvShows(pageKey);
-      return result.tvShows ?? [];
+      final result = await _tmdbService.getPopularMovies(pageKey);
+      return result.movies ?? [];
+    },
+  );
+
+  late final PagingController<int, model.Movie> _topRatedController = PagingController<int, model.Movie>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) async {
+      final result = await _tmdbService.getTopRatedMovies(pageKey);
+      return result.movies ?? [];
     },
   );
 
@@ -82,6 +90,7 @@ class _TvShowsState extends State<TvShows> {
 
   @override
   void dispose() {
+    _trendingController.dispose();
     _popularController.dispose();
     _topRatedController.dispose();
     super.dispose();
@@ -90,7 +99,7 @@ class _TvShowsState extends State<TvShows> {
   Future<void> _initializeScreen() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _spinner = Spinner(context);
-      await FirebaseAnalytics.instance.logScreenView(screenName: 'TV Shows');
+      await FirebaseAnalytics.instance.logScreenView(screenName: 'Movies');
       await _loadAllData();
     });
   }
@@ -100,7 +109,7 @@ class _TvShowsState extends State<TvShows> {
 
     try {
       await Future.wait([
-        _loadOnTheAir(),
+        _loadNowPlaying(),
         _loadRecentlyWatched(),
         _loadGenres(),
       ]);
@@ -114,48 +123,48 @@ class _TvShowsState extends State<TvShows> {
     }
   }
 
-  Future<void> _loadOnTheAir() async {
-    final SearchResults results = await _tmdbService.getOnTheAirTvShows();
-    final List<model.TvShow> tvShows = results.tvShows ?? <model.TvShow>[];
+  Future<void> _loadNowPlaying() async {
+    final SearchResults results = await _tmdbService.getNowPlayingMovies();
+    final List<model.Movie> movies = results.movies ?? <model.Movie>[];
     if (mounted) {
       setState(() {
-        _onTheAir = tvShows.length > 10 ? tvShows.sublist(0, 10) : tvShows;
+        _nowPlaying = movies.length > 10 ? movies.sublist(0, 10) : movies;
       });
     }
   }
 
   Future<void> _loadRecentlyWatched() async {
-    final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedTvShowIds();
-    final tvShows = <model.TvShow>[];
+    final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedMovieIds();
+    final movies = <model.Movie>[];
 
     for (final id in recentlyWatchedIds) {
       try {
-        final tvShow = await _tmdbService.getTvShowDetails(id);
-        if (tvShow != null) {
-          tvShows.add(tvShow);
+        final movie = await _tmdbService.getMovieDetails(id);
+        if (movie != null) {
+          movies.add(movie);
         }
       } catch (e) {
-        print('Failed to load TV show $id: $e');
+        print('Failed to load movie $id: $e');
       }
     }
 
     if (mounted) {
-      setState(() => _recentlyWatched = tvShows);
+      setState(() => _recentlyWatched = movies);
     }
   }
 
   Future<void> _loadGenres() async {
-    final genres = await _tmdbService.getTvShowGenres();
+    final genres = await _tmdbService.getMovieGenres();
     if (mounted) {
       setState(() => _genres = genres);
     }
   }
 
-  Future<void> _removeFromRecentlyWatched(model.TvShow tvShow) async {
+  Future<void> _removeFromRecentlyWatched(model.Movie movie) async {
     try {
-      await _recentlyWatchedService.removeTvShowFromRecentlyWatched(tvShow.id);
+      await _recentlyWatchedService.removeMovieFromRecentlyWatched(movie.id);
       setState(() {
-        _recentlyWatched.removeWhere((tv) => tv.id == tvShow.id);
+        _recentlyWatched.removeWhere((m) => m.id == movie.id);
       });
     } catch (e) {
       _showErrorSnackBar('Failed to remove from recently watched');
@@ -164,13 +173,14 @@ class _TvShowsState extends State<TvShows> {
 
   Future<void> _refreshData() async {
     // Reset pagination controllers
+    _trendingController.refresh();
     _popularController.refresh();
     _topRatedController.refresh();
 
     // Reset state
     setState(() {
       _isLoading = true;
-      _onTheAir = [];
+      _nowPlaying = [];
       _recentlyWatched = [];
       _genres = [];
     });
@@ -193,42 +203,42 @@ class _TvShowsState extends State<TvShows> {
     }
   }
 
-  Future<void> _navigateToTvShow(model.TvShow tvShow) async {
-    final result = await NavigationHelper.navigate(context, TvShow(tvShow));
+  Future<void> _navigateToMovie(model.Movie movie) async {
+    final result = await NavigationHelper.navigate(context, MovieScreen(movie));
     if (result == 'refresh') {
       await _loadRecentlyWatched();
     }
   }
 
-  Widget _buildOnTheAir() {
-    if (_onTheAir.isEmpty) return const SizedBox.shrink();
+  Widget _buildNowPlaying() {
+    if (_nowPlaying.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: [
         CarouselSlider.builder(
-          carouselController: _onTheAirController,
-          itemCount: _onTheAir.length,
+          carouselController: _nowPlayingController,
+          itemCount: _nowPlaying.length,
           options: CarouselOptions(
             aspectRatio: 2,
             autoPlay: true,
             enlargeCenterPage: true,
             onPageChanged: (int index, CarouselPageChangedReason reason) {
-              setState(() => _currentOnTheAirIndex = index);
+              setState(() => _currentNowPlayingIndex = index);
             },
           ),
           itemBuilder: (context, index, realIndex) {
             return CarouselPoster(
-              backdropPath: _onTheAir[index].backdropPath,
-              title: _onTheAir[index].name,
-              onTap: () => _navigateToTvShow(_onTheAir[index]),
+              backdropPath: _nowPlaying[index].backdropPath,
+              title: _nowPlaying[index].title,
+              onTap: () => _navigateToMovie(_nowPlaying[index]),
             );
           },
         ),
         Container(
           margin: const EdgeInsets.only(top: 20),
           child: AnimatedSmoothIndicator(
-            activeIndex: _currentOnTheAirIndex,
-            count: _onTheAir.length,
+            activeIndex: _currentNowPlayingIndex,
+            count: _nowPlaying.length,
             effect: ExpandingDotsEffect(
               dotWidth: 10,
               dotHeight: 10,
@@ -262,19 +272,19 @@ class _TvShowsState extends State<TvShows> {
               scrollDirection: Axis.horizontal,
               itemCount: _recentlyWatched.length,
               itemBuilder: (context, index) {
-                final tvShow = _recentlyWatched[index];
+                final movie = _recentlyWatched[index];
                 return Container(
                   margin: EdgeInsets.only(
                     right: index < _recentlyWatched.length - 1 ? 18 : 0,
                   ),
                   child: MediaCard(
-                    posterPath: tvShow.posterPath,
-                    title: tvShow.name,
-                    year: tvShow.firstAirDate.split('-')[0],
-                    voteAverage: tvShow.voteAverage,
-                    onTap: () => _navigateToTvShow(tvShow),
+                    posterPath: movie.posterPath,
+                    title: movie.title,
+                    year: movie.releaseDate.split('-')[0],
+                    voteAverage: movie.voteAverage,
+                    onTap: () => _navigateToMovie(movie),
                     showRemoveOption: true,
-                    onRemove: () => _removeFromRecentlyWatched(tvShow),
+                    onRemove: () => _removeFromRecentlyWatched(movie),
                   ),
                 );
               },
@@ -312,14 +322,14 @@ class _TvShowsState extends State<TvShows> {
                     platform: _streamingPlatforms[index],
                     onTap: () => NavigationHelper.navigate(
                       context,
-                      ViewAll(
+                      ViewAllScreen(
                         title: _streamingPlatforms[index].name,
-                        source: Urls.discoverTvShow,
+                        source: Urls.discoverMovie,
                         parameters: {
                           'with_watch_providers': '${_streamingPlatforms[index].id}',
                           'watch_region': 'US',
                         },
-                        mediaType: MediaType.tvShows,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -358,15 +368,15 @@ class _TvShowsState extends State<TvShows> {
                     right: index < _genres.length - 1 ? 18 : 0,
                   ),
                   child: GenreCard(
-                    mediaType: MediaType.tvShows,
+                    mediaType: MediaType.movies,
                     genre: _genres[index],
                     onTap: () => NavigationHelper.navigate(
                       context,
-                      ViewAll(
+                      ViewAllScreen(
                         title: _genres[index].name,
-                        source: Urls.discoverTvShow,
+                        source: Urls.discoverMovie,
                         parameters: {'with_genres': '${_genres[index].id}'},
-                        mediaType: MediaType.tvShows,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -393,55 +403,80 @@ class _TvShowsState extends State<TvShows> {
               margin: const EdgeInsets.all(18),
               child: Column(
                 children: [
-                  _buildOnTheAir(),
+                  _buildNowPlaying(),
                   _buildRecentlyWatchedSection(),
-                  HorizontalMediaList<model.TvShow>(
+                  HorizontalMediaList<model.Movie>(
+                    title: 'Trending',
+                    source: Urls.trendingMovies,
+                    pagingController: _trendingController,
+                    itemBuilder: (c, m, i) => Padding(
+                      padding: EdgeInsets.only(
+                        right: i < (_trendingController.items?.length ?? 0) - 1 ? 18 : 0,
+                      ),
+                      child: MediaCard(
+                        posterPath: m.posterPath,
+                        title: m.title,
+                        year: m.releaseDate.split('-')[0],
+                        voteAverage: m.voteAverage,
+                        onTap: () => _navigateToMovie(m),
+                      ),
+                    ),
+                    onViewAllTap: () => NavigationHelper.navigate(
+                      context,
+                      ViewAllScreen(
+                        title: 'Trending',
+                        source: Urls.trendingMovies,
+                        mediaType: MediaType.movies,
+                      ),
+                    ),
+                  ),
+                  HorizontalMediaList<model.Movie>(
                     title: 'Popular',
-                    source: Urls.popularTvShows,
+                    source: Urls.popularMovies,
                     pagingController: _popularController,
-                    itemBuilder: (c, tv, i) => Padding(
+                    itemBuilder: (c, m, i) => Padding(
                       padding: EdgeInsets.only(
                         right: i < (_popularController.items?.length ?? 0) - 1 ? 18 : 0,
                       ),
                       child: MediaCard(
-                        posterPath: tv.posterPath,
-                        title: tv.name,
-                        year: tv.firstAirDate.split('-')[0],
-                        voteAverage: tv.voteAverage,
-                        onTap: () => _navigateToTvShow(tv),
+                        posterPath: m.posterPath,
+                        title: m.title,
+                        year: m.releaseDate.split('-')[0],
+                        voteAverage: m.voteAverage,
+                        onTap: () => _navigateToMovie(m),
                       ),
                     ),
                     onViewAllTap: () => NavigationHelper.navigate(
                       context,
-                      ViewAll(
+                      ViewAllScreen(
                         title: 'Popular',
-                        source: Urls.popularTvShows,
-                        mediaType: MediaType.tvShows,
+                        source: Urls.popularMovies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
-                  HorizontalMediaList<model.TvShow>(
+                  HorizontalMediaList<model.Movie>(
                     title: 'Top Rated',
-                    source: Urls.topRatedTvShows,
+                    source: Urls.topRatedMovies,
                     pagingController: _topRatedController,
-                    itemBuilder: (c, tv, i) => Padding(
+                    itemBuilder: (c, m, i) => Padding(
                       padding: EdgeInsets.only(
                         right: i < (_topRatedController.items?.length ?? 0) - 1 ? 18 : 0,
                       ),
                       child: MediaCard(
-                        posterPath: tv.posterPath,
-                        title: tv.name,
-                        year: tv.firstAirDate.split('-')[0],
-                        voteAverage: tv.voteAverage,
-                        onTap: () => _navigateToTvShow(tv),
+                        posterPath: m.posterPath,
+                        title: m.title,
+                        year: m.releaseDate.split('-')[0],
+                        voteAverage: m.voteAverage,
+                        onTap: () => _navigateToMovie(m),
                       ),
                     ),
                     onViewAllTap: () => NavigationHelper.navigate(
                       context,
-                      ViewAll(
+                      ViewAllScreen(
                         title: 'Top Rated',
-                        source: Urls.topRatedTvShows,
-                        mediaType: MediaType.tvShows,
+                        source: Urls.topRatedMovies,
+                        mediaType: MediaType.movies,
                       ),
                     ),
                   ),
@@ -451,7 +486,8 @@ class _TvShowsState extends State<TvShows> {
               ),
             ),
           ),
-        ) : const Center(child: CircularProgressIndicator()),
+        )
+            : const Center(child: CircularProgressIndicator()),
       ),
     );
   }

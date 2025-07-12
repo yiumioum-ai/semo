@@ -4,12 +4,12 @@ import 'package:semo/models/open_source_library.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class OpenSourceLibraries extends StatefulWidget {
+class OpenSourceLibrariesScreen extends StatefulWidget {
   @override
-  _OpenSourceLibrariesState createState() => _OpenSourceLibrariesState();
+  _OpenSourceLibrariesScreenState createState() => _OpenSourceLibrariesScreenState();
 }
 
-class _OpenSourceLibrariesState extends State<OpenSourceLibraries> {
+class _OpenSourceLibrariesScreenState extends State<OpenSourceLibrariesScreen> {
   List<OpenSourceLibrary> _libraries = [
     OpenSourceLibrary(name: 'archive', pubPath: '/archive'),
     OpenSourceLibrary(name: 'audio_video_progress_bar', pubPath: '/audio_video_progress_bar'),

@@ -4,18 +4,18 @@ import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
 import "package:semo/gen/assets.gen.dart";
-import "package:semo/screens/favorites.dart";
-import "package:semo/screens/landing.dart";
+import "package:semo/screens/favorites_screen.dart";
+import "package:semo/screens/landing_screen.dart";
 import "package:semo/models/navigation_page.dart";
-import "package:semo/screens/movies.dart";
-import "package:semo/screens/search.dart";
-import "package:semo/screens/settings.dart";
-import "package:semo/screens/tv_shows.dart";
+import "package:semo/screens/movies_screen.dart";
+import "package:semo/screens/search_screen.dart";
+import "package:semo/screens/settings_screen.dart";
+import "package:semo/screens/tv_shows_screen.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/utils/navigation_helper.dart";
 
-class Fragments extends StatefulWidget {
-  const Fragments({
+class FragmentsScreen extends StatefulWidget {
+  const FragmentsScreen({
     super.key,
     this.initialPageIndex = 0,
     this.initialFavoritesTabIndex = 0,
@@ -25,10 +25,10 @@ class Fragments extends StatefulWidget {
   final int initialFavoritesTabIndex;
 
   @override
-  _FragmentsState createState() => _FragmentsState();
+  _FragmentsScreenState createState() => _FragmentsScreenState();
 }
 
-class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
+class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderStateMixin {
   int _selectedPageIndex = 0;
   List<NavigationPage> _navigationPages = <NavigationPage>[];
   late TabController _tabController;
@@ -40,7 +40,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
       if (mounted && user == null) {
         NavigationHelper.navigate(
           context,
-          Landing(),
+          LandingScreen(),
           replace: true,
         );
       }
@@ -53,13 +53,13 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
         NavigationPage(
           icon: Icons.movie,
           title: "Movies",
-          widget: const Movies(),
+          widget: const MoviesScreen(),
           mediaType: MediaType.movies,
         ),
         NavigationPage(
           icon: Icons.video_library,
           title: "TV Shows",
-          widget: const TvShows(),
+          widget: const TvShowsScreen(),
           mediaType: MediaType.tvShows,
         ),
         NavigationPage(
@@ -68,15 +68,15 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
           widget: TabBarView(
             controller: _tabController,
             children: <Widget>[
-              Favorites(mediaType: MediaType.movies),
-              Favorites(mediaType: MediaType.tvShows),
+              FavoritesScreen(mediaType: MediaType.movies),
+              FavoritesScreen(mediaType: MediaType.tvShows),
             ],
           )
         ),
         NavigationPage(
           icon: Icons.settings,
           title: "Settings",
-          widget: Settings()
+          widget: SettingsScreen()
         ),
       ];
     });
@@ -198,7 +198,7 @@ class _FragmentsState extends State<Fragments> with TickerProviderStateMixin {
             onPressed: () {
               NavigationHelper.navigate(
                 context,
-                Search(mediaType: _navigationPages[_selectedPageIndex].mediaType),
+                SearchScreen(mediaType: _navigationPages[_selectedPageIndex].mediaType),
               );
             },
           ) : Container(),

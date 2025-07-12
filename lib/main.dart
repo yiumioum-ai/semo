@@ -6,7 +6,7 @@ import "package:flutter/material.dart";
 import "package:flutter/foundation.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:semo/firebase_options.dart";
-import "package:semo/screens/splash.dart";
+import "package:semo/screens/splash_screen.dart";
 import "package:semo/services/tmdb_service.dart";
 import "package:semo/utils/preferences.dart";
 
@@ -136,6 +136,6 @@ class Semo extends StatelessWidget {
         backgroundColor: _surface,
       ),
     ),
-    home: Splash(),
+    home: SplashScreen(),
   );
 }

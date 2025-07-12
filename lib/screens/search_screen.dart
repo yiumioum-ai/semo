@@ -6,8 +6,8 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:semo/components/media_card.dart';
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/tv_show.dart' as model;
-import 'package:semo/screens/movie.dart';
-import 'package:semo/screens/tv_show.dart';
+import 'package:semo/screens/movie_screen.dart';
+import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/services/recent_searches_service.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/enums/media_type.dart';
@@ -15,19 +15,19 @@ import 'package:semo/utils/navigation_helper.dart';
 
 import '../components/vertical_media_list.dart' show VerticalMediaList;
 
-class Search extends StatefulWidget {
+class SearchScreen extends StatefulWidget {
   final MediaType mediaType;
 
-  const Search({
+  const SearchScreen({
     Key? key,
     required this.mediaType,
   }) : super(key: key);
 
   @override
-  _SearchState createState() => _SearchState();
+  _SearchScreenState createState() => _SearchScreenState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchScreenState extends State<SearchScreen> {
   // Services
   final TMDBService _tmdbService = TMDBService();
   final RecentSearchesService _recentSearchesService = RecentSearchesService();
@@ -167,9 +167,9 @@ class _SearchState extends State<Search> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (_mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, Movie(media as model.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media as model.Movie));
     } else {
-      await NavigationHelper.navigate(context, TvShow(media as model.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media as model.TvShow));
     }
   }
 

@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/fragments.dart';
+import 'package:semo/screens/fragments_screen.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:video_player/video_player.dart';
 
-class Landing extends StatefulWidget {
+class LandingScreen extends StatefulWidget {
   @override
-  _LandingState createState() => _LandingState();
+  _LandingScreenState createState() => _LandingScreenState();
 }
 
-class _LandingState extends State<Landing> {
+class _LandingScreenState extends State<LandingScreen> {
   VideoPlayerController? _controller;
   Spinner? _spinner;
 
@@ -38,7 +38,7 @@ class _LandingState extends State<Landing> {
 
       _spinner!.dismiss();
 
-      navigate(destination: Fragments());
+      navigate(destination: FragmentsScreen());
     } catch (e) {
       print(e);
 

@@ -7,16 +7,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/fragments.dart';
-import 'package:semo/screens/landing.dart';
+import 'package:semo/screens/fragments_screen.dart';
+import 'package:semo/screens/landing_screen.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
-class Splash extends StatefulWidget {
+class SplashScreen extends StatefulWidget {
   @override
-  _SplashState createState() => _SplashState();
+  _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashState extends State<Splash> {
+class _SplashScreenState extends State<SplashScreen> {
   String version = '1.0.0';
 
   getAppVersion() async {
@@ -46,9 +46,9 @@ class _SplashState extends State<Splash> {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       Widget destination;
       if (user == null) {
-        destination = Landing();
+        destination = LandingScreen();
       } else {
-        destination = Fragments();
+        destination = FragmentsScreen();
       }
       navigate(destination: destination);
     });

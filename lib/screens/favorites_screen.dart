@@ -4,15 +4,15 @@ import "package:semo/components/vertical_media_list.dart";
 import "package:semo/models/movie.dart" as model;
 import "package:semo/models/tv_show.dart" as model;
 import "package:semo/screens/base_screen.dart";
-import "package:semo/screens/movie.dart";
-import "package:semo/screens/tv_show.dart";
+import "package:semo/screens/movie_screen.dart";
+import "package:semo/screens/tv_show_screen.dart";
 import "package:semo/services/favorites_service.dart";
 import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/components/pop_up_menu.dart";
 
-class Favorites extends BaseScreen {
-  const Favorites({
+class FavoritesScreen extends BaseScreen {
+  const FavoritesScreen({
     super.key,
     required this.mediaType,
   });
@@ -20,10 +20,10 @@ class Favorites extends BaseScreen {
   final MediaType mediaType;
 
   @override
-  FavoritesState createState() => FavoritesState();
+  FavoritesScreenState createState() => FavoritesScreenState();
 }
 
-class FavoritesState extends BaseScreenState<Favorites> {
+class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
   List<dynamic> _favorites = <dynamic>[];
   final FavoritesService _favoritesService = FavoritesService();
   final TMDBService _tmdbService = TMDBService();
@@ -101,14 +101,14 @@ class FavoritesState extends BaseScreenState<Favorites> {
       title = movie.title;
       year = movie.releaseDate.split("-")[0];
       voteAverage = movie.voteAverage;
-      onTap = () => navigate(Movie(media));
+      onTap = () => navigate(MovieScreen(media));
     } else {
       final model.TvShow tvShow = media as model.TvShow;
       posterPath = tvShow.posterPath;
       title = tvShow.name;
       year = tvShow.firstAirDate.split("-")[0];
       voteAverage = tvShow.voteAverage;
-      onTap = () => navigate(TvShow(media));
+      onTap = () => navigate(TvShowScreen(media));
     }
 
     return PopupMenuContainer<String>(

@@ -12,8 +12,8 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:semo/models/movie.dart' as model;
 import 'package:semo/models/person.dart' as model;
 import 'package:semo/models/tv_show.dart'  as model;
-import 'package:semo/screens/movie.dart';
-import 'package:semo/screens/tv_show.dart';
+import 'package:semo/screens/movie_screen.dart';
+import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/utils/secrets.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/components/spinner.dart';
@@ -21,16 +21,16 @@ import 'package:semo/utils/urls.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
-class PersonMedia extends StatefulWidget {
+class PersonMediaScreen extends StatefulWidget {
   model.Person person;
 
-  PersonMedia(this.person);
+  PersonMediaScreen(this.person);
 
   @override
-  _PersonMediaState createState() => _PersonMediaState();
+  _PersonMediaScreenState createState() => _PersonMediaScreenState();
 }
 
-class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin  {
+class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProviderStateMixin  {
   model.Person? _person;
   List<model.Movie> _movies = [];
   List<model.TvShow> _tvShows = [];
@@ -306,9 +306,9 @@ class _PersonMediaState extends State<PersonMedia> with TickerProviderStateMixin
                   ),
                   onTap: () {
                     if (_mediaType == MediaType.movies) {
-                      navigate(destination: Movie(movie!));
+                      navigate(destination: MovieScreen(movie!));
                     } else {
-                      navigate(destination: TvShow(tvShow!));
+                      navigate(destination: TvShowScreen(tvShow!));
                     }
                   },
                 ),

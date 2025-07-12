@@ -19,7 +19,7 @@ import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 //ignore: must_be_immutable
-class Player extends StatefulWidget {
+class PlayerScreen extends StatefulWidget {
   int id;
   int? seasonId, episodeId;
   String title;
@@ -27,7 +27,7 @@ class Player extends StatefulWidget {
   List<File>? subtitles;
   MediaType mediaType;
 
-  Player({
+  PlayerScreen({
     required this.id,
     this.seasonId,
     this.episodeId,
@@ -38,10 +38,10 @@ class Player extends StatefulWidget {
   });
 
   @override
-  _PlayerState createState() => _PlayerState();
+  _PlayerScreenState createState() => _PlayerScreenState();
 }
 
-class _PlayerState extends State<Player> with TickerProviderStateMixin {
+class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMixin {
   int? _id, _seasonId, _episodeId;
   String? _title;
   MediaStream? _stream;

@@ -10,9 +10,9 @@ import 'package:semo/components/media_info.dart';
 import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
 import 'package:semo/models/movie.dart' as model;
-import 'package:semo/screens/person_media.dart';
-import 'package:semo/screens/player.dart';
-import 'package:semo/screens/view_all.dart';
+import 'package:semo/screens/person_media_screen.dart';
+import 'package:semo/screens/player_screen.dart';
+import 'package:semo/screens/view_all_screen.dart';
 import 'package:semo/services/favorites_service.dart';
 import 'package:semo/services/recently_watched_service.dart';
 import 'package:semo/services/subtitle_service.dart';
@@ -23,16 +23,16 @@ import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
-class Movie extends StatefulWidget {
+class MovieScreen extends StatefulWidget {
   final model.Movie movie;
 
-  const Movie(this.movie, {Key? key}) : super(key: key);
+  const MovieScreen(this.movie, {Key? key}) : super(key: key);
 
   @override
-  _MovieState createState() => _MovieState();
+  _MovieScreenState createState() => _MovieScreenState();
 }
 
-class _MovieState extends State<Movie> {
+class _MovieScreenState extends State<MovieScreen> {
   late model.Movie _movie;
   late Spinner _spinner;
 
@@ -197,7 +197,7 @@ class _MovieState extends State<Movie> {
       if (stream.url != null) {
         final result = await NavigationHelper.navigate(
           context,
-          Player(
+          PlayerScreen(
             id: _movie.id,
             title: _movie.title,
             stream: stream,
@@ -353,7 +353,7 @@ class _MovieState extends State<Movie> {
                                   person: _movie.cast![i],
                                   onTap: () => NavigationHelper.navigate(
                                     context,
-                                    PersonMedia(_movie.cast![i]),
+                                    PersonMediaScreen(_movie.cast![i]),
                                   ),
                                 ),
                               ),
@@ -377,14 +377,14 @@ class _MovieState extends State<Movie> {
                             voteAverage: m.voteAverage,
                             onTap: () => NavigationHelper.navigate(
                               context,
-                              Movie(m),
+                              MovieScreen(m),
                             ),
                           ),
                         ),
                         onViewAllTap: () =>
                             NavigationHelper.navigate(
                               context,
-                              ViewAll(
+                              ViewAllScreen(
                                 title: 'Recommendations',
                                 source: Urls.getMovieRecommendations(_movie.id),
                                 mediaType: MediaType.movies,
@@ -408,14 +408,14 @@ class _MovieState extends State<Movie> {
                             voteAverage: m.voteAverage,
                             onTap: () => NavigationHelper.navigate(
                               context,
-                              Movie(m),
+                              MovieScreen(m),
                             ),
                           ),
                         ),
                         onViewAllTap: () =>
                             NavigationHelper.navigate(
                               context,
-                              ViewAll(
+                              ViewAllScreen(
                                 mediaType: MediaType.movies,
                                 title: 'Similar',
                                 source: Urls.getMovieSimilar(_movie.id),

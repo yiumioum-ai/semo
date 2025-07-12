@@ -54,11 +54,11 @@ class FavoritesState extends BaseScreenState<Favorites> {
           }
         }
       }
+
+      setState(() => _favorites = favorites);
     } catch (_) {
       showSnackBar("An error occurred.");
     }
-
-    setState(() => _favorites = favorites);
   }
 
   Future<void> _removeFromRecentlyWatched(int id) async {
@@ -146,7 +146,7 @@ class FavoritesState extends BaseScreenState<Favorites> {
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             emptyStateMessage: "You don't have any favorites",
-            errorMessage: "Failed to load search results",
+            errorMessage: "Failed to load favorites",
             shrinkWrap: false,
             physics: const AlwaysScrollableScrollPhysics(),
           ),

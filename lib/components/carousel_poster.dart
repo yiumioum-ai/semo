@@ -3,7 +3,6 @@ import "package:flutter/material.dart";
 import "package:semo/utils/urls.dart";
 
 class CarouselPoster extends StatelessWidget {
-
   const CarouselPoster({
     super.key,
     required this.backdropPath,

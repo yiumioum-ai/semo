@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../models/person.dart' as model;
+import '../models/person.dart';
 import '../utils/urls.dart';
 
 class PersonCard extends StatelessWidget {
-  final model.Person person;
+  final Person person;
   final VoidCallback? onTap;
 
   const PersonCard({

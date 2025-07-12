@@ -9,8 +9,8 @@ import 'package:semo/components/horizontal_media_list.dart';
 import 'package:semo/components/media_card.dart';
 import 'package:semo/components/streaming_platform_card.dart';
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/models/genre.dart' as model;
-import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/genre.dart';
+import 'package:semo/models/movie.dart';
 import "package:semo/models/search_results.dart";
 import 'package:semo/models/streaming_platform.dart';
 import 'package:semo/screens/movie_screen.dart';
@@ -40,15 +40,15 @@ class _MoviesScreenState extends State<MoviesScreen> {
   bool _isLoading = true;
 
   // Now Playing
-  List<model.Movie> _nowPlaying = [];
+  List<Movie> _nowPlaying = [];
   final CarouselSliderController _nowPlayingController = CarouselSliderController();
   int _currentNowPlayingIndex = 0;
 
   // Recently Watched
-  List<model.Movie> _recentlyWatched = [];
+  List<Movie> _recentlyWatched = [];
 
   // Genres and Streaming Platforms
-  List<model.Genre> _genres = [];
+  List<Genre> _genres = [];
   final List<StreamingPlatform> _streamingPlatforms = [
     StreamingPlatform(id: 8, logoPath: Assets.images.netflixLogo.path, name: 'Netflix'),
     StreamingPlatform(id: 9, logoPath: Assets.images.amazonPrimeVideoLogo.path, name: 'Amazon Prime Video'),
@@ -58,7 +58,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
   ];
 
   // Pagination Controllers using v5.x API
-  late final PagingController<int, model.Movie> _trendingController = PagingController<int, model.Movie>(
+  late final PagingController<int, Movie> _trendingController = PagingController<int, Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getTrendingMovies(pageKey);
@@ -66,7 +66,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
     },
   );
 
-  late final PagingController<int, model.Movie> _popularController = PagingController<int, model.Movie>(
+  late final PagingController<int, Movie> _popularController = PagingController<int, Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getPopularMovies(pageKey);
@@ -74,7 +74,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
     },
   );
 
-  late final PagingController<int, model.Movie> _topRatedController = PagingController<int, model.Movie>(
+  late final PagingController<int, Movie> _topRatedController = PagingController<int, Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getTopRatedMovies(pageKey);
@@ -125,7 +125,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
   Future<void> _loadNowPlaying() async {
     final SearchResults results = await _tmdbService.getNowPlayingMovies();
-    final List<model.Movie> movies = results.movies ?? <model.Movie>[];
+    final List<Movie> movies = results.movies ?? <Movie>[];
     if (mounted) {
       setState(() {
         _nowPlaying = movies.length > 10 ? movies.sublist(0, 10) : movies;
@@ -135,7 +135,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
   Future<void> _loadRecentlyWatched() async {
     final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedMovieIds();
-    final movies = <model.Movie>[];
+    final movies = <Movie>[];
 
     for (final id in recentlyWatchedIds) {
       try {
@@ -160,7 +160,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
     }
   }
 
-  Future<void> _removeFromRecentlyWatched(model.Movie movie) async {
+  Future<void> _removeFromRecentlyWatched(Movie movie) async {
     try {
       await _recentlyWatchedService.removeMovieFromRecentlyWatched(movie.id);
       setState(() {
@@ -203,7 +203,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
     }
   }
 
-  Future<void> _navigateToMovie(model.Movie movie) async {
+  Future<void> _navigateToMovie(Movie movie) async {
     final result = await NavigationHelper.navigate(context, MovieScreen(movie));
     if (result == 'refresh') {
       await _loadRecentlyWatched();
@@ -405,7 +405,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                 children: [
                   _buildNowPlaying(),
                   _buildRecentlyWatchedSection(),
-                  HorizontalMediaList<model.Movie>(
+                  HorizontalMediaList<Movie>(
                     title: 'Trending',
                     source: Urls.trendingMovies,
                     pagingController: _trendingController,
@@ -430,7 +430,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                       ),
                     ),
                   ),
-                  HorizontalMediaList<model.Movie>(
+                  HorizontalMediaList<Movie>(
                     title: 'Popular',
                     source: Urls.popularMovies,
                     pagingController: _popularController,
@@ -455,7 +455,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                       ),
                     ),
                   ),
-                  HorizontalMediaList<model.Movie>(
+                  HorizontalMediaList<Movie>(
                     title: 'Top Rated',
                     source: Urls.topRatedMovies,
                     pagingController: _topRatedController,

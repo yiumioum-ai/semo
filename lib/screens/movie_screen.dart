@@ -9,7 +9,7 @@ import 'package:semo/components/media_card.dart';
 import 'package:semo/components/media_info.dart';
 import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
-import 'package:semo/models/movie.dart' as model;
+import 'package:semo/models/movie.dart';
 import 'package:semo/screens/person_media_screen.dart';
 import 'package:semo/screens/player_screen.dart';
 import 'package:semo/screens/view_all_screen.dart';
@@ -24,7 +24,7 @@ import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
 class MovieScreen extends StatefulWidget {
-  final model.Movie movie;
+  final Movie movie;
 
   const MovieScreen(this.movie, {Key? key}) : super(key: key);
 
@@ -33,7 +33,7 @@ class MovieScreen extends StatefulWidget {
 }
 
 class _MovieScreenState extends State<MovieScreen> {
-  late model.Movie _movie;
+  late Movie _movie;
   late Spinner _spinner;
 
   // Services
@@ -48,7 +48,7 @@ class _MovieScreenState extends State<MovieScreen> {
   bool _isConnectedToInternet = true;
 
   // Pagination controllers using v5.x API
-  late final PagingController<int, model.Movie> _recommendationsController = PagingController<int, model.Movie>(
+  late final PagingController<int, Movie> _recommendationsController = PagingController<int, Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getRecommendations(
@@ -60,7 +60,7 @@ class _MovieScreenState extends State<MovieScreen> {
     },
   );
 
-  late final PagingController<int, model.Movie> _similarController = PagingController<int, model.Movie>(
+  late final PagingController<int, Movie> _similarController = PagingController<int, Movie>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getSimilar(
@@ -361,7 +361,7 @@ class _MovieScreenState extends State<MovieScreen> {
                           ),
                         ],
                       const SizedBox(height: 30),
-                      HorizontalMediaList<model.Movie>(
+                      HorizontalMediaList<Movie>(
                         title: 'Recommendations',
                         source: Urls.getMovieRecommendations(_movie.id),
                         pagingController:
@@ -392,7 +392,7 @@ class _MovieScreenState extends State<MovieScreen> {
                             ),
                       ),
                       const SizedBox(height: 30),
-                      HorizontalMediaList<model.Movie>(
+                      HorizontalMediaList<Movie>(
                         title: 'Similar',
                         source: Urls.getMovieSimilar(_movie.id),
                         pagingController:

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/components/media_card.dart';
-import 'package:semo/models/movie.dart' as model;
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/movie.dart';
+import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/movie_screen.dart';
 import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/services/recent_searches_service.dart';
@@ -167,9 +167,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (_mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, MovieScreen(media as model.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media.Movie));
     } else {
-      await NavigationHelper.navigate(context, TvShowScreen(media as model.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media.TvShow));
     }
   }
 
@@ -263,7 +263,7 @@ class _SearchScreenState extends State<SearchScreen> {
       pagingController: _searchPagingController,
       itemBuilder: (context, media, index) {
         if (_mediaType == MediaType.movies) {
-          final movie = media as model.Movie;
+          final movie = media.Movie;
           return MediaCard(
             posterPath: movie.posterPath,
             title: movie.title,
@@ -272,7 +272,7 @@ class _SearchScreenState extends State<SearchScreen> {
             onTap: () => _navigateToMedia(movie),
           );
         } else {
-          final tvShow = media as model.TvShow;
+          final tvShow = media.TvShow;
           return MediaCard(
             posterPath: tvShow.posterPath,
             title: tvShow.name,

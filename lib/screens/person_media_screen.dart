@@ -9,9 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:semo/models/movie.dart' as model;
-import 'package:semo/models/person.dart' as model;
-import 'package:semo/models/tv_show.dart'  as model;
+import 'package:semo/models/movie.dart';
+import 'package:semo/models/person.dart';
+import 'package:semo/models/tv_show.dart' ;
 import 'package:semo/screens/movie_screen.dart';
 import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/utils/secrets.dart';
@@ -22,7 +22,7 @@ import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 //ignore: must_be_immutable
 class PersonMediaScreen extends StatefulWidget {
-  model.Person person;
+  Person person;
 
   PersonMediaScreen(this.person);
 
@@ -31,9 +31,9 @@ class PersonMediaScreen extends StatefulWidget {
 }
 
 class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProviderStateMixin  {
-  model.Person? _person;
-  List<model.Movie> _movies = [];
-  List<model.TvShow> _tvShows = [];
+  Person? _person;
+  List<Movie> _movies = [];
+  List<TvShow> _tvShows = [];
   late TabController _tabController;
   MediaType _mediaType = MediaType.movies;
   Spinner? _spinner;
@@ -84,7 +84,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
 
     if (response.isNotEmpty) {
       List data = json.decode(response)['cast'] as List;
-      List<model.Movie> movies = data.map((json) => model.Movie.fromJson(json)).toList();
+      List<Movie> movies = data.map((json) => Movie.fromJson(json)).toList();
       setState(() => _movies = movies);
     } else {
       print('Failed to get person movies');
@@ -116,7 +116,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
 
     if (response.isNotEmpty) {
       List data = json.decode(response)['cast'] as List;
-      List<model.TvShow> tvShows = data.map((json) => model.TvShow.fromJson(json)).toList();
+      List<TvShow> tvShows = data.map((json) => TvShow.fromJson(json)).toList();
       setState(() => _tvShows = tvShows);
     } else {
       print('Failed to get person tv shows');
@@ -224,7 +224,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
     ) : NoContent();
   }
 
-  Widget ResultCard({model.Movie? movie, model.TvShow? tvShow}) {
+  Widget ResultCard({Movie? movie, TvShow? tvShow}) {
     String posterUrl, title, releaseDate;
     double voteAverage;
 

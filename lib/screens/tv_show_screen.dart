@@ -10,7 +10,7 @@ import 'package:semo/components/media_info.dart';
 import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
 import 'package:semo/components/season_selector.dart';
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/person_media_screen.dart';
 import 'package:semo/screens/player_screen.dart';
 import 'package:semo/screens/view_all_screen.dart';
@@ -25,7 +25,7 @@ import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
 
 class TvShowScreen extends StatefulWidget {
-  final model.TvShow tvShow;
+  final TvShow tvShow;
 
   const TvShowScreen(this.tvShow, {Key? key}) : super(key: key);
 
@@ -34,7 +34,7 @@ class TvShowScreen extends StatefulWidget {
 }
 
 class _TvShowScreenState extends State<TvShowScreen> {
-  late model.TvShow _tvShow;
+  late TvShow _tvShow;
   late Spinner _spinner;
   final TMDBService _tmdbService = TMDBService();
   final FavoritesService _favoritesService = FavoritesService();
@@ -46,7 +46,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
   int _currentSeasonIndex = 0;
 
   // Pagination controllers using v5.x API
-  late final PagingController<int, model.TvShow> _recommendationsController = PagingController<int, model.TvShow>(
+  late final PagingController<int, TvShow> _recommendationsController = PagingController<int, TvShow>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getRecommendations(
@@ -58,7 +58,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     },
   );
 
-  late final PagingController<int, model.TvShow> _similarController = PagingController<int, model.TvShow>(
+  late final PagingController<int, TvShow> _similarController = PagingController<int, TvShow>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getSimilar(
@@ -219,7 +219,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     }
   }
 
-  Future<void> _playEpisode(model.Episode episode) async {
+  Future<void> _playEpisode(Episode episode) async {
     final season = _tvShow.seasons![_currentSeasonIndex];
     _spinner.show();
     try {
@@ -270,7 +270,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     }
   }
 
-  Future<void> _markEpisodeAsWatched(model.Episode episode) async {
+  Future<void> _markEpisodeAsWatched(Episode episode) async {
     final season = _tvShow.seasons![_currentSeasonIndex];
     try {
       await _recentlyWatchedService.updateEpisodeProgress(
@@ -288,7 +288,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     }
   }
 
-  Future<void> _removeEpisodeFromWatched(model.Episode episode) async {
+  Future<void> _removeEpisodeFromWatched(Episode episode) async {
     final season = _tvShow.seasons![_currentSeasonIndex];
     try {
       await _recentlyWatchedService.removeEpisodeProgress(
@@ -305,7 +305,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     }
   }
 
-  Future<void> _onSeasonChanged(model.Season season) async {
+  Future<void> _onSeasonChanged(Season season) async {
     final newIndex = _tvShow.seasons!.indexOf(season);
     if (newIndex != -1) {
       setState(() => _currentSeasonIndex = newIndex);
@@ -457,7 +457,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
                       const SizedBox(height: 30),
                       _buildCastSection(),
                       const SizedBox(height: 30),
-                      HorizontalMediaList<model.TvShow>(
+                      HorizontalMediaList<TvShow>(
                         title: 'Recommendations',
                         source: Urls.getTvShowRecommendations(_tvShow.id),
                         pagingController: _recommendationsController,
@@ -486,7 +486,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      HorizontalMediaList<model.TvShow>(
+                      HorizontalMediaList<TvShow>(
                         title: 'Similar',
                         source: Urls.getTvShowSimilar(_tvShow.id),
                         pagingController: _similarController,

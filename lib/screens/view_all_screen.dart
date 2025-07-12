@@ -7,9 +7,9 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:semo/components/media_card.dart';
 import 'package:semo/components/vertical_media_list.dart';
-import 'package:semo/models/movie.dart' as model;
-import 'package:semo/models/search_results.dart' as model;
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/movie.dart';
+import 'package:semo/models/search_results.dart';
+import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/movie_screen.dart';
 import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/services/tmdb_service.dart';
@@ -37,7 +37,7 @@ class ViewAllScreen extends StatefulWidget {
 class _ViewAllScreenState extends State<ViewAllScreen> {
   // State
   bool _isConnectedToInternet = true;
-  model.SearchResults _searchResults = model.SearchResults();
+  SearchResults _searchResults = SearchResults();
   final TMDBService _tmdbService = TMDBService();
 
   // Pagination Controller using v5.x API
@@ -45,11 +45,11 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   PagingController<int, dynamic>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
-      model.SearchResults results = await _tmdbService.searchFromUrl(widget.mediaType, widget.source, pageKey, widget.parameters);
+      SearchResults results = await _tmdbService.searchFromUrl(widget.mediaType, widget.source, pageKey, widget.parameters);
       setState(() => _searchResults = results);
       return widget.mediaType == MediaType.movies
-          ? (results.movies ?? <model.Movie>[])
-          : (results.tvShows ?? <model.TvShow>[]);
+          ? (results.movies ?? <Movie>[])
+          : (results.tvShows ?? <TvShow>[]);
     },
   );
 
@@ -94,9 +94,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (widget.mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, MovieScreen(media as model.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media.Movie));
     } else {
-      await NavigationHelper.navigate(context, TvShowScreen(media as model.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media.TvShow));
     }
   }
 
@@ -105,7 +105,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       pagingController: _pagingController,
       itemBuilder: (context, media, index) {
         if (widget.mediaType == MediaType.movies) {
-          final movie = media as model.Movie;
+          final movie = media.Movie;
           return MediaCard(
             posterPath: movie.posterPath,
             title: movie.title,
@@ -114,7 +114,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             onTap: () => _navigateToMedia(movie),
           );
         } else {
-          final tvShow = media as model.TvShow;
+          final tvShow = media.TvShow;
           return MediaCard(
             posterPath: tvShow.posterPath,
             title: tvShow.name,

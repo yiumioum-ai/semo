@@ -9,10 +9,10 @@ import 'package:semo/components/horizontal_media_list.dart';
 import 'package:semo/components/media_card.dart';
 import 'package:semo/components/streaming_platform_card.dart';
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/models/genre.dart' as model;
+import 'package:semo/models/genre.dart';
 import "package:semo/models/search_results.dart";
 import 'package:semo/models/streaming_platform.dart';
-import 'package:semo/models/tv_show.dart' as model;
+import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/tv_show_screen.dart';
 import 'package:semo/screens/view_all_screen.dart';
 import 'package:semo/services/recently_watched_service.dart';
@@ -40,15 +40,15 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
   bool _isLoading = true;
 
   // On The Air
-  List<model.TvShow> _onTheAir = [];
+  List<TvShow> _onTheAir = [];
   final CarouselSliderController _onTheAirController = CarouselSliderController();
   int _currentOnTheAirIndex = 0;
 
   // Recently Watched
-  List<model.TvShow> _recentlyWatched = [];
+  List<TvShow> _recentlyWatched = [];
 
   // Genres and Streaming Platforms
-  List<model.Genre> _genres = [];
+  List<Genre> _genres = [];
   final List<StreamingPlatform> _streamingPlatforms = [
     StreamingPlatform(id: 8, logoPath: Assets.images.netflixLogo.path, name: 'Netflix'),
     StreamingPlatform(id: 9, logoPath: Assets.images.amazonPrimeVideoLogo.path, name: 'Amazon Prime Video'),
@@ -58,7 +58,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
   ];
 
   // Pagination Controllers using v5.x API
-  late final PagingController<int, model.TvShow> _popularController = PagingController<int, model.TvShow>(
+  late final PagingController<int, TvShow> _popularController = PagingController<int, TvShow>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getPopularTvShows(pageKey);
@@ -66,7 +66,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
     },
   );
 
-  late final PagingController<int, model.TvShow> _topRatedController = PagingController<int, model.TvShow>(
+  late final PagingController<int, TvShow> _topRatedController = PagingController<int, TvShow>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
       final result = await _tmdbService.getTopRatedTvShows(pageKey);
@@ -116,7 +116,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
 
   Future<void> _loadOnTheAir() async {
     final SearchResults results = await _tmdbService.getOnTheAirTvShows();
-    final List<model.TvShow> tvShows = results.tvShows ?? <model.TvShow>[];
+    final List<TvShow> tvShows = results.tvShows ?? <TvShow>[];
     if (mounted) {
       setState(() {
         _onTheAir = tvShows.length > 10 ? tvShows.sublist(0, 10) : tvShows;
@@ -126,7 +126,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
 
   Future<void> _loadRecentlyWatched() async {
     final recentlyWatchedIds = await _recentlyWatchedService.getRecentlyWatchedTvShowIds();
-    final tvShows = <model.TvShow>[];
+    final tvShows = <TvShow>[];
 
     for (final id in recentlyWatchedIds) {
       try {
@@ -151,7 +151,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
     }
   }
 
-  Future<void> _removeFromRecentlyWatched(model.TvShow tvShow) async {
+  Future<void> _removeFromRecentlyWatched(TvShow tvShow) async {
     try {
       await _recentlyWatchedService.removeTvShowFromRecentlyWatched(tvShow.id);
       setState(() {
@@ -193,7 +193,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
     }
   }
 
-  Future<void> _navigateToTvShow(model.TvShow tvShow) async {
+  Future<void> _navigateToTvShow(TvShow tvShow) async {
     final result = await NavigationHelper.navigate(context, TvShowScreen(tvShow));
     if (result == 'refresh') {
       await _loadRecentlyWatched();
@@ -395,7 +395,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
                 children: [
                   _buildOnTheAir(),
                   _buildRecentlyWatchedSection(),
-                  HorizontalMediaList<model.TvShow>(
+                  HorizontalMediaList<TvShow>(
                     title: 'Popular',
                     source: Urls.popularTvShows,
                     pagingController: _popularController,
@@ -420,7 +420,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
                       ),
                     ),
                   ),
-                  HorizontalMediaList<model.TvShow>(
+                  HorizontalMediaList<TvShow>(
                     title: 'Top Rated',
                     source: Urls.topRatedTvShows,
                     pagingController: _topRatedController,

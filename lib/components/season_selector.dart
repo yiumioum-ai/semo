@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/tv_show.dart' as model;
+import '../models/tv_show.dart';
 
 class SeasonSelector extends StatelessWidget {
-  final List<model.Season> seasons;
-  final model.Season selectedSeason;
-  final Function(model.Season) onSeasonChanged;
+  final List<Season> seasons;
+  final Season selectedSeason;
+  final Function(Season) onSeasonChanged;
 
   const SeasonSelector({
     Key? key,
@@ -15,7 +15,7 @@ class SeasonSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownMenu<model.Season>(
+    return DropdownMenu<Season>(
       initialSelection: selectedSeason,
       requestFocusOnTap: false,
       enableFilter: false,
@@ -29,14 +29,14 @@ class SeasonSelector extends StatelessWidget {
           borderSide: BorderSide.none,
         ),
       ),
-      onSelected: (model.Season? season) {
+      onSelected: (Season? season) {
         if (season != null) {
           onSeasonChanged(season);
         }
       },
-      dropdownMenuEntries: seasons.map<DropdownMenuEntry<model.Season>>(
-            (model.Season season) {
-          return DropdownMenuEntry<model.Season>(
+      dropdownMenuEntries: seasons.map<DropdownMenuEntry<Season>>(
+            (Season season) {
+          return DropdownMenuEntry<Season>(
             value: season,
             label: season.name,
             style: MenuItemButton.styleFrom(

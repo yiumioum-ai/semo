@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
 import "package:semo/components/media_card.dart";
 import "package:semo/components/vertical_media_list.dart";
-import "package:semo/models/movie.dart" as model;
-import "package:semo/models/tv_show.dart" as model;
+import "package:semo/models/movie.dart";
+import "package:semo/models/tv_show.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/movie_screen.dart";
 import "package:semo/screens/tv_show_screen.dart";
@@ -42,14 +42,14 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
       if (widget.mediaType == MediaType.movies) {
         for (int id in favoritesIds) {
-          model.Movie? movie = await _tmdbService.getMovieDetails(id);
+          Movie? movie = await _tmdbService.getMovieDetails(id);
           if (movie != null) {
             favorites.add(movie);
           }
         }
       } else if (widget.mediaType == MediaType.tvShows) {
         for (int id in favoritesIds) {
-          model.TvShow? tvShow = await _tmdbService.getTvShowDetails(id);
+          TvShow? tvShow = await _tmdbService.getTvShowDetails(id);
           if (tvShow != null) {
             favorites.add(tvShow);
           }
@@ -96,14 +96,14 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
     VoidCallback onTap;
 
     if (widget.mediaType == MediaType.movies) {
-      final model.Movie movie = media as model.Movie;
+      final Movie movie = media.Movie;
       posterPath = movie.posterPath;
       title = movie.title;
       year = movie.releaseDate.split("-")[0];
       voteAverage = movie.voteAverage;
       onTap = () => navigate(MovieScreen(media));
     } else {
-      final model.TvShow tvShow = media as model.TvShow;
+      final TvShow tvShow = media.TvShow;
       posterPath = tvShow.posterPath;
       title = tvShow.name;
       year = tvShow.firstAirDate.split("-")[0];

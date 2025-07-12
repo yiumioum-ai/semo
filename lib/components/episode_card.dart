@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../models/tv_show.dart' as model;
+import '../models/tv_show.dart';
 import '../utils/urls.dart';
 
 class EpisodeCard extends StatelessWidget {
-  final model.Episode episode;
+  final Episode episode;
   final VoidCallback? onTap;
   final VoidCallback? onMarkWatched;
   final VoidCallback? onRemove;

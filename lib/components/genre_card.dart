@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import "package:semo/enums/media_type.dart";
-import '../models/genre.dart' as model;
+import '../models/genre.dart';
 import '../services/tmdb_service.dart';
 import '../utils/urls.dart';
 
 class GenreCard extends StatelessWidget {
-  final model.Genre genre;
+  final Genre genre;
   final MediaType mediaType;
   final VoidCallback? onTap;
 

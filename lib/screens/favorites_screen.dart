@@ -96,14 +96,14 @@ class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
     VoidCallback onTap;
 
     if (widget.mediaType == MediaType.movies) {
-      final Movie movie = media.Movie;
+      final Movie movie = media as Movie;
       posterPath = movie.posterPath;
       title = movie.title;
       year = movie.releaseDate.split("-")[0];
       voteAverage = movie.voteAverage;
       onTap = () => navigate(MovieScreen(media));
     } else {
-      final TvShow tvShow = media.TvShow;
+      final TvShow tvShow = media as TvShow;
       posterPath = tvShow.posterPath;
       title = tvShow.name;
       year = tvShow.firstAirDate.split("-")[0];

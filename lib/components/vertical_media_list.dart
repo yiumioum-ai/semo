@@ -14,6 +14,7 @@ class VerticalMediaList<T> extends StatelessWidget {
     this.padding,
     this.shrinkWrap = false,
     this.physics,
+    this.isLoading = false,
     this.emptyStateMessage,
     this.errorMessage,
   }) : assert((pagingController != null && itemBuilder != null) || (items != null && itemBuilder != null),
@@ -30,6 +31,7 @@ class VerticalMediaList<T> extends StatelessWidget {
   final EdgeInsets? padding;
   final bool shrinkWrap;
   final ScrollPhysics? physics;
+  final bool isLoading;
   final String? emptyStateMessage;
   final String? errorMessage;
 
@@ -59,23 +61,17 @@ class VerticalMediaList<T> extends StatelessWidget {
             firstPageErrorIndicatorBuilder: (BuildContext context) => _buildErrorIndicator(
               context,
               errorMessage ?? "Failed to load items",
-                  () => pagingController!.refresh(),
+                  () => pagingController?.refresh(),
               isFirstPage: true,
             ),
             newPageErrorIndicatorBuilder: (BuildContext context) => _buildErrorIndicator(
               context,
               "Failed to load more items",
-                  () => pagingController!.fetchNextPage(),
+                  () => pagingController?.fetchNextPage(),
               isFirstPage: false,
             ),
-            firstPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(
-              context,
-              isFirstPage: true,
-            ),
-            newPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(
-              context,
-              isFirstPage: false,
-            ),
+            firstPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(isFirstPage: true),
+            newPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(),
             noItemsFoundIndicatorBuilder: (BuildContext context) => _buildEmptyState(
               context,
               emptyStateMessage ?? "No items found",
@@ -93,6 +89,10 @@ class VerticalMediaList<T> extends StatelessWidget {
 
     // If items list is provided, use simple GridView.builder
     if (items != null) {
+      if (isLoading) {
+        return _buildLoadingIndicator();
+      }
+
       if (items!.isEmpty) {
         return _buildEmptyState(context, emptyStateMessage ?? "No items found");
       }
@@ -107,7 +107,7 @@ class VerticalMediaList<T> extends StatelessWidget {
           mainAxisSpacing: mainAxisSpacing,
           childAspectRatio: childAspectRatio,
         ),
-        itemCount: items!.length,
+        itemCount: items?.length,
         itemBuilder: (BuildContext context, int index) => itemBuilder!(context, items![index], index),
       );
     }
@@ -116,12 +116,7 @@ class VerticalMediaList<T> extends StatelessWidget {
     return Container();
   }
 
-  Widget _buildErrorIndicator(
-      BuildContext context,
-      String message,
-      VoidCallback onRetry, {
-        required bool isFirstPage,
-      }) {
+  Widget _buildErrorIndicator(BuildContext context, String message, VoidCallback onRetry, {required bool isFirstPage,}) {
     if (isFirstPage) {
       return Center(
         child: Padding(
@@ -137,10 +132,7 @@ class VerticalMediaList<T> extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 message,
-                style: Theme.of(context)
-                    .textTheme
-                    .displayMedium!
-                    .copyWith(color: Colors.white54),
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -164,10 +156,7 @@ class VerticalMediaList<T> extends StatelessWidget {
           children: <Widget>[
             Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall!
-                  .copyWith(color: Colors.white54),
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
             ),
             const SizedBox(width: 16),
             ElevatedButton(
@@ -185,23 +174,12 @@ class VerticalMediaList<T> extends StatelessWidget {
     }
   }
 
-  Widget _buildLoadingIndicator(BuildContext context, {required bool isFirstPage}) {
-    if (isFirstPage) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-  }
+  Widget _buildLoadingIndicator({bool isFirstPage = false}) => Center(
+    child: Padding(
+      padding: EdgeInsets.all(isFirstPage ? 32 : 16),
+      child: const CircularProgressIndicator(),
+    ),
+  );
 
   Widget _buildEmptyState(BuildContext context, String message) => Center(
     child: Padding(
@@ -217,10 +195,7 @@ class VerticalMediaList<T> extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(context)
-                .textTheme
-                .displayMedium!
-                .copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
             textAlign: TextAlign.center,
           ),
         ],

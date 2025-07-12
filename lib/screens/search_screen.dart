@@ -107,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _addToRecentSearches(String query) async {
     try {
-      await _recentSearchesService.addToRecentSearches(_mediaType, query);
+      await _recentSearchesService.add(_mediaType, query);
       await _loadRecentSearches();
     } catch (e) {
       _showErrorSnackBar('Failed to save search');
@@ -116,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _removeFromRecentSearches(String query) async {
     try {
-      await _recentSearchesService.removeFromRecentSearches(_mediaType, query);
+      await _recentSearchesService.remove(_mediaType, query);
       await _loadRecentSearches();
     } catch (e) {
       _showErrorSnackBar('Failed to remove search');

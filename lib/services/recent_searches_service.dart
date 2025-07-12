@@ -51,7 +51,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> addToRecentSearches(MediaType mediaType, String query) async {
+  Future<void> add(MediaType mediaType, String query) async {
     final String fieldName = _getFieldName(mediaType);
     final List<String> searches = await getRecentSearches(mediaType);
 
@@ -76,7 +76,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> removeFromRecentSearches(MediaType mediaType, String query) async {
+  Future<void> remove(MediaType mediaType, String query) async {
     final String fieldName = _getFieldName(mediaType);
     final List<String> searches = await getRecentSearches(mediaType);
 
@@ -91,7 +91,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> clearRecentSearches(MediaType mediaType) async {
+  Future<void> clear(MediaType mediaType) async {
     try {
       final String fieldName = _getFieldName(mediaType);
       await _getDocReference().set(<String, dynamic>{fieldName: <dynamic>[]}, SetOptions(merge: true));

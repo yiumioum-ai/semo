@@ -190,6 +190,9 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   @override
   void dispose() {
     _connectionSubscription?.cancel();
+    if (widget.shouldVerifySession) {
+      _auth.authStateChanges().listen((User? user) {}).cancel();
+    }
     handleDispose();
     super.dispose();
   }

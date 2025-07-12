@@ -1,47 +1,45 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import '../models/tv_show.dart';
-import '../utils/urls.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:semo/models/tv_show.dart";
+import "package:semo/utils/urls.dart";
 
 class EpisodeCard extends StatelessWidget {
+  const EpisodeCard({
+    super.key,
+    required this.episode,
+    this.onTap,
+    this.onMarkWatched,
+    this.onRemove,
+  });
+  
   final Episode episode;
   final VoidCallback? onTap;
   final VoidCallback? onMarkWatched;
   final VoidCallback? onRemove;
 
-  const EpisodeCard({
-    Key? key,
-    required this.episode,
-    this.onTap,
-    this.onMarkWatched,
-    this.onRemove,
-  }) : super(key: key);
-
   String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
+    final int hours = duration.inHours;
+    final int minutes = duration.inMinutes.remainder(60);
 
     if (hours > 0) {
-      return '${hours} ${hours == 1 ? 'hr' : 'hrs'}${minutes > 0 ? ' ${minutes} ${minutes == 1 ? 'min' : 'mins'}' : ''}';
+      return "$hours ${hours == 1 ? "hr" : "hrs"}${minutes > 0 ? " $minutes ${minutes == 1 ? "min" : "mins"}" : ''}";
     } else {
-      return '$minutes ${minutes == 1 ? 'min' : 'mins'}';
+      return "$minutes ${minutes == 1 ? "min" : "mins"}";
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(
-          children: [
+          children: <Widget>[
             Row(
-              children: [
+              children: <Widget>[
                 CachedNetworkImage(
                   imageUrl: Urls.getBestImageUrl(context) + episode.stillPath,
-                  placeholder: (context, url) {
-                    return Container(
+                  placeholder: (BuildContext context, String url) => Container(
                       width: MediaQuery.of(context).size.width * .3,
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
@@ -56,10 +54,8 @@ class EpisodeCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    );
-                  },
-                  imageBuilder: (context, image) {
-                    return Container(
+                    ),
+                  imageBuilder: (BuildContext context, ImageProvider<Object> image) => Container(
                       width: MediaQuery.of(context).size.width * .3,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
@@ -72,27 +68,21 @@ class EpisodeCard extends StatelessWidget {
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            child: episode.isRecentlyWatched
-                                ? Column(
-                              children: [
+                            child: episode.isRecentlyWatched ? Column(
+                              children: <Widget>[
                                 const Spacer(),
                                 LinearProgressIndicator(
                                   value: episode.watchedProgress! / (episode.duration * 60),
-                                  valueColor: AlwaysStoppedAnimation(
-                                    Theme.of(context).primaryColor,
-                                  ),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
                                   backgroundColor: Colors.transparent,
                                 ),
                               ],
-                            )
-                                : Container(),
+                            ) : Container(),
                           ),
                         ),
                       ),
-                    );
-                  },
-                  errorWidget: (context, url, error) {
-                    return Container(
+                    ),
+                  errorWidget: (BuildContext context, String url, Object error) => Container(
                       width: MediaQuery.of(context).size.width * .3,
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
@@ -103,12 +93,14 @@ class EpisodeCard extends StatelessWidget {
                           ),
                           child: const Align(
                             alignment: Alignment.center,
-                            child: Icon(Icons.error, color: Colors.white54),
+                            child: Icon(
+                              Icons.error,
+                              color: Colors.white54,
+                            ),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
                 ),
                 Expanded(
                   child: Container(
@@ -116,22 +108,22 @@ class EpisodeCard extends StatelessWidget {
                     margin: const EdgeInsets.only(left: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Text(
                           episode.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .displayMedium!
-                              .copyWith(fontWeight: FontWeight.w600),
+                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 2,
                         ),
-                        const Padding(padding: EdgeInsets.only(top: 2)),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                        ),
                         Text(
                           _formatDuration(Duration(minutes: episode.duration)),
-                          style: Theme.of(context)
-                              .textTheme
-                              .displaySmall!
-                              .copyWith(color: Colors.white54),
+                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            color: Colors.white54,
+                          ),
                           maxLines: 1,
                         ),
                       ],
@@ -139,29 +131,27 @@ class EpisodeCard extends StatelessWidget {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  onSelected: (value) {
+                  onSelected: (String value) {
                     switch (value) {
-                      case 'mark_watched':
+                      case "mark_watched":
                         onMarkWatched?.call();
-                        break;
-                      case 'remove':
+                      case "delete_progress":
                         onRemove?.call();
-                        break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'mark_watched',
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                      value: "mark_watched",
                       child: Text(
-                        'Mark as watched',
+                        "Mark as watched",
                         style: Theme.of(context).textTheme.displaySmall,
                       ),
                     ),
                     if (episode.isRecentlyWatched)
-                      PopupMenuItem(
-                        value: 'remove',
+                      PopupMenuItem<String>(
+                        value: "delete_progress",
                         child: Text(
-                          'Remove from watched',
+                          "Delete progress",
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
                       ),
@@ -174,15 +164,13 @@ class EpisodeCard extends StatelessWidget {
               margin: const EdgeInsets.only(top: 18),
               child: Text(
                 episode.overview,
-                style: Theme.of(context)
-                    .textTheme
-                    .displaySmall!
-                    .copyWith(color: Colors.white54),
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white54,
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
 }

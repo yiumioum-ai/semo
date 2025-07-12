@@ -167,9 +167,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _navigateToMedia(dynamic media) async {
     if (_mediaType == MediaType.movies) {
-      await NavigationHelper.navigate(context, MovieScreen(media.Movie));
+      await NavigationHelper.navigate(context, MovieScreen(media));
     } else {
-      await NavigationHelper.navigate(context, TvShowScreen(media.TvShow));
+      await NavigationHelper.navigate(context, TvShowScreen(media));
     }
   }
 

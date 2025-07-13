@@ -1,19 +1,18 @@
-import 'package:flutter/material.dart';
-import '../models/streaming_platform.dart';
+import "package:flutter/material.dart";
+import "package:semo/models/streaming_platform.dart";
 
 class StreamingPlatformCard extends StatelessWidget {
+  const StreamingPlatformCard({
+    super.key,
+    required this.platform,
+    this.onTap,
+  });
+
   final StreamingPlatform platform;
   final VoidCallback? onTap;
 
-  const StreamingPlatformCard({
-    Key? key,
-    required this.platform,
-    this.onTap,
-  }) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       height: double.infinity,
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
@@ -27,12 +26,11 @@ class StreamingPlatformCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           child: Image.asset(
-            '${platform.logoPath}',
+            platform.logoPath,
             width: MediaQuery.of(context).size.width * .4,
             color: Colors.white,
           ),
         ),
       ),
     );
-  }
 }

@@ -30,7 +30,7 @@ class MediaInfo extends StatelessWidget {
           width: double.infinity,
           child: Text(
             subtitle,
-            style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
             textAlign: TextAlign.center,
           ),
         ),
@@ -41,7 +41,7 @@ class MediaInfo extends StatelessWidget {
             margin: const EdgeInsets.only(top: 20),
             child: Text(
               overview!,
-              style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
               textAlign: TextAlign.justify,
             ),
           ),

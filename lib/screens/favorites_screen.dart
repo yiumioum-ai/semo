@@ -17,7 +17,7 @@ class FavoritesScreen extends BaseScreen {
     super.key,
     required this.mediaType,
   });
-  
+
   final MediaType mediaType;
 
   @override
@@ -29,7 +29,7 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final TMDBService _tmdbService = TMDBService();
   bool _isLoading = true;
-  
+
   @override
   String get screenName => "Favorites";
 
@@ -145,24 +145,24 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
   @override
   Widget buildContent(BuildContext context) => Scaffold(
-      body: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(18),
-          child: VerticalMediaList<dynamic>(
-            isLoading: _isLoading,
-            items: _favorites,
-            //ignore: always_specify_types
-            itemBuilder: (BuildContext context, media, int index) => _buildMediaCard(context, media, index),
-            crossAxisCount: 3,
-            childAspectRatio: 0.5,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            emptyStateMessage: "You don't have any favorites",
-            errorMessage: "Failed to load favorites",
-            shrinkWrap: false,
-            physics: const AlwaysScrollableScrollPhysics(),
-          ),
+    body: SafeArea(
+      child: Container(
+        margin: const EdgeInsets.all(18),
+        child: VerticalMediaList<dynamic>(
+          isLoading: _isLoading,
+          items: _favorites,
+          //ignore: always_specify_types
+          itemBuilder: (BuildContext context, media, int index) => _buildMediaCard(context, media, index),
+          crossAxisCount: 3,
+          childAspectRatio: 0.5,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          emptyStateMessage: "You don't have any favorites",
+          errorMessage: "Failed to load favorites",
+          shrinkWrap: false,
+          physics: const AlwaysScrollableScrollPhysics(),
         ),
       ),
-    );
+    ),
+  );
 }

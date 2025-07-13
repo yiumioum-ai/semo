@@ -28,7 +28,7 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
   }
 
   Future<void> _authenticateWithGoogle() async {
-    //await spinner.show();
+    spinner.show();
 
     try {
       final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
@@ -47,7 +47,7 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
       }
     }
 
-    //spinner.dismiss();
+    spinner.dismiss();
   }
 
   @override

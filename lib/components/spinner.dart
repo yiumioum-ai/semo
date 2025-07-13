@@ -52,8 +52,8 @@ class Spinner {
 
   final bool useRootNavigator;
 
-  Future<void> show() async {
-    await showGeneralDialog(
+  void show() {
+    showGeneralDialog(
       context: context,
       useRootNavigator: useRootNavigator,
       barrierDismissible: false,
@@ -99,6 +99,8 @@ class Spinner {
         });
       }
     });
+
+    return;
   }
 
   void dismiss() {

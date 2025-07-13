@@ -105,72 +105,78 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
   );
 
   @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      title: Text(fragmentScreens[_selectedPageIndex].title),
-      leading: Builder(
-        builder: (BuildContext context) => IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
-      bottom: _selectedPageIndex == 2 ? TabBar(
-        controller: _tabController,
-        tabs: const <Tab>[
-          Tab(
-            icon: Icon(Icons.movie),
-            text: "Movies",
-          ),
-          Tab(
-            icon: Icon(Icons.video_library),
-            text: "TV Shows",
-          ),
-        ],
-      ) : null,
-      actions: <Widget>[
-        (isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
-          icon: const Icon(
-            Icons.search,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            NavigationHelper.navigate(
-              context,
-              SearchScreen(mediaType: fragmentScreens[_selectedPageIndex].mediaType),
-            );
-          },
-        ) : Container(),
-      ],
-    ),
-    body: fragmentScreens[_selectedPageIndex].widget,
-    drawer: SafeArea(
-      top: true,
-      left: true,
-      right: true,
-      bottom: false,
-      child: Drawer(
+  Widget buildContent(BuildContext context) {
+    if (fragmentScreens.isEmpty) {
+     return const Scaffold();
+    }
+
+    return Scaffold(
+      appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            Container(
-              height: 200,
-              child: Center(
-                child: Assets.images.appIcon.image(
-                  width: 80,
-                  height: 80,
+        title: Text(fragmentScreens[_selectedPageIndex].title),
+        leading: Builder(
+          builder: (BuildContext context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        bottom: _selectedPageIndex == 2 ? TabBar(
+          controller: _tabController,
+          tabs: const <Tab>[
+            Tab(
+              icon: Icon(Icons.movie),
+              text: "Movies",
+            ),
+            Tab(
+              icon: Icon(Icons.video_library),
+              text: "TV Shows",
+            ),
+          ],
+        ) : null,
+        actions: <Widget>[
+          (isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
+            icon: const Icon(
+              Icons.search,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              NavigationHelper.navigate(
+                context,
+                SearchScreen(mediaType: fragmentScreens[_selectedPageIndex].mediaType),
+              );
+            },
+          ) : Container(),
+        ],
+      ),
+      body: fragmentScreens[_selectedPageIndex].widget,
+      drawer: SafeArea(
+        top: true,
+        left: true,
+        right: true,
+        bottom: false,
+        child: Drawer(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              Container(
+                height: 200,
+                child: Center(
+                  child: Assets.images.appIcon.image(
+                    width: 80,
+                    height: 80,
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Divider(color: Theme.of(context).cardColor),
-            ),
-            for (final (int index, _) in fragmentScreens.indexed) _buildNavigationTile(index),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Divider(color: Theme.of(context).cardColor),
+              ),
+              for (final (int index, _) in fragmentScreens.indexed) _buildNavigationTile(index),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

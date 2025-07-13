@@ -55,7 +55,7 @@ class MediaPoster extends StatelessWidget {
                           mode: LaunchMode.externalNonBrowserApplication,
                         );
                       } else {
-                        showSnackBar(context, "An error occurred.");
+                        showSnackBar(context, "No trailer found.");
                       }
                     },
                   ),

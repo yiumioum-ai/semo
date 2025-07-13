@@ -46,7 +46,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   void handleDispose() {}
 
   /// Override this method to customize the no internet widget
-  Widget buildNoInternetWidget() => Center(
+  Widget _buildNoInternetWidget() => Scaffold(
+    body: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -71,11 +72,17 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
             onPressed: () async {
               await _checkConnectivity();
             },
-            child: const Text("Retry"),
+            child: Text(
+              "Retry",
+              style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                color: Colors.white54,
+              ),
+            ),
           ),
         ],
       ),
-    );
+    ),
+  );
 
   /// Initialize connectivity checking
   Future<void> _initConnectivity() async {
@@ -151,7 +158,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
       setState(() => _isAuthenticated = user != null);
       if (user == null) {
         await navigate(
-          LandingScreen(),
+          const LandingScreen(),
           replace: true,
         );
       }
@@ -196,9 +203,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   @override
   Widget build(BuildContext context) {
-    // Show no internet widget if not connected
     if (!_isConnectedToInternet) {
-      return buildNoInternetWidget();
+      return _buildNoInternetWidget();
     }
 
     // Build the main content

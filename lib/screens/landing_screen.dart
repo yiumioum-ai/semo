@@ -28,13 +28,13 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
   }
 
   Future<void> _authenticateWithGoogle() async {
-    await spinner.show();
-
-    final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
-    final GoogleSignInAuthentication auth = user.authentication;
-    final OAuthCredential credential = GoogleAuthProvider.credential(idToken: auth.idToken);
+    //await spinner.show();
 
     try {
+      final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAuthentication auth = user.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(idToken: auth.idToken);
+
       await FirebaseAuth.instance.signInWithCredential(credential);
       await navigate(
         const FragmentsScreen(),
@@ -47,7 +47,7 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
       }
     }
 
-    spinner.dismiss();
+    //spinner.dismiss();
   }
 
   @override

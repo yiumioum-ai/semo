@@ -6,7 +6,7 @@ import "package:internet_connection_checker_plus/internet_connection_checker_plu
 import "package:semo/gen/assets.gen.dart";
 import "package:semo/screens/favorites_screen.dart";
 import "package:semo/screens/landing_screen.dart";
-import "package:semo/models/navigation_page.dart";
+import "package:semo/models/fragment_screen.dart";
 import "package:semo/screens/movies_screen.dart";
 import "package:semo/screens/search_screen.dart";
 import "package:semo/screens/settings_screen.dart";
@@ -30,7 +30,7 @@ class FragmentsScreen extends StatefulWidget {
 
 class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderStateMixin {
   int _selectedPageIndex = 0;
-  List<NavigationPage> _navigationPages = <NavigationPage>[];
+  List<FragmentScreen> _fragementScreens = <FragmentScreen>[];
   late TabController _tabController;
   late StreamSubscription<dynamic> _connectionSubscription;
   bool _isConnectedToInternet = true;
@@ -49,20 +49,20 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
 
   void populatePages() {
     setState(() {
-      _navigationPages = <NavigationPage>[
-        NavigationPage(
+      _fragementScreens = <FragmentScreen>[
+        FragmentScreen(
           icon: Icons.movie,
           title: "Movies",
           widget: const MoviesScreen(),
           mediaType: MediaType.movies,
         ),
-        NavigationPage(
+        FragmentScreen(
           icon: Icons.video_library,
           title: "TV Shows",
           widget: const TvShowsScreen(),
           mediaType: MediaType.tvShows,
         ),
-        NavigationPage(
+        FragmentScreen(
           icon: Icons.favorite,
           title: "Favorites",
           widget: TabBarView(
@@ -73,7 +73,7 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
             ],
           )
         ),
-        NavigationPage(
+        FragmentScreen(
           icon: Icons.settings,
           title: "Settings",
           widget: SettingsScreen()
@@ -131,10 +131,10 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         selected: _selectedPageIndex == index,
-        leading: Icon(_navigationPages[index].icon),
+        leading: Icon(_fragementScreens[index].icon),
         title: Container(
           padding: _selectedPageIndex == index ? const EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
-          child: Text(_navigationPages[index].title),
+          child: Text(_fragementScreens[index].title),
         ),
         onTap: () {
           setState(() => _selectedPageIndex = index);
@@ -169,7 +169,7 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: Text(_navigationPages[_selectedPageIndex].title),
+        title: Text(_fragementScreens[_selectedPageIndex].title),
         leading: Builder(
           builder: (BuildContext context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -198,13 +198,13 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
             onPressed: () {
               NavigationHelper.navigate(
                 context,
-                SearchScreen(mediaType: _navigationPages[_selectedPageIndex].mediaType),
+                SearchScreen(mediaType: _fragementScreens[_selectedPageIndex].mediaType),
               );
             },
           ) : Container(),
         ],
       ),
-      body: _isConnectedToInternet ? _navigationPages[_selectedPageIndex].widget : NoInternet(),
+      body: _isConnectedToInternet ? _fragementScreens[_selectedPageIndex].widget : NoInternet(),
       drawer: SafeArea(
         top: true,
         left: true,
@@ -228,7 +228,7 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Divider(color: Theme.of(context).cardColor),
               ),
-              for (final (int index, _) in _navigationPages.indexed) NavigationTile(index),
+              for (final (int index, _) in _fragementScreens.indexed) NavigationTile(index),
             ],
           ),
         ),

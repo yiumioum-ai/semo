@@ -24,6 +24,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   late StreamSubscription<InternetStatus> _connectionSubscription;
   StreamSubscription<User?>? _authSubscription;
   bool _isConnectedToInternet = true;
+  bool _isAuthenticated = false;
 
   final Logger logger = Logger();
   late Spinner spinner;
@@ -145,6 +146,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   void _verifyAuthSession() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
+      setState(() => _isAuthenticated = user != null);
       if (user == null) {
         await navigate(
           LandingScreen(),
@@ -156,6 +158,9 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   /// Get current connectivity status
   bool get isConnectedToInternet => _isConnectedToInternet;
+
+  /// Get current auth status
+  bool get isAuthenticated => _isAuthenticated;
 
   @override
   void initState() {

@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:semo/models/duration_state.dart';
+import 'package:semo/models/media_progress.dart';
 import 'package:semo/models/stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/enums/media_type.dart';
@@ -55,7 +55,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
     showSubtitles: false,
   );
   int _seekDuration = 0;
-  DurationState _durationState = DurationState();
+  MediaProgress _mediaProgress = MediaProgress();
   int _watchedProgress = 0;
   bool _isSeekedToWatchedProgress = false;
   bool _isPlaying = true;
@@ -103,16 +103,16 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
         if (recentlyWatched.isNotEmpty && isInRecentlyWatched) {
           Map<String, dynamic> movie = recentlyWatched['$_id']!;
 
-          if (_videoPlayerController != null) movie['progress'] = _durationState.progress.inSeconds;
+          if (_videoPlayerController != null) movie['progress'] = _mediaProgress.progress.inSeconds;
           movie['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
           if (movie['progress'] != null && movie['progress'] != 0) {
             setState(() => _watchedProgress = movie['progress']);
           }
         } else {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             recentlyWatched['$_id'] = {
-              'progress': _durationState.progress.inSeconds,
+              'progress': _mediaProgress.progress.inSeconds,
               'timestamp': DateTime.now().millisecondsSinceEpoch,
             };
           }
@@ -123,7 +123,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
         });
 
         if (recentlyWatched.keys.contains('$_id')) {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             recentlyWatched['$_id']['visibleInMenu'] = true;
           }
 
@@ -135,37 +135,37 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
             if (episodes.keys.contains('$_episodeId')) {
               Map<String, dynamic> episode = episodes['$_episodeId'] as Map<String, dynamic>;
 
-              if (_videoPlayerController != null) episode['progress'] = _durationState.progress.inSeconds;
+              if (_videoPlayerController != null) episode['progress'] = _mediaProgress.progress.inSeconds;
               episode['timestamp'] = DateTime.now().millisecondsSinceEpoch;
 
               if (episode['progress'] != null && episode['progress'] != 0) {
                 setState(() => _watchedProgress = episode['progress']);
               }
             } else {
-              if (_durationState.total.inSeconds > 0) {
+              if (_mediaProgress.total.inSeconds > 0) {
                 episodes['$_episodeId'] = {
-                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'progress': _videoPlayerController != null ? _mediaProgress.progress.inSeconds : 0,
                   'timestamp': DateTime.now().millisecondsSinceEpoch,
                 };
               }
             }
           } else {
-            if (_durationState.total.inSeconds > 0) {
+            if (_mediaProgress.total.inSeconds > 0) {
               seasons['$_seasonId'] = {
                 '$_episodeId': {
-                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'progress': _videoPlayerController != null ? _mediaProgress.progress.inSeconds : 0,
                   'timestamp': DateTime.now().millisecondsSinceEpoch,
                 },
               };
             }
           }
         } else {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             recentlyWatched['$_id'] = {
               'visibleInMenu': true,
               '$_seasonId': {
                 '$_episodeId': {
-                  'progress': _videoPlayerController != null ? _durationState.progress.inSeconds : 0,
+                  'progress': _videoPlayerController != null ? _mediaProgress.progress.inSeconds : 0,
                   'timestamp': DateTime.now().millisecondsSinceEpoch,
                 },
               },
@@ -256,7 +256,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
     Duration total = _videoPlayerController!.value.duration;
     bool isBuffering = false;
 
-    if (isPlaying && _videoPlayerController!.value.isBuffering && (progress == _durationState.progress)) isBuffering = true;
+    if (isPlaying && _videoPlayerController!.value.isBuffering && (progress == _mediaProgress.progress)) isBuffering = true;
 
     if (!_isSeekedToWatchedProgress && total.inSeconds != 0 && progress.inSeconds < _watchedProgress) {
       Duration watchedProgress = Duration(seconds: _watchedProgress);
@@ -266,7 +266,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
 
     if (mounted) {
       setState(() {
-        _durationState = DurationState(
+        _mediaProgress = MediaProgress(
           progress: progress,
           total: total,
           isBuffering: isBuffering,
@@ -279,7 +279,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
       endSession();
       Navigator.pop(context, {
         if (_episodeId != null) 'episodeId': _episodeId,
-        'progress': _durationState.progress.inSeconds,
+        'progress': _mediaProgress.progress.inSeconds,
       });
     }
   }
@@ -455,7 +455,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                         await updateRecentlyWatched();
                         Navigator.pop(context, {
                           if (_episodeId != null) 'episodeId': _episodeId,
-                          'progress': _durationState.progress.inSeconds,
+                          'progress': _mediaProgress.progress.inSeconds,
                         });
                       },
                     ),
@@ -482,7 +482,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                       IconButton(
                         icon: Icon(!_isZoomedIn ? Icons.zoom_out_map : Icons.zoom_in_map),
                         onPressed: () => setState(() {
-                          if (_durationState.total.inSeconds > 0) {
+                          if (_mediaProgress.total.inSeconds > 0) {
                             if (_isZoomedIn) {
                               _scaleVideoAnimationController.reverse();
                             } else {
@@ -510,13 +510,13 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                         color: Colors.white,
                         size: 25,
                       ),
-                      onPressed: () => _durationState.total.inSeconds > 0 ? seekBack() : null,
+                      onPressed: () => _mediaProgress.total.inSeconds > 0 ? seekBack() : null,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 30,
                       ),
-                      child: !_durationState.isBuffering ? IconButton(
+                      child: !_mediaProgress.isBuffering ? IconButton(
                         icon: Icon(
                           _isPlaying ? Icons.pause : Icons.play_arrow,
                           color: Colors.white,
@@ -531,7 +531,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                         color: Colors.white,
                         size: 25,
                       ),
-                      onPressed: () => _durationState.total.inSeconds > 0 ? seekForward() : null,
+                      onPressed: () => _mediaProgress.total.inSeconds > 0 ? seekForward() : null,
                     ),
                   ],
                 ),
@@ -551,8 +551,8 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                     top: false,
                     bottom: false,
                     child: ProgressBar(
-                      progress: _durationState.progress,
-                      total: _durationState.total,
+                      progress: _mediaProgress.progress,
+                      total: _mediaProgress.total,
                       progressBarColor: Theme.of(context).primaryColor,
                       baseBarColor: Theme.of(context).primaryColor.withValues(alpha: .2),
                       bufferedBarColor: Theme.of(context).primaryColor.withValues(alpha: .5),
@@ -576,7 +576,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
     return Scaffold(
       body: _videoPlayerController != null ? GestureDetector(
         onTap: () {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             if (_showControls) {
               setState(() => _showControls = false);
             } else {
@@ -593,7 +593,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
           _lastZoomGestureScale = details.scale;
         },
         onScaleEnd: (details) {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             if (_lastZoomGestureScale < 1.0) {
               setState(() {
                 _isZoomedIn = true;
@@ -609,7 +609,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
           }
         },
         onDoubleTapDown: (details) async {
-          if (_durationState.total.inSeconds > 0) {
+          if (_mediaProgress.total.inSeconds > 0) {
             setState(() => _showControls = true);
             Future.delayed(Duration(seconds: 3), () {
               if (mounted && _isPlaying) {

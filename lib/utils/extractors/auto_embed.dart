@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:semo/models/stream.dart';
+import 'package:semo/models/media_stream.dart';
 
 class AutoEmbed {
   final String baseUrl = 'autoembed.cc';

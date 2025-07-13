@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:semo/models/media_progress.dart';
-import 'package:semo/models/stream.dart';
+import 'package:semo/models/media_stream.dart';
 import 'package:semo/utils/db_names.dart';
 import 'package:semo/enums/media_type.dart';
 import 'package:semo/utils/preferences.dart';

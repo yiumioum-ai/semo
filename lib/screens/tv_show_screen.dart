@@ -232,7 +232,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
       );
       _spinner.dismiss();
 
-      if (stream.url != null) {
+      if (stream?.url != null) {
         final result = await NavigationHelper.navigate(
           context,
           PlayerScreen(
@@ -240,7 +240,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
             seasonId: season.id,
             episodeId: episode.id,
             title: episode.name,
-            stream: stream,
+            stream: stream!,
             subtitles: subs,
             mediaType: MediaType.tvShows,
           ),

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html;
-import 'package:semo/models/stream.dart';
+import 'package:semo/models/media_stream.dart';
 
 class MoviesApi {
   final String baseUrl = 'https://moviesapi.club';

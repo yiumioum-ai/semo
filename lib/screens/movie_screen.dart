@@ -194,13 +194,13 @@ class _MovieScreenState extends State<MovieScreen> {
       final subs = await _subtitleService.getSubtitles(_movie.id);
       _spinner.dismiss();
 
-      if (stream.url != null) {
+      if (stream?.url != null) {
         final result = await NavigationHelper.navigate(
           context,
           PlayerScreen(
             id: _movie.id,
             title: _movie.title,
-            stream: stream,
+            stream: stream!,
             subtitles: subs,
             mediaType: MediaType.movies,
           ),

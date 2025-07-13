@@ -4,7 +4,7 @@ import "package:flutter/foundation.dart";
 import "package:logger/logger.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/server.dart";
-import "package:semo/models/stream.dart";
+import "package:semo/models/media_stream.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/utils/extractors/auto_embed.dart";
 import "package:semo/utils/extractors/embedsu.dart";
@@ -20,9 +20,9 @@ class Extractor {
 
   Movie? movie;
   Episode? episode;
-
-  static List<Server> servers = <Server>[
-    Server(name: "Random", extractor: null),
+  
+  static final List<Server> _servers = <Server>[
+    const Server(name: "Random", extractor: null),
     Server(name: "AutoEmbed", extractor: AutoEmbed()),
     Server(name: "EmbedSu", extractor: EmbedSu()),
     Server(name: "KissKh", extractor: KissKh()),
@@ -30,16 +30,17 @@ class Extractor {
     Server(name: "RiveStream", extractor: RiveStream()),
     //Server(name: "Whvx", extractor: Whvx()),
   ];
+  final Logger _logger = Logger();
 
-  Future<MediaStream> getStream() async {
+  Future<MediaStream?> getStream() async {
     late Map<String, dynamic> parameters;
     Random random = Random();
     String serverName = Preferences().getServer();
-    MediaStream stream = MediaStream();
+    MediaStream? stream;
     dynamic extractor;
 
     if (serverName != "Random") {
-      Server server = servers.firstWhere((Server server) => server.name == serverName);
+      Server server = _servers.firstWhere((Server server) => server.name == serverName);
       extractor = server.extractor;
     }
 
@@ -57,29 +58,29 @@ class Extractor {
       };
     }
 
-    while (stream.url == null && servers.isNotEmpty) {
-      int randomIndex = random.nextInt(servers.length);
+    while (stream?.url == null && _servers.isNotEmpty) {
+      int randomIndex = random.nextInt(_servers.length);
 
       if (serverName == "Random" && extractor == null) {
-        Server server = servers[randomIndex];
+        Server server = _servers[randomIndex];
         extractor = server.extractor;
       }
 
       stream = await extractor.extract(parameters);
 
-      if (stream.url == null) {
+      if (stream?.url == null) {
+        _logger.w("Stream not found.\nServer: $serverName");
         if (serverName == "Random") {
-          servers.removeAt(randomIndex);
+          _servers.removeAt(randomIndex);
         }
-        stream = MediaStream();
+        stream = null;
       }
     }
 
-    if (!kReleaseMode) {
-      Logger logger = Logger();
-      logger.i("Stream found.\nServer: $serverName\nUrl: ${stream.url}");
-    }
+    _logger.i("Stream found.\nServer: $serverName\nUrl: ${stream?.url}");
 
     return stream;
   }
+
+  static List<Server> getServers() => _servers;
 }

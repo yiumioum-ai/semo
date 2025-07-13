@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   openServerSelector() async {
     String savedServerName = await _preferences.getServer();
-    List<Server> servers = Extractor.servers;
+    List<Server> servers = Extractor.getServers();
 
     await showModalBottomSheet(
       context: context,

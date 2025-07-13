@@ -55,6 +55,8 @@ class Spinner {
   // Track if spinner is currently showing
   bool _isShowing = false;
 
+  Timer? _autoCloseTimer;
+
   void show() {
     if (_isShowing) {
       return;
@@ -102,11 +104,12 @@ class Spinner {
           ),
         ),
     ).whenComplete(() {
-      _isShowing = false;
       if (duration != null) {
-        Timer(duration!, () {
+        _autoCloseTimer = Timer(duration!, () {
           dismiss();
         });
+      } else {
+        _isShowing = false;
       }
     });
 
@@ -115,6 +118,8 @@ class Spinner {
 
   void dismiss() {
     if (_isShowing) {
+      _autoCloseTimer?.cancel();
+      _autoCloseTimer = null;
       _isShowing = false;
       Navigator.of(context, rootNavigator: useRootNavigator).pop();
     }

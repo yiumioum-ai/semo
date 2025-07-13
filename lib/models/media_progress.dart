@@ -1,5 +1,5 @@
 class MediaProgress {
-  MediaProgress({
+  const MediaProgress({
     this.progress = Duration.zero,
     this.total = Duration.zero,
     this.isBuffering = true,

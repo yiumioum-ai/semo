@@ -11,9 +11,11 @@ import "package:swipeable_page_route/swipeable_page_route.dart";
 abstract class BaseScreen extends StatefulWidget {
   const BaseScreen({
     super.key,
+    this.shouldLogScreenView = true,
     this.shouldVerifySession = true
   });
 
+  final bool shouldLogScreenView;
   final bool shouldVerifySession;
 }
 
@@ -168,7 +170,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _initConnectivity();
 
-      if (_isConnectedToInternet) {
+      if (_isConnectedToInternet && widget.shouldLogScreenView) {
         await _logScreenView();
       }
 

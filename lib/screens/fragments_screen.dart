@@ -1,11 +1,9 @@
 import "dart:async";
 
-import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
-import "package:internet_connection_checker_plus/internet_connection_checker_plus.dart";
 import "package:semo/gen/assets.gen.dart";
+import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/favorites_screen.dart";
-import "package:semo/screens/landing_screen.dart";
 import "package:semo/models/fragment_screen.dart";
 import "package:semo/screens/movies_screen.dart";
 import "package:semo/screens/search_screen.dart";
@@ -14,52 +12,41 @@ import "package:semo/screens/tv_shows_screen.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/utils/navigation_helper.dart";
 
-class FragmentsScreen extends StatefulWidget {
+class FragmentsScreen extends BaseScreen {
   const FragmentsScreen({
     super.key,
     this.initialPageIndex = 0,
     this.initialFavoritesTabIndex = 0,
-  });
+  }) : super(shouldLogScreenView: false);
   
   final int initialPageIndex;
   final int initialFavoritesTabIndex;
 
   @override
-  _FragmentsScreenState createState() => _FragmentsScreenState();
+  BaseScreenState<FragmentsScreen> createState() => _FragmentsScreenState();
 }
 
-class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderStateMixin {
+class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with TickerProviderStateMixin {
   int _selectedPageIndex = 0;
-  List<FragmentScreen> _fragementScreens = <FragmentScreen>[];
+  List<FragmentScreen> fragmentScreens = <FragmentScreen>[];
   late TabController _tabController;
-  late StreamSubscription<dynamic> _connectionSubscription;
-  bool _isConnectedToInternet = true;
 
-  void checkUserSession() {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (mounted && user == null) {
-        NavigationHelper.navigate(
-          context,
-          LandingScreen(),
-          replace: true,
-        );
-      }
-    });
-  }
+  @override
+  String get screenName => "Fragments";
 
-  void populatePages() {
+  void _initFragments() {
     setState(() {
-      _fragementScreens = <FragmentScreen>[
-        FragmentScreen(
+      fragmentScreens = <FragmentScreen>[
+        const FragmentScreen(
           icon: Icons.movie,
           title: "Movies",
-          widget: const MoviesScreen(),
+          widget: MoviesScreen(),
           mediaType: MediaType.movies,
         ),
-        FragmentScreen(
+        const FragmentScreen(
           icon: Icons.video_library,
           title: "TV Shows",
-          widget: const TvShowsScreen(),
+          widget: TvShowsScreen(),
           mediaType: MediaType.tvShows,
         ),
         FragmentScreen(
@@ -67,7 +54,7 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
           title: "Favorites",
           widget: TabBarView(
             controller: _tabController,
-            children: <Widget>[
+            children: const <Widget>[
               FavoritesScreen(mediaType: MediaType.movies),
               FavoritesScreen(mediaType: MediaType.tvShows),
             ],
@@ -82,156 +69,108 @@ class _FragmentsScreenState extends State<FragmentsScreen> with TickerProviderSt
     });
   }
 
-  Future<void> initConnectivity() async {
-    bool isConnectedToInternet = await InternetConnection().hasInternetAccess;
-    setState(() => _isConnectedToInternet = isConnectedToInternet);
-
-    _connectionSubscription = InternetConnection().onStatusChange.listen((InternetStatus status) async {
-      if (mounted) {
-        switch (status) {
-          case InternetStatus.connected:
-            setState(() => _isConnectedToInternet = true);
-          case InternetStatus.disconnected:
-            setState(() => _isConnectedToInternet = false);
-        }
-      }
-    });
-  }
-
   @override
-  void initState() {
-    super.initState();
+  Future<void> initializeScreen() async {
     _selectedPageIndex = widget.initialPageIndex;
     _tabController = TabController(
       length: 2,
       initialIndex: widget.initialFavoritesTabIndex,
       vsync: this,
     );
-    initConnectivity();
-    checkUserSession();
-    populatePages();
+    _initFragments();
   }
+
+  Widget _buildNavigationTile(int index) => Container(
+    margin: const EdgeInsets.symmetric(
+      horizontal: 18,
+    ),
+    child: ListTile(
+      iconColor: Colors.white,
+      selectedColor: Theme.of(context).primaryColor,
+      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .3),
+      titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
+        fontWeight: _selectedPageIndex == index ? FontWeight.w900 : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+      selected: _selectedPageIndex == index,
+      leading: Icon(fragmentScreens[index].icon),
+      title: Container(
+        padding: _selectedPageIndex == index ? const EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
+        child: Text(fragmentScreens[index].title),
+      ),
+      onTap: () {
+        setState(() => _selectedPageIndex = index);
+        Navigator.pop(context);},
+    ),
+  );
 
   @override
-  void dispose() {
-    _connectionSubscription.cancel();
-    super.dispose();
-  }
-
-  Widget NavigationTile(int index) => Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 18,
-      ),
-      child: ListTile(
-        iconColor: Colors.white,
-        selectedColor: Theme.of(context).primaryColor,
-        selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .3),
-        titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
-          fontWeight: _selectedPageIndex == index ? FontWeight.w900 : FontWeight.normal,
+  Widget buildContent(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      title: Text(fragmentScreens[_selectedPageIndex].title),
+      leading: Builder(
+        builder: (BuildContext context) => IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-        selected: _selectedPageIndex == index,
-        leading: Icon(_fragementScreens[index].icon),
-        title: Container(
-          padding: _selectedPageIndex == index ? const EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
-          child: Text(_fragementScreens[index].title),
-        ),
-        onTap: () {
-          setState(() => _selectedPageIndex = index);
-          Navigator.pop(context);
-        },
       ),
-    );
-
-  Widget NoInternet() => Container(
-      width: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          const Icon(
-            Icons.wifi_off_sharp,
-            color: Colors.white54,
-            size: 80,
+      bottom: _selectedPageIndex == 2 ? TabBar(
+        controller: _tabController,
+        tabs: const <Tab>[
+          Tab(
+            icon: Icon(Icons.movie),
+            text: "Movies",
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 10),
-            child: Text(
-              "You have lost internet connection",
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
-            ),
+          Tab(
+            icon: Icon(Icons.video_library),
+            text: "TV Shows",
           ),
         ],
-      ),
-    );
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
+      ) : null,
+      actions: <Widget>[
+        (isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
+          icon: const Icon(
+            Icons.search,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            NavigationHelper.navigate(
+              context,
+              SearchScreen(mediaType: fragmentScreens[_selectedPageIndex].mediaType),
+            );
+          },
+        ) : Container(),
+      ],
+    ),
+    body: fragmentScreens[_selectedPageIndex].widget,
+    drawer: SafeArea(
+      top: true,
+      left: true,
+      right: true,
+      bottom: false,
+      child: Drawer(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: Text(_fragementScreens[_selectedPageIndex].title),
-        leading: Builder(
-          builder: (BuildContext context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        bottom: _isConnectedToInternet && _selectedPageIndex == 2 ? TabBar(
-          controller: _tabController,
-          tabs: const <Tab>[
-            Tab(
-              icon: Icon(Icons.movie),
-              text: "Movies",
-            ),
-            Tab(
-              icon: Icon(Icons.video_library),
-              text: "TV Shows",
-            ),
-          ],
-        ) : null,
-        actions: <Widget>[
-          (_isConnectedToInternet && _selectedPageIndex <= 1) ? IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              NavigationHelper.navigate(
-                context,
-                SearchScreen(mediaType: _fragementScreens[_selectedPageIndex].mediaType),
-              );
-            },
-          ) : Container(),
-        ],
-      ),
-      body: _isConnectedToInternet ? _fragementScreens[_selectedPageIndex].widget : NoInternet(),
-      drawer: SafeArea(
-        top: true,
-        left: true,
-        right: true,
-        bottom: false,
-        child: Drawer(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              Container(
-                height: 200,
-                child: Center(
-                  child: Assets.images.appIcon.image(
-                    width: 80,
-                    height: 80,
-                  ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            Container(
+              height: 200,
+              child: Center(
+                child: Assets.images.appIcon.image(
+                  width: 80,
+                  height: 80,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Divider(color: Theme.of(context).cardColor),
-              ),
-              for (final (int index, _) in _fragementScreens.indexed) NavigationTile(index),
-            ],
-          ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Divider(color: Theme.of(context).cardColor),
+            ),
+            for (final (int index, _) in fragmentScreens.indexed) _buildNavigationTile(index),
+          ],
         ),
       ),
-    );
+    ),
+  );
 }

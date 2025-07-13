@@ -4,6 +4,6 @@ class Server {
     this.extractor,
   });
 
-  String name;
-  dynamic extractor;
+  final String name;
+  final dynamic extractor;
 }

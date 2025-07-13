@@ -3,7 +3,7 @@ import "dart:math";
 import "package:flutter/foundation.dart";
 import "package:logger/logger.dart";
 import "package:semo/models/movie.dart";
-import "package:semo/models/server.dart";
+import "package:semo/models/streaming_server.dart";
 import "package:semo/models/media_stream.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/utils/extractors/auto_embed.dart";
@@ -21,14 +21,14 @@ class Extractor {
   Movie? movie;
   Episode? episode;
   
-  static final List<Server> _servers = <Server>[
-    const Server(name: "Random", extractor: null),
-    Server(name: "AutoEmbed", extractor: AutoEmbed()),
-    Server(name: "EmbedSu", extractor: EmbedSu()),
-    Server(name: "KissKh", extractor: KissKh()),
-    //Server(name: "MoviesApi", extractor: MoviesApi()),
-    Server(name: "RiveStream", extractor: RiveStream()),
-    //Server(name: "Whvx", extractor: Whvx()),
+  static final List<StreamingServer> _servers = <StreamingServer>[
+    const StreamingServer(name: "Random", extractor: null),
+    StreamingServer(name: "AutoEmbed", extractor: AutoEmbed()),
+    StreamingServer(name: "EmbedSu", extractor: EmbedSu()),
+    StreamingServer(name: "KissKh", extractor: KissKh()),
+    //StreamingServer(name: "MoviesApi", extractor: MoviesApi()),
+    StreamingServer(name: "RiveStream", extractor: RiveStream()),
+    //StreamingServer(name: "Whvx", extractor: Whvx()),
   ];
   final Logger _logger = Logger();
 
@@ -40,7 +40,7 @@ class Extractor {
     dynamic extractor;
 
     if (serverName != "Random") {
-      Server server = _servers.firstWhere((Server server) => server.name == serverName);
+      StreamingServer server = _servers.firstWhere((StreamingServer server) => server.name == serverName);
       extractor = server.extractor;
     }
 
@@ -62,14 +62,14 @@ class Extractor {
       int randomIndex = random.nextInt(_servers.length);
 
       if (serverName == "Random" && extractor == null) {
-        Server server = _servers[randomIndex];
+        StreamingServer server = _servers[randomIndex];
         extractor = server.extractor;
       }
 
       stream = await extractor.extract(parameters);
 
       if (stream?.url == null) {
-        _logger.w("Stream not found.\nServer: $serverName");
+        _logger.w("Stream not found.\nStreamingServer: $serverName");
         if (serverName == "Random") {
           _servers.removeAt(randomIndex);
         }
@@ -77,10 +77,10 @@ class Extractor {
       }
     }
 
-    _logger.i("Stream found.\nServer: $serverName\nUrl: ${stream?.url}");
+    _logger.i("Stream found.\nStreamingServer: $serverName\nUrl: ${stream?.url}");
 
     return stream;
   }
 
-  static List<Server> getServers() => _servers;
+  static List<StreamingServer> getServers() => _servers;
 }

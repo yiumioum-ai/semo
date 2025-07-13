@@ -11,7 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import "package:semo/gen/assets.gen.dart";
 import 'package:semo/screens/landing_screen.dart';
-import 'package:semo/models/server.dart';
+import 'package:semo/models/streaming_server.dart';
 import 'package:semo/screens/open_source_libraries_screen.dart';
 import 'package:semo/screens/subtitles_preferences_screen.dart';
 import 'package:semo/utils/db_names.dart';
@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   openServerSelector() async {
     String savedServerName = await _preferences.getServer();
-    List<Server> servers = Extractor.getServers();
+    List<StreamingServer> servers = Extractor.getServers();
 
     await showModalBottomSheet(
       context: context,
@@ -67,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               shrinkWrap: true,
               itemCount: servers.length,
               itemBuilder: (context, index) {
-                Server server = servers[index];
+                StreamingServer server = servers[index];
                 bool isSelected = server.name == serverName;
 
                 return ListTile(

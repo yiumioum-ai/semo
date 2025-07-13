@@ -1,5 +1,5 @@
-class Server {
-  const Server({
+class StreamingServer {
+  const StreamingServer({
     required this.name,
     required this.extractor,
   });

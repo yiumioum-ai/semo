@@ -1,7 +1,7 @@
 import "dart:convert";
 
 import "package:logger/logger.dart";
-import "package:semo/models/server.dart";
+import "package:semo/models/streaming_server.dart";
 import "package:semo/models/subtitle_style.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
@@ -16,7 +16,7 @@ class Preferences {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  Future<bool?> setServer(Server server) async => await _prefs?.setString("server", server.name);
+  Future<bool?> setServer(StreamingServer server) async => await _prefs?.setString("server", server.name);
 
   Future<bool?> setSeekDuration(int seekDuration) async => await _prefs?.setInt("seekDuration", seekDuration);
 

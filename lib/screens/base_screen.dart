@@ -61,7 +61,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
             margin: const EdgeInsets.only(top: 10),
             child: Text(
               "You have lost internet connection",
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: Colors.white54,
               ),
               textAlign: TextAlign.center,
@@ -74,7 +74,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
             },
             child: Text(
               "Retry",
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: Colors.white54,
               ),
             ),

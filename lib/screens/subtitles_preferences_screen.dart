@@ -57,7 +57,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
   Text SectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
         fontSize: 20,
         color: Theme.of(context).primaryColor,
       ),

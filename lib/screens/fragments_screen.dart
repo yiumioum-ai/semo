@@ -88,7 +88,7 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
       iconColor: Colors.white,
       selectedColor: Theme.of(context).primaryColor,
       selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .3),
-      titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
+      titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
         fontWeight: _selectedPageIndex == index ? FontWeight.w900 : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),

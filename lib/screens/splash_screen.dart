@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                     child: Text(
                       'Version $version',
-                      style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         color: Colors.white54,
                       ),
                     ),

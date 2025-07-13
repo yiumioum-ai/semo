@@ -192,7 +192,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
             margin: EdgeInsets.only(top: 10),
             child: Text(
               'The person has no content',
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
             ),
           ),
         ],
@@ -350,7 +350,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
             releaseDate,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
           ),
         ),
       ],
@@ -373,7 +373,7 @@ class _PersonMediaScreenState extends State<PersonMediaScreen> with TickerProvid
             margin: EdgeInsets.only(top: 10),
             child: Text(
               'You have lost internet connection',
-              style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
             ),
           ),
         ],

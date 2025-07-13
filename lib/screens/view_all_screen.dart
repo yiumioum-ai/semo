@@ -147,7 +147,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           const SizedBox(height: 16),
           Text(
             'You have lost internet connection',
-            style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
           ),
         ],
       ),

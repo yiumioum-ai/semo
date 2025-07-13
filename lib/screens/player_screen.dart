@@ -354,7 +354,7 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
                 return ListTile(
                   title: Text(
                     'English ${index + 1}',
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       color: isSelected ? Theme.of(context).primaryColor : Colors.white,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),

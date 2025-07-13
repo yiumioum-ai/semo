@@ -74,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
                   selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
-                  titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
+                  titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   title: Text(server.name),
@@ -113,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
                   selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
-                  titleTextStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
+                  titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   title: Text(seekDurations[index] != 60 ? '${seekDurations[index]} s' : '1 m'),
@@ -163,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         TextSpan(text: 'Developed by '),
                         TextSpan(
                           text: 'Moses Mbaga',
-                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
@@ -198,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Text(
                           'GitHub',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.displayMedium!.copyWith(
+                          style: Theme.of(context).textTheme.displayMedium?.copyWith(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
@@ -226,14 +226,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextButton(
               child: Text(
                 'Cancel',
-                style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: Text(
                 'Delete',
-                style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Theme.of(context).primaryColor),
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Theme.of(context).primaryColor),
               ),
               onPressed: () => reauthenticate(),
             ),
@@ -437,7 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Padding(padding: EdgeInsets.symmetric(vertical: 2.5)),
                   Text(
                     email,
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Colors.white54),
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
                   ),
                 ],
               ),
@@ -451,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Text SectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
         fontSize: 20,
         color: Theme.of(context).primaryColor,
       ),
@@ -472,7 +472,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       description: description != null ? Text(
         description,
-        style: Theme.of(context).textTheme.displaySmall!.copyWith(color: Colors.white54),
+        style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
       ) : null,
       leading: Icon(icon),
       trailing: trailing,

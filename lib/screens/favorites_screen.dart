@@ -20,10 +20,10 @@ class FavoritesScreen extends BaseScreen {
   final MediaType mediaType;
 
   @override
-  FavoritesScreenState createState() => FavoritesScreenState();
+  BaseScreenState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
-class FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
+class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
   List<dynamic> _favorites = <dynamic>[];
   final FavoritesService _favoritesService = FavoritesService();
   final TMDBService _tmdbService = TMDBService();

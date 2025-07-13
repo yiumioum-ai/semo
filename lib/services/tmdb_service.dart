@@ -185,8 +185,8 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
         return SearchResults.fromJson(
-          mediaType,
           response.data,
+          mediaType,
         );
       }
 

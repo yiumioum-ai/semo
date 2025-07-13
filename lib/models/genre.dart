@@ -1,18 +1,16 @@
 class Genre {
-  int id;
-  String name;
-  String? backdropPath;
-
-  Genre({
+  const Genre({
     required this.id,
     required this.name,
     this.backdropPath,
   });
 
-  factory Genre.fromJson(Map<String, dynamic> json) {
-    return Genre(
-      id: json['id'],
-      name: json['name'],
+  factory Genre.fromJson(Map<String, dynamic> json) => Genre(
+      id: json["id"] ?? 0,
+      name: json["name"] ?? "Genre",
     );
-  }
+
+  final int id;
+  final String name;
+  final String? backdropPath;
 }

@@ -226,160 +226,146 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
   }
 
   @override
-  Widget buildContent(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        leading:
-        BackButton(onPressed: () => Navigator.pop(context, "refresh")),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
-            ),
-            color: _isFavorite ? Colors.red : Colors.white,
-            onPressed: _toggleFavorite,
-          ),
-        ],
+  Widget buildContent(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      leading: BackButton(
+        onPressed: () => Navigator.pop(context, "refresh"),
       ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshData,
-          color: Theme.of(context).primaryColor,
-          backgroundColor:
-          Theme.of(context).scaffoldBackgroundColor,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                MediaPoster(
-                  backdropPath: _movie.backdropPath,
-                  trailerUrl: _movie.trailerUrl,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: <Widget>[
-                      MediaInfo(
-                        title: _movie.title,
-                        subtitle: _movie.duration != null
-                            ? "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration ?? 0))}"
-                            : _movie.releaseDate.split("-")[0],
-                        overview: _movie.overview,
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _playMovie,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            Theme.of(context).primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.center,
-                            children: <Widget>[
-                              Icon(
-                                Icons.play_arrow,
-                                size: 25,
-                              ),
-                              SizedBox(width: 5),
-                              Text("Play"),
-                            ],
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(
+            _isFavorite ? Icons.favorite : Icons.favorite_border,
+          ),
+          color: _isFavorite ? Colors.red : Colors.white,
+          onPressed: _toggleFavorite,
+        ),
+      ],
+    ),
+    body: !_isLoading ? SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              MediaPoster(
+                backdropPath: _movie.backdropPath,
+                trailerUrl: _movie.trailerUrl,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    MediaInfo(
+                      title: _movie.title,
+                      subtitle: _movie.duration != null
+                          ? "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration ?? 0))}"
+                          : _movie.releaseDate.split("-")[0],
+                      overview: _movie.overview,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _playMovie,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(
+                              Icons.play_arrow,
+                              size: 25,
+                            ),
+                            SizedBox(width: 5),
+                            Text("Play"),
+                          ],
+                        ),
                       ),
-                      if (_movie.cast?.isNotEmpty == true)
-                        ...<Widget>[
-                          const SizedBox(height: 30),
-                          HorizontalMediaList<Person>(
-                            title: "Cast",
-                            items: _movie.cast!,
-                            itemBuilder: (BuildContext context, Person person, int index) => Padding(
-                              padding: EdgeInsets.only(
-                                right: index < _movie.cast!.length - 1 ? 18 : 0,
-                              ),
-                              child: PersonCard(
-                                person: person,
-                                onTap: () => NavigationHelper.navigate(
-                                  context,
-                                  PersonMediaScreen(person),
-                                ),
+                    ),
+                    if (_movie.cast?.isNotEmpty == true)
+                      ...<Widget>[
+                        const SizedBox(height: 30),
+                        HorizontalMediaList<Person>(
+                          title: "Cast",
+                          items: _movie.cast!,
+                          itemBuilder: (BuildContext context, Person person, int index) => Padding(
+                            padding: EdgeInsets.only(
+                              right: index < _movie.cast!.length - 1 ? 18 : 0,
+                            ),
+                            child: PersonCard(
+                              person: person,
+                              onTap: () => NavigationHelper.navigate(
+                                context,
+                                PersonMediaScreen(person),
                               ),
                             ),
                           ),
-                        ],
-                      const SizedBox(height: 30),
-                      HorizontalMediaList<Movie>(
-                        title: "Recommendations",
-                        pagingController: _recommendationsController,
-                        itemBuilder: (BuildContext context, Movie movie, int index) => Padding(
-                          padding: EdgeInsets.only(
-                            right: index < (_recommendationsController.items?.length ?? 0) - 1 ? 18 : 0,
-                          ),
-                          child: MediaCard(
-                            posterPath: movie.posterPath,
-                            title: movie.title,
-                            year: movie.releaseDate.split("-")[0],
-                            voteAverage: movie.voteAverage,
-                            onTap: () => navigate(MovieScreen(movie)),
-                          ),
                         ),
-                        onViewAllTap: () => navigate(
-                          ViewAllScreen(
-                            title: "Recommendations",
-                            source: Urls.getMovieRecommendations(_movie.id),
-                            mediaType: MediaType.movies,
-                          ),
+                      ],
+                    const SizedBox(height: 30),
+                    HorizontalMediaList<Movie>(
+                      title: "Recommendations",
+                      pagingController: _recommendationsController,
+                      itemBuilder: (BuildContext context, Movie movie, int index) => Padding(
+                        padding: EdgeInsets.only(
+                          right: index < (_recommendationsController.items?.length ?? 0) - 1 ? 18 : 0,
+                        ),
+                        child: MediaCard(
+                          posterPath: movie.posterPath,
+                          title: movie.title,
+                          year: movie.releaseDate.split("-")[0],
+                          voteAverage: movie.voteAverage,
+                          onTap: () => navigate(MovieScreen(movie)),
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      HorizontalMediaList<Movie>(
-                        title: "Similar",
-                        pagingController:
-                        _similarController,
-                        itemBuilder: (BuildContext context, Movie movie, int index) => Padding(
-                          padding: EdgeInsets.only(
-                            right: index < (_similarController.items?.length ?? 0) - 1 ? 18 : 0,
-                          ),
-                          child: MediaCard(
-                            posterPath: movie.posterPath,
-                            title: movie.title,
-                            year: movie.releaseDate.split("-")[0],
-                            voteAverage: movie.voteAverage,
-                            onTap: () => navigate(MovieScreen(movie)),
-                          ),
-                        ),
-                        onViewAllTap: () => navigate(
-                          ViewAllScreen(
-                            mediaType: MediaType.movies,
-                            title: "Similar",
-                            source: Urls.getMovieSimilar(_movie.id),
-                          ),
+                      onViewAllTap: () => navigate(
+                        ViewAllScreen(
+                          title: "Recommendations",
+                          source: Urls.getMovieRecommendations(_movie.id),
+                          mediaType: MediaType.movies,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 30),
+                    HorizontalMediaList<Movie>(
+                      title: "Similar",
+                      pagingController:
+                      _similarController,
+                      itemBuilder: (BuildContext context, Movie movie, int index) => Padding(
+                        padding: EdgeInsets.only(
+                          right: index < (_similarController.items?.length ?? 0) - 1 ? 18 : 0,
+                        ),
+                        child: MediaCard(
+                          posterPath: movie.posterPath,
+                          title: movie.title,
+                          year: movie.releaseDate.split("-")[0],
+                          voteAverage: movie.voteAverage,
+                          onTap: () => navigate(MovieScreen(movie)),
+                        ),
+                      ),
+                      onViewAllTap: () => navigate(
+                        ViewAllScreen(
+                          mediaType: MediaType.movies,
+                          title: "Similar",
+                          source: Urls.getMovieSimilar(_movie.id),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ) : const Center(child: CircularProgressIndicator())
+  );
 }

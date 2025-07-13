@@ -1,29 +1,7 @@
-import 'package:semo/models/genre.dart';
-import 'package:semo/models/person.dart';
+import "package:semo/models/genre.dart";
+import "package:semo/models/person.dart";
 
 class Movie {
-  bool adult;
-  String backdropPath;
-  List<int>? genreIds;
-  List<Genre>? genres;
-  int id;
-  String originalLanguage;
-  String originalTitle;
-  String overview;
-  double popularity;
-  String posterPath;
-  String releaseDate;
-  String title;
-  bool video;
-  double voteAverage;
-  int voteCount;
-  int? duration;
-  Duration? creditsStart;
-  bool? isRecentlyWatched;
-  int? watchedProgress;
-  String? trailerUrl;
-  List<Person>? cast;
-
   Movie({
     required this.adult,
     required this.backdropPath,
@@ -48,23 +26,44 @@ class Movie {
     this.cast,
   });
 
-  factory Movie.fromJson(Map<String, dynamic> json) {
-    return Movie(
-      adult: json['adult'],
-      backdropPath: json['backdrop_path'] ?? '',
-      genreIds: json['genre_ids'] != null ? List<int>.from(json['genre_ids']) : null,
-      genres: json['genres'] != null ? List<Genre>.from(json['genres'].map((json) => Genre.fromJson(json)).toList()) : null,
-      id: json['id'],
-      originalLanguage: json['original_language'],
-      originalTitle: json['original_title'],
-      overview: json['overview'],
-      popularity: double.parse((json['popularity'].toDouble() ?? 0.0).toStringAsFixed(1)),
-      posterPath: json['poster_path'] ?? '',
-      releaseDate: json['release_date'],
-      title: json['title'],
-      video: json['video'],
-      voteAverage: double.parse((json['vote_average'].toDouble() ?? 0.0).toStringAsFixed(1)),
-      voteCount: json['vote_count'] ?? 0,
+  factory Movie.fromJson(Map<String, dynamic> json) => Movie(
+      adult: json["adult"] ?? false,
+      backdropPath: json["backdrop_path"] ?? "",
+      genreIds: json["genre_ids"] != null ? List<int>.from(json["genre_ids"]) : null,
+      //ignore: always_specify_types
+      genres: json["genres"] != null ? List<Genre>.from(json["genres"].map((json) => Genre.fromJson(json)).toList()) : null,
+      id: json["id"] ?? 0,
+      originalLanguage: json["original_language"] ?? "",
+      originalTitle: json["original_title"] ?? "",
+      overview: json["overview"] ?? "",
+      popularity: double.parse((json["popularity"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
+      posterPath: json["poster_path"] ?? "",
+      releaseDate: json["release_date"] ?? "",
+      title: json["title"] ?? "",
+      video: json["video"] ?? false,
+      voteAverage: double.parse((json["vote_average"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
+      voteCount: json["vote_count"] ?? 0,
     );
-  }
+
+  final bool adult;
+  final String backdropPath;
+  final List<int>? genreIds;
+  final List<Genre>? genres;
+  final int id;
+  final String originalLanguage;
+  final String originalTitle;
+  final String overview;
+  final double popularity;
+  final String posterPath;
+  final String releaseDate;
+  final String title;
+  final bool video;
+  final double voteAverage;
+  final int voteCount;
+  int? duration;
+  Duration? creditsStart;
+  bool? isRecentlyWatched;
+  int? watchedProgress;
+  String? trailerUrl;
+  List<Person>? cast;
 }

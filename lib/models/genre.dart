@@ -7,7 +7,7 @@ class Genre {
 
   factory Genre.fromJson(Map<String, dynamic> json) => Genre(
       id: json["id"] ?? 0,
-      name: json["name"] ?? "Genre",
+      name: json["name"] ?? "",
     );
 
   final int id;

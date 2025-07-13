@@ -1,8 +1,19 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import '../utils/urls.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:semo/utils/urls.dart";
 
 class MediaCard extends StatelessWidget {
+  const MediaCard({
+    super.key,
+    required this.posterPath,
+    required this.title,
+    required this.year,
+    required this.voteAverage,
+    this.onTap,
+    this.showRemoveOption = false,
+    this.onRemove,
+  });
+
   final String posterPath;
   final String title;
   final String year;
@@ -11,26 +22,13 @@ class MediaCard extends StatelessWidget {
   final bool showRemoveOption;
   final VoidCallback? onRemove;
 
-  const MediaCard({
-    Key? key,
-    required this.posterPath,
-    required this.title,
-    required this.year,
-    required this.voteAverage,
-    this.onTap,
-    this.showRemoveOption = false,
-    this.onRemove,
-  }) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  Widget build(BuildContext context) => Column(
+      children: <Widget>[
         Expanded(
           child: CachedNetworkImage(
-            imageUrl: '${Urls.image185}$posterPath',
-            placeholder: (context, url) {
-              return Container(
+            imageUrl: "${Urls.image185}$posterPath",
+            placeholder: (BuildContext context, String url) => Container(
                 width: MediaQuery.of(context).size.width * 0.3,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -41,10 +39,8 @@ class MediaCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: CircularProgressIndicator(),
                 ),
-              );
-            },
-            imageBuilder: (context, image) {
-              return Container(
+              ),
+            imageBuilder: (BuildContext context, ImageProvider image) => Container(
                 width: MediaQuery.of(context).size.width * 0.3,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -55,7 +51,7 @@ class MediaCard extends StatelessWidget {
                   ),
                 ),
                 child: Stack(
-                  children: [
+                  children: <Widget>[
                     Positioned.fill(
                       child: InkWell(
                         customBorder: RoundedRectangleBorder(
@@ -63,9 +59,9 @@ class MediaCard extends StatelessWidget {
                         ),
                         onTap: onTap,
                         child: Column(
-                          children: [
+                          children: <Widget>[
                             Row(
-                              children: [
+                              children: <Widget>[
                                 const Spacer(),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -81,7 +77,7 @@ class MediaCard extends StatelessWidget {
                                     color: Theme.of(context).primaryColor,
                                   ),
                                   child: Text(
-                                    '$voteAverage',
+                                    "$voteAverage",
                                     style: Theme.of(context).textTheme.displaySmall,
                                   ),
                                 ),
@@ -97,16 +93,16 @@ class MediaCard extends StatelessWidget {
                         top: 5,
                         left: 5,
                         child: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'remove') {
+                          onSelected: (String action) {
+                            if (action == "remove") {
                               onRemove!();
                             }
                           },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'remove',
+                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                              value: "remove",
                               child: Text(
-                                'Remove',
+                                "Remove",
                                 style: Theme.of(context).textTheme.displaySmall,
                               ),
                             ),
@@ -127,10 +123,8 @@ class MediaCard extends StatelessWidget {
                       ),
                   ],
                 ),
-              );
-            },
-            errorWidget: (context, url, error) {
-              return Container(
+              ),
+            errorWidget: (BuildContext context, String url, Object error) => Container(
                 width: MediaQuery.of(context).size.width * 0.3,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -139,10 +133,12 @@ class MediaCard extends StatelessWidget {
                 ),
                 child: const Align(
                   alignment: Alignment.center,
-                  child: Icon(Icons.error, color: Colors.white54),
+                  child: Icon(
+                    Icons.error,
+                    color: Colors.white54,
+                  ),
                 ),
-              );
-            },
+              ),
           ),
         ),
         Container(
@@ -162,13 +158,9 @@ class MediaCard extends StatelessWidget {
             year,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .displaySmall!
-                .copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
           ),
         ),
       ],
     );
-  }
 }

@@ -1,229 +1,190 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import "package:firebase_auth/firebase_auth.dart";
+import "package:flutter/material.dart";
+import "package:font_awesome_flutter/font_awesome_flutter.dart";
+import "package:google_sign_in/google_sign_in.dart";
+import "package:semo/components/snack_bar.dart";
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/fragments_screen.dart';
-import 'package:semo/components/spinner.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
-import 'package:video_player/video_player.dart';
+import "package:semo/screens/base_screen.dart";
+import "package:semo/screens/fragments_screen.dart";
+import "package:video_player/video_player.dart";
 
-class LandingScreen extends StatefulWidget {
+class LandingScreen extends BaseScreen {
+  const LandingScreen({super.key}) : super(shouldVerifySession: false);
+
   @override
-  _LandingScreenState createState() => _LandingScreenState();
+  BaseScreenState<LandingScreen> createState() => _LandingScreenState();
 }
 
-class _LandingScreenState extends State<LandingScreen> {
-  VideoPlayerController? _controller;
-  Spinner? _spinner;
+class _LandingScreenState extends BaseScreenState<LandingScreen> {
+  final VideoPlayerController _videoController = VideoPlayerController.asset(Assets.videos.coverPortrait);
 
-  initializeVideo() {
-    _controller = VideoPlayerController.asset(Assets.videos.coverPortrait);
-    _controller!.initialize().then((_) {
-      _controller!.play();
-      _controller!.setLooping(true);
-    });
+  @override
+  String get screenName => "Landing";
+
+  Future<void> _initPlayback() async {
+    await _videoController.initialize();
+    await _videoController.play();
+    await _videoController.setLooping(true);
   }
 
-  signInWithGoogle() async {
-    _spinner!.show();
+  Future<void> _authenticateWithGoogle() async {
+    await spinner.show();
 
-    final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-    final credential = GoogleAuthProvider.credential(idToken: googleAuth?.idToken);
+    final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
+    final GoogleSignInAuthentication auth = user.authentication;
+    final OAuthCredential credential = GoogleAuthProvider.credential(idToken: auth.idToken);
 
     try {
       await FirebaseAuth.instance.signInWithCredential(credential);
-
-      _spinner!.dismiss();
-
-      navigate(destination: FragmentsScreen());
-    } catch (e) {
-      print(e);
-
-      _spinner!.dismiss();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to authenticate',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
+      await navigate(
+        const FragmentsScreen(),
+        replace: true,
       );
+    } catch (e, s) {
+      logger.e("Failed to authenticate", error: e, stackTrace: s);
+      if (mounted) {
+        showSnackBar(context, "An error occurred.");
+      }
     }
-  }
 
-  navigate({required Widget destination}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-
-    await Navigator.pushReplacement(
-      context,
-      pageTransition,
-    );
+    spinner.dismiss();
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    initializeVideo();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _spinner = Spinner(context);
-      await FirebaseAnalytics.instance.logScreenView(screenName: 'Landing');
-      await GoogleSignIn.instance.initialize();
-    });
+  Future<void> initializeScreen() async {
+    await _initPlayback();
+    await GoogleSignIn.instance.initialize();
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    if (_controller != null) {
-      _controller!.pause();
-      _controller!.dispose();
-      _controller = null;
-    }
+  void handleDispose() {
+    _videoController.pause();
+    _videoController.dispose();
   }
 
-  Widget BackgroundTint() {
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .5),
-    );
-  }
-
-  Widget ContinueWithGoogle() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      child: ElevatedButton(
-        child: Container(
-          width: double.infinity,
-          child: Stack(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.google,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ],
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  right: 16,
-                ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Spacer(),
-                      Text(
-                        'Continue with Google',
-                        style: Theme.of(context).textTheme.displayMedium,
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+  Widget _buildContinueWithGoogleButton() => Container(
+    width: double.infinity,
+    height: 60,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).primaryColor,
+        side: const BorderSide(
+          width: 3,
+          color: Colors.white,
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
-          side: BorderSide(
-            width: 3,
-            color: Colors.white,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
         ),
-        onPressed: () {
-          signInWithGoogle();
-        },
       ),
-    );
-  }
-
-  Widget Content() {
-    return Column(
-      children: [
-        Spacer(),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            horizontal: 24,
-          ),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(20),
+      onPressed: () async {
+        await _authenticateWithGoogle();
+      },
+      child: Container(
+        width: double.infinity,
+        child: Stack(
+          children: <Widget>[
+            const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                FaIcon(
+                  FontAwesomeIcons.google,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
             ),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 36),
-                child: Container(
-                  width: double.infinity,
-                  child: Text(
-                    'Welcome!',
-                    style: Theme.of(context).textTheme.titleLarge,
-                    textAlign: TextAlign.left,
-                  ),
-                ),
+            const Padding(
+              padding: EdgeInsets.only(
+                right: 16,
               ),
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 20),
-                child: Container(
-                  width: double.infinity,
-                  child: Text(
-                    'Discover a vast library of entertainment, from blockbuster hits to indie gems, all tailored to your tastes. Enjoy unlimited streaming on any device, create your personalized watchlist, and get ready for an unparalleled viewing experience.',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left,
-                  ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    const Spacer(),
+                    Text(
+                      "Continue with Google",
+                      style: Theme.of(context).textTheme.displayMedium,
+                    ),
+                    const Spacer(),
+                  ],
                 ),
-              ),
-              SafeArea(
-                top: false,
-                left: false,
-                right: false,
-                bottom: true,
-                child: Container(
-                  margin: EdgeInsets.only(
-                    bottom: 18,
-                  ),
-                  child: ContinueWithGoogle(),
-                ),
-              ),
-            ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildContent() => Column(
+    children: <Widget>[
+      const Spacer(),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(20),
           ),
         ),
-      ],
-    );
-  }
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(top: 36),
+              child: Container(
+                width: double.infinity,
+                child: Text(
+                  "Welcome!",
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 20),
+              child: Container(
+                width: double.infinity,
+                child: Text(
+                  "Discover a vast library of entertainment, from blockbuster hits to indie gems, all tailored to your tastes. Enjoy unlimited streaming on any device, create your personalized watchlist, and get ready for an unparalleled viewing experience.",
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              left: false,
+              right: false,
+              bottom: true,
+              child: Container(
+                margin: const EdgeInsets.only(
+                  bottom: 18,
+                ),
+                child: _buildContinueWithGoogleButton(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _controller != null ? Stack(
-        children: [
-          VideoPlayer(_controller!),
-          BackgroundTint(),
-          Content(),
-        ],
-      ) : Container(),
-    );
-  }
+  Widget buildContent(BuildContext context) => Scaffold(
+    body: Stack(
+      children: <Widget>[
+        VideoPlayer(_videoController),
+        Container(
+          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .5),
+        ),
+        _buildContent(),
+      ],
+    ),
+  );
 }

@@ -28,7 +28,7 @@ class FragmentsScreen extends BaseScreen {
 
 class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with TickerProviderStateMixin {
   int _selectedPageIndex = 0;
-  List<FragmentScreen> fragmentScreens = <FragmentScreen>[];
+  List<FragmentScreen> _fragmentScreens = <FragmentScreen>[];
   late TabController _tabController;
 
   @override
@@ -36,7 +36,7 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
 
   void _initFragments() {
     setState(() {
-      fragmentScreens = <FragmentScreen>[
+      _fragmentScreens = <FragmentScreen>[
         const FragmentScreen(
           icon: Icons.movie,
           title: "Movies",
@@ -93,10 +93,10 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       selected: _selectedPageIndex == index,
-      leading: Icon(fragmentScreens[index].icon),
+      leading: Icon(_fragmentScreens[index].icon),
       title: Container(
         padding: _selectedPageIndex == index ? const EdgeInsets.symmetric(vertical: 16) : EdgeInsets.zero,
-        child: Text(fragmentScreens[index].title),
+        child: Text(_fragmentScreens[index].title),
       ),
       onTap: () {
         setState(() => _selectedPageIndex = index);
@@ -106,14 +106,14 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
 
   @override
   Widget buildContent(BuildContext context) {
-    if (fragmentScreens.isEmpty) {
+    if (_fragmentScreens.isEmpty) {
      return const Scaffold();
     }
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: Text(fragmentScreens[_selectedPageIndex].title),
+        title: Text(_fragmentScreens[_selectedPageIndex].title),
         leading: Builder(
           builder: (BuildContext context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -142,13 +142,13 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
             onPressed: () {
               NavigationHelper.navigate(
                 context,
-                SearchScreen(mediaType: fragmentScreens[_selectedPageIndex].mediaType),
+                SearchScreen(mediaType: _fragmentScreens[_selectedPageIndex].mediaType),
               );
             },
           ) : Container(),
         ],
       ),
-      body: fragmentScreens[_selectedPageIndex].widget,
+      body: _fragmentScreens[_selectedPageIndex].widget,
       drawer: SafeArea(
         top: true,
         left: true,
@@ -172,7 +172,7 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Divider(color: Theme.of(context).cardColor),
               ),
-              for (final (int index, _) in fragmentScreens.indexed) _buildNavigationTile(index),
+              for (final (int index, _) in _fragmentScreens.indexed) _buildNavigationTile(index),
             ],
           ),
         ),

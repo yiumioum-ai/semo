@@ -1,6 +1,6 @@
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
-import "package:semo/models/tv_show.dart";
+import "package:semo/models/episode.dart";
 import "package:semo/utils/urls.dart";
 
 class EpisodeCard extends StatelessWidget {

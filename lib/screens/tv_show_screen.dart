@@ -10,6 +10,8 @@ import 'package:semo/components/media_info.dart';
 import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
 import 'package:semo/components/season_selector.dart';
+import "package:semo/models/episode.dart";
+import "package:semo/models/season.dart";
 import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/person_media_screen.dart';
 import 'package:semo/screens/player_screen.dart';

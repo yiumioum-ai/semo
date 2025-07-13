@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:semo/models/tv_show.dart";
+import "package:semo/models/season.dart";
 
 class SeasonSelector extends StatelessWidget {
   const SeasonSelector({

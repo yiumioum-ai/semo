@@ -2,6 +2,7 @@ import "dart:math";
 
 import "package:flutter/foundation.dart";
 import "package:logger/logger.dart";
+import "package:semo/models/episode.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/streaming_server.dart";
 import "package:semo/models/media_stream.dart";

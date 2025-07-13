@@ -143,18 +143,6 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
     }
   }
 
-  void showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: Theme.of(context).textTheme.displayMedium,
-        ),
-        backgroundColor: Theme.of(context).cardColor,
-      ),
-    );
-  }
-
   void _verifyAuthSession() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
       if (user == null) {

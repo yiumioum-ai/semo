@@ -1,36 +1,33 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../utils/urls.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:semo/components/snack_bar.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:semo/utils/urls.dart";
 
 class MediaPoster extends StatelessWidget {
-  final String backdropPath;
-  final String? trailerUrl;
-  final String playTrailerText;
-
   const MediaPoster({
     super.key,
     required this.backdropPath,
     this.trailerUrl,
-    this.playTrailerText = 'Play trailer',
+    this.playTrailerText = "Play trailer",
   });
 
+  final String backdropPath;
+  final String? trailerUrl;
+  final String playTrailerText;
+
   @override
-  Widget build(BuildContext context) {
-    return CachedNetworkImage(
+  Widget build(BuildContext context) => CachedNetworkImage(
       imageUrl: Urls.getBestImageUrl(context) + backdropPath,
-      placeholder: (context, url) {
-        return Container(
+      placeholder: (BuildContext context, String url) => Container(
           width: double.infinity,
           height: MediaQuery.of(context).size.width * 0.4,
           child: const Align(
             alignment: Alignment.center,
             child: CircularProgressIndicator(),
           ),
-        );
-      },
-      imageBuilder: (context, image) {
-        return Container(
+        ),
+      imageBuilder: (BuildContext context, ImageProvider image) => Container(
           width: double.infinity,
           height: MediaQuery.of(context).size.height * 0.25,
           decoration: BoxDecoration(
@@ -44,19 +41,23 @@ class MediaPoster extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: Theme.of(context).primaryColor,
                   child: IconButton(
                     icon: const Icon(Icons.play_arrow),
                     color: Colors.white,
-                    onPressed: trailerUrl != null ? () async {
-                      await launchUrl(
-                        Uri.parse(trailerUrl!),
-                        mode: LaunchMode.externalNonBrowserApplication,
-                      );
-                    } : null,
+                    onPressed: () async {
+                      if (trailerUrl != null) {
+                        await launchUrl(
+                          Uri.parse(trailerUrl!),
+                          mode: LaunchMode.externalNonBrowserApplication,
+                        );
+                      } else {
+                        showSnackBar(context, "An error occurred.");
+                      }
+                    },
                   ),
                 ),
                 Container(
@@ -69,9 +70,7 @@ class MediaPoster extends StatelessWidget {
               ],
             ),
           ),
-        );
-      },
-      errorWidget: (context, url, error) => const Icon(Icons.error),
+        ),
+      errorWidget: (BuildContext context, String url, Object error) => const Icon(Icons.error),
     );
-  }
 }

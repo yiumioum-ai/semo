@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:semo/components/media_card.dart";
+import "package:semo/components/snack_bar.dart";
 import "package:semo/components/vertical_media_list.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/tv_show.dart";
@@ -58,7 +59,9 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
       setState(() => _favorites = favorites);
     } catch (_) {
-      showSnackBar("An error occurred.");
+      if (mounted) {
+        showSnackBar(context, "An error occurred.");
+      }
     }
 
     setState(() => _isLoading = false);
@@ -78,7 +81,9 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
       favorites.removeWhere((media) => media.id == id);
       setState(() => _favorites = favorites);
     } catch (_) {
-      showSnackBar("An error occurred.");
+      if (mounted) {
+        showSnackBar(context, "An error occurred.");
+      }
     }
   }
 

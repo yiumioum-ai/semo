@@ -1,5 +1,5 @@
 class Server {
-  Server({
+  const Server({
     required this.name,
     required this.extractor,
   });

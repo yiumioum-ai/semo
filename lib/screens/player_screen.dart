@@ -184,12 +184,12 @@ class _PlayerScreenState extends State<PlayerScreen> with TickerProviderStateMix
     local.SubtitleStyle localSubtitlesStyle = await _preferences.getSubtitlesStyle();
     SubtitleStyle subtitleStyle = SubtitleStyle(
       fontSize: localSubtitlesStyle.fontSize,
-      textColor: local.SubtitleStyle.colors[localSubtitlesStyle.color]!,
+      textColor: local.SubtitleStyle.getColors()[localSubtitlesStyle.color]!,
       hasBorder: localSubtitlesStyle.hasBorder,
       borderStyle: SubtitleBorderStyle(
         strokeWidth: localSubtitlesStyle.borderStyle.strokeWidth,
         style: localSubtitlesStyle.borderStyle.style,
-        color: local.SubtitleStyle.colors[localSubtitlesStyle.borderStyle.color]!,
+        color: local.SubtitleStyle.getColors()[localSubtitlesStyle.borderStyle.color]!,
       ),
     );
     setState(() => _subtitleStyle = subtitleStyle);

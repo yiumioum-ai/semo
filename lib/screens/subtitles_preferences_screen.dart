@@ -69,7 +69,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
     Paint foreground  = Paint()
       ..style = _subtitleStyle!.borderStyle.style
       ..strokeWidth = _subtitleStyle!.borderStyle.strokeWidth
-      ..color = SubtitleStyle.colors[_subtitleStyle!.borderStyle.color]!;
+      ..color = SubtitleStyle.getColors()[_subtitleStyle!.borderStyle.color]!;
 
     return Container(
       width: double.infinity,
@@ -97,7 +97,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: _subtitleStyle!.fontSize,
-                color: SubtitleStyle.colors[_subtitleStyle!.color],
+                color: SubtitleStyle.getColors()[_subtitleStyle!.color],
               ),
             ),
           ],
@@ -164,7 +164,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                       await _preferences.setSubtitlesStyle(_subtitleStyle!);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.fontSizes.map<DropdownMenuEntry<double>>((double size) {
+                  dropdownMenuEntries: SubtitleStyle.getFontSizes().map<DropdownMenuEntry<double>>((double size) {
                     return DropdownMenuEntry<double>(
                       value: size,
                       label: '${size}'.replaceAll('.0', ''),
@@ -190,7 +190,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                       await _preferences.setSubtitlesStyle(_subtitleStyle!);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.colors.keys.map<DropdownMenuEntry<String>>((String color) {
+                  dropdownMenuEntries: SubtitleStyle.getColors().keys.map<DropdownMenuEntry<String>>((String color) {
                     return DropdownMenuEntry<String>(
                       value: color,
                       label: color,
@@ -237,7 +237,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                       await _preferences.setSubtitlesStyle(_subtitleStyle!);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.borderWidths.map<DropdownMenuEntry<double>>((double size) {
+                  dropdownMenuEntries: SubtitleStyle.getBorderWidths().map<DropdownMenuEntry<double>>((double size) {
                     return DropdownMenuEntry<double>(
                       value: size,
                       label: '${size}'.replaceAll('.0', ''),
@@ -264,7 +264,7 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                       await _preferences.setSubtitlesStyle(_subtitleStyle!);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.colors.keys.map<DropdownMenuEntry<String>>((String color) {
+                  dropdownMenuEntries: SubtitleStyle.getColors().keys.map<DropdownMenuEntry<String>>((String color) {
                     return DropdownMenuEntry<String>(
                       value: color,
                       label: color,

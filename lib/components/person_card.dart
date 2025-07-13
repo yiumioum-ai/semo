@@ -1,27 +1,25 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import '../models/person.dart';
-import '../utils/urls.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:flutter/material.dart";
+import "package:semo/models/person.dart";
+import "package:semo/utils/urls.dart";
 
 class PersonCard extends StatelessWidget {
-  final Person person;
-  final VoidCallback? onTap;
-
   const PersonCard({
     super.key,
     required this.person,
     this.onTap,
   });
 
+  final Person person;
+  final VoidCallback? onTap;
+
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  Widget build(BuildContext context) => Column(
+      children: <Widget>[
         Expanded(
           child: CachedNetworkImage(
-            imageUrl: '${Urls.image300}${person.profilePath}',
-            placeholder: (context, url) {
-              return Container(
+            imageUrl: "${Urls.image300}${person.profilePath}",
+            placeholder: (BuildContext context, String url) => Container(
                 width: MediaQuery.of(context).size.width * 0.4,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -32,10 +30,8 @@ class PersonCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: CircularProgressIndicator(),
                 ),
-              );
-            },
-            imageBuilder: (context, image) {
-              return InkWell(
+              ),
+            imageBuilder: (BuildContext context, ImageProvider image) => InkWell(
                 customBorder: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -51,10 +47,8 @@ class PersonCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              );
-            },
-            errorWidget: (context, url, error) {
-              return Container(
+              ),
+            errorWidget: (BuildContext context, String url, Object error) => Container(
                 width: MediaQuery.of(context).size.width * 0.4,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -63,10 +57,12 @@ class PersonCard extends StatelessWidget {
                 ),
                 child: const Align(
                   alignment: Alignment.center,
-                  child: Icon(Icons.error, color: Colors.white54),
+                  child: Icon(
+                    Icons.error,
+                    color: Colors.white54,
+                  ),
                 ),
-              );
-            },
+              ),
           ),
         ),
         Container(
@@ -82,5 +78,4 @@ class PersonCard extends StatelessWidget {
         ),
       ],
     );
-  }
 }

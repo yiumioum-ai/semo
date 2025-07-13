@@ -3,7 +3,7 @@ import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 
 class HorizontalMediaList<T> extends StatelessWidget {
   const HorizontalMediaList({
-    super. key,
+    super.key,
     required this.title,
     required this.source,
     required this.pagingController,

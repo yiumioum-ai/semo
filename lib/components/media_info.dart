@@ -1,23 +1,23 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class MediaInfo extends StatelessWidget {
+
+  const MediaInfo({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.overview,
+    this.progressIndicator,
+  });
+
   final String title;
   final String subtitle;
   final String? overview;
   final Widget? progressIndicator;
 
-  const MediaInfo({
-    Key? key,
-    required this.title,
-    required this.subtitle,
-    this.overview,
-    this.progressIndicator,
-  }) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  Widget build(BuildContext context) => Column(
+      children: <Widget>[
         Container(
           width: double.infinity,
           child: Text(
@@ -30,7 +30,9 @@ class MediaInfo extends StatelessWidget {
           width: double.infinity,
           child: Text(
             subtitle,
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              color: Colors.white54,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -41,11 +43,12 @@ class MediaInfo extends StatelessWidget {
             margin: const EdgeInsets.only(top: 20),
             child: Text(
               overview!,
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                color: Colors.white54,
+              ),
               textAlign: TextAlign.justify,
             ),
           ),
       ],
     );
-  }
 }

@@ -52,7 +52,16 @@ class Spinner {
 
   final bool useRootNavigator;
 
+  // Track if spinner is currently showing
+  bool _isShowing = false;
+
   void show() {
+    if (_isShowing) {
+      return;
+    }
+
+    _isShowing = true;
+
     showGeneralDialog(
       context: context,
       useRootNavigator: useRootNavigator,
@@ -93,6 +102,7 @@ class Spinner {
           ),
         ),
     ).whenComplete(() {
+      _isShowing = false;
       if (duration != null) {
         Timer(duration!, () {
           dismiss();
@@ -104,6 +114,9 @@ class Spinner {
   }
 
   void dismiss() {
-    Navigator.of(context, rootNavigator: useRootNavigator).pop();
+    if (_isShowing) {
+      _isShowing = false;
+      Navigator.of(context, rootNavigator: useRootNavigator).pop();
+    }
   }
 }

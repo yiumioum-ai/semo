@@ -13,7 +13,7 @@ class PopupMenuContainer<T> extends StatefulWidget {
   final void Function(T?) onItemSelected;
 
   @override
-  State<StatefulWidget> createState() => PopupMenuContainerState<T>();
+  State<PopupMenuContainer<T>> createState() => PopupMenuContainerState<T>();
 }
 
 class PopupMenuContainerState<T> extends State<PopupMenuContainer<T>>{

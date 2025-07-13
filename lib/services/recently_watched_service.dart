@@ -52,7 +52,7 @@ class RecentlyWatchedService {
         .map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
   }
 
-  Future<int?> getMovie(int movieId) async {
+  Future<int?> getMovieProgress(int movieId) async {
     final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
 
     try {

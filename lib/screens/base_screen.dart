@@ -140,16 +140,16 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   }
 
   /// Navigate to a screen
-  Future<void> navigate(Widget destination, {bool replace = false}) async {
+  Future<dynamic> navigate(Widget destination, {bool replace = false}) async {
     final SwipeablePageRoute<dynamic> pageTransition = SwipeablePageRoute<dynamic>(
       canOnlySwipeFromEdge: true,
       builder: (BuildContext context) => destination,
     );
 
     if (replace) {
-      await Navigator.pushReplacement(context, pageTransition);
+      return Navigator.pushReplacement(context, pageTransition);
     } else {
-      await Navigator.push(context, pageTransition);
+      return Navigator.push(context, pageTransition);
     }
   }
 

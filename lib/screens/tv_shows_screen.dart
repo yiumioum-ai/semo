@@ -397,7 +397,6 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
                   _buildRecentlyWatchedSection(),
                   HorizontalMediaList<TvShow>(
                     title: 'Popular',
-                    source: Urls.popularTvShows,
                     pagingController: _popularController,
                     itemBuilder: (c, tv, i) => Padding(
                       padding: EdgeInsets.only(
@@ -422,7 +421,6 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
                   ),
                   HorizontalMediaList<TvShow>(
                     title: 'Top Rated',
-                    source: Urls.topRatedTvShows,
                     pagingController: _topRatedController,
                     itemBuilder: (c, tv, i) => Padding(
                       padding: EdgeInsets.only(

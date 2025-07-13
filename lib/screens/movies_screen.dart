@@ -407,7 +407,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                   _buildRecentlyWatchedSection(),
                   HorizontalMediaList<Movie>(
                     title: 'Trending',
-                    source: Urls.trendingMovies,
                     pagingController: _trendingController,
                     itemBuilder: (c, m, i) => Padding(
                       padding: EdgeInsets.only(
@@ -432,7 +431,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                   ),
                   HorizontalMediaList<Movie>(
                     title: 'Popular',
-                    source: Urls.popularMovies,
                     pagingController: _popularController,
                     itemBuilder: (c, m, i) => Padding(
                       padding: EdgeInsets.only(
@@ -457,7 +455,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                   ),
                   HorizontalMediaList<Movie>(
                     title: 'Top Rated',
-                    source: Urls.topRatedMovies,
                     pagingController: _topRatedController,
                     itemBuilder: (c, m, i) => Padding(
                       padding: EdgeInsets.only(

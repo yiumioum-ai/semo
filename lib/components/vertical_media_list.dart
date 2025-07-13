@@ -1,11 +1,12 @@
 import "package:flutter/material.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
+import "package:semo/components/helpers.dart";
 
 class VerticalMediaList<T> extends StatelessWidget {
   const VerticalMediaList({
     super.key,
     this.pagingController,
-    this.itemBuilder,
+    required this.itemBuilder,
     this.items,
     this.crossAxisCount = 3,
     this.childAspectRatio = 0.5,
@@ -17,12 +18,12 @@ class VerticalMediaList<T> extends StatelessWidget {
     this.isLoading = false,
     this.emptyStateMessage,
     this.errorMessage,
-  }) : assert((pagingController != null && itemBuilder != null) || (items != null && itemBuilder != null),
-  "Either provide pagingController with itemBuilder for pagination, or items with itemBuilder for simple grid",
+  }) : assert((pagingController != null) || (items != null),
+  "Either provide pagingController for paginated grid, or items for simple grid",
   );
 
   final PagingController<int, T>? pagingController;
-  final Widget Function(BuildContext, T, int)? itemBuilder;
+  final Widget Function(BuildContext, T, int) itemBuilder;
   final List<T>? items;
   final int crossAxisCount;
   final double childAspectRatio;
@@ -57,22 +58,22 @@ class VerticalMediaList<T> extends StatelessWidget {
           physics: physics,
           padding: padding,
           builderDelegate: PagedChildBuilderDelegate<T>(
-            itemBuilder: itemBuilder!,
-            firstPageErrorIndicatorBuilder: (BuildContext context) => _buildErrorIndicator(
+            itemBuilder: itemBuilder,
+            firstPageErrorIndicatorBuilder: (BuildContext context) => buildErrorIndicator(
               context,
               errorMessage ?? "Failed to load items",
                   () => pagingController?.refresh(),
               isFirstPage: true,
             ),
-            newPageErrorIndicatorBuilder: (BuildContext context) => _buildErrorIndicator(
+            newPageErrorIndicatorBuilder: (BuildContext context) => buildErrorIndicator(
               context,
               "Failed to load more items",
                   () => pagingController?.fetchNextPage(),
               isFirstPage: false,
             ),
-            firstPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(isFirstPage: true),
-            newPageProgressIndicatorBuilder: (BuildContext context) => _buildLoadingIndicator(),
-            noItemsFoundIndicatorBuilder: (BuildContext context) => _buildEmptyState(
+            firstPageProgressIndicatorBuilder: (BuildContext context) => buildLoadingIndicator(isFirstPage: true),
+            newPageProgressIndicatorBuilder: (BuildContext context) => buildLoadingIndicator(),
+            noItemsFoundIndicatorBuilder: (BuildContext context) => buildEmptyState(
               context,
               emptyStateMessage ?? "No items found",
             ),
@@ -90,11 +91,11 @@ class VerticalMediaList<T> extends StatelessWidget {
     // If items list is provided, use simple GridView.builder
     if (items != null) {
       if (isLoading) {
-        return _buildLoadingIndicator();
+        return buildLoadingIndicator();
       }
 
       if (items!.isEmpty) {
-        return _buildEmptyState(context, emptyStateMessage ?? "No items found");
+        return buildEmptyState(context, emptyStateMessage ?? "No items found");
       }
 
       return GridView.builder(
@@ -108,98 +109,11 @@ class VerticalMediaList<T> extends StatelessWidget {
           childAspectRatio: childAspectRatio,
         ),
         itemCount: items?.length,
-        itemBuilder: (BuildContext context, int index) => itemBuilder!(context, items![index], index),
+        itemBuilder: (BuildContext context, int index) => itemBuilder(context, items![index], index),
       );
     }
 
     // Fallback - should never reach here due to assertion
     return Container();
   }
-
-  Widget _buildErrorIndicator(BuildContext context, String message, VoidCallback onRetry, {required bool isFirstPage,}) {
-    if (isFirstPage) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Icon(
-                Icons.error_outline,
-                size: 80,
-                color: Colors.white54,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onRetry,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text("Retry"),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              message,
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(80, 36),
-              ),
-              child: const Text("Retry"),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildLoadingIndicator({bool isFirstPage = false}) => Center(
-    child: Padding(
-      padding: EdgeInsets.all(isFirstPage ? 32 : 16),
-      child: const CircularProgressIndicator(),
-    ),
-  );
-
-  Widget _buildEmptyState(BuildContext context, String message) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const Icon(
-            Icons.search_off,
-            size: 80,
-            color: Colors.white54,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    ),
-  );
 }

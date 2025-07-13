@@ -461,7 +461,6 @@ class _TvShowScreenState extends State<TvShowScreen> {
                       const SizedBox(height: 30),
                       HorizontalMediaList<TvShow>(
                         title: 'Recommendations',
-                        source: Urls.getTvShowRecommendations(_tvShow.id),
                         pagingController: _recommendationsController,
                         itemBuilder: (c, show, i) => Padding(
                           padding: EdgeInsets.only(
@@ -490,7 +489,6 @@ class _TvShowScreenState extends State<TvShowScreen> {
                       const SizedBox(height: 30),
                       HorizontalMediaList<TvShow>(
                         title: 'Similar',
-                        source: Urls.getTvShowSimilar(_tvShow.id),
                         pagingController: _similarController,
                         itemBuilder: (c, show, i) => Padding(
                           padding: EdgeInsets.only(

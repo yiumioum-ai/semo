@@ -1,7 +1,7 @@
 class Server {
   Server({
     required this.name,
-    this.extractor,
+    required this.extractor,
   });
 
   final String name;

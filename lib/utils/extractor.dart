@@ -22,7 +22,7 @@ class Extractor {
   Episode? episode;
 
   static List<Server> servers = <Server>[
-    Server(name: "Random"),
+    Server(name: "Random", extractor: null),
     Server(name: "AutoEmbed", extractor: AutoEmbed()),
     Server(name: "EmbedSu", extractor: EmbedSu()),
     Server(name: "KissKh", extractor: KissKh()),

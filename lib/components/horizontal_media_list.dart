@@ -35,7 +35,7 @@ class HorizontalMediaList<T> extends StatelessWidget {
   final String? errorMessage;
 
   Widget _buildListView(BuildContext context) {
-    // If pagingController is provided, use paginated grid
+    // If pagingController is provided, use paginated list
     if (pagingController != null) {
       return PagingListener<int, T>(
         controller: pagingController!,
@@ -71,8 +71,12 @@ class HorizontalMediaList<T> extends StatelessWidget {
       );
     }
 
-    // If items list is provided, use simple GridView.builder
+    // If items list is provided, use simple ListView.builder
     if (items != null) {
+      if (isLoading) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
       if (items!.isEmpty) {
         return buildEmptyState(context, emptyStateMessage ?? "No items found");
       }

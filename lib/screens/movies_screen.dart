@@ -34,6 +34,7 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
   int _currentNowPlayingIndex = 0;
   List<Movie> _recentlyWatched = <Movie>[];
   List<Genre> _genres = <Genre>[];
+  bool _isLoadingGenres = true;
   late final PagingController<int, Movie> _trendingController = PagingController<int, Movie>(
     getNextPageKey: (PagingState<int, Movie> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (int pageKey) async {
@@ -60,8 +61,9 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     await Future.wait(<Future<void>>[
       _loadNowPlaying(),
       _loadRecentlyWatched(),
-      _loadGenres(),
     ]);
+
+    unawaited(_loadGenres());
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -109,6 +111,8 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
         showSnackBar(context, "Failed to load genres");
       }
     }
+
+    setState(() => _isLoadingGenres = false);
   }
 
   Future<void> _removeFromRecentlyWatched(Movie movie) async {
@@ -216,20 +220,15 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     ),
   );
 
-  Widget _buildGenres() {
-    if (_genres.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(top: 30),
-      child: GenresList(
-        genres: _genres,
-        mediaType: MediaType.movies,
-        viewAllSource: Urls.discoverMovie,
-      ),
-    );
-  }
+  Widget _buildGenres() => Container(
+    margin: const EdgeInsets.only(top: 30),
+    child: GenresList(
+      isLoading: _isLoadingGenres,
+      genres: _genres,
+      mediaType: MediaType.movies,
+      viewAllSource: Urls.discoverMovie,
+    ),
+  );
 
   @override
   String get screenName => "Movies";

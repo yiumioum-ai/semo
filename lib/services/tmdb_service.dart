@@ -193,7 +193,16 @@ class TMDBService {
 
       if (response.statusCode == 200 && response.data.isNotEmpty) {
         final List<Map<String, dynamic>> data = (response.data["genres"] as List<dynamic>).cast<Map<String, dynamic>>();
-        return data.map((Map<String, dynamic> json) => Genre.fromJson(json)).toList();
+        List<Genre> genres = data.map((Map<String, dynamic> json) => Genre.fromJson(json)).toList();
+
+        for (Genre genre in genres) {
+          try {
+            String backdropPath = await getGenreBackdrop(mediaType, genre);
+            genre.backdropPath = backdropPath;
+          } catch (_) {}
+        }
+
+        return genres;
       }
 
       throw Exception("Failed to get genres");

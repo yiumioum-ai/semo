@@ -157,14 +157,11 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     }
 
     return CarouselSlider(
-      itemCount: _nowPlaying.length,
+      items: _nowPlaying,
       currentItemIndex: _currentNowPlayingIndex,
-      onItemChanged: (int index) {
-        setState(() => _currentNowPlayingIndex = index);
-      },
-      itemBackdropPath: _nowPlaying[_currentNowPlayingIndex].backdropPath,
-      itemTitle: _nowPlaying[_currentNowPlayingIndex].title,
-      itemOnTap: () => _navigateToMovie(_nowPlaying[_currentNowPlayingIndex]),
+      onItemChanged: (int index) => setState(() => _currentNowPlayingIndex = index),
+      onItemTap: (int index) => _navigateToMovie(_nowPlaying[index]),
+      mediaType: MediaType.movies,
     );
   }
 

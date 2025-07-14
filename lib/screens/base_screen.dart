@@ -207,7 +207,6 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
       return _buildNoInternetWidget();
     }
 
-    // Build the main content
     return buildContent(context);
   }
 }

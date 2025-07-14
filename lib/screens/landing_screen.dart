@@ -18,9 +18,6 @@ class LandingScreen extends BaseScreen {
 class _LandingScreenState extends BaseScreenState<LandingScreen> {
   final VideoPlayerController _videoController = VideoPlayerController.asset(Assets.videos.coverPortrait);
 
-  @override
-  String get screenName => "Landing";
-
   Future<void> _initPlayback() async {
     await _videoController.initialize();
     await _videoController.play();
@@ -48,18 +45,6 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
     }
 
     spinner.dismiss();
-  }
-
-  @override
-  Future<void> initializeScreen() async {
-    await _initPlayback();
-    await GoogleSignIn.instance.initialize();
-  }
-
-  @override
-  void handleDispose() {
-    _videoController.pause();
-    _videoController.dispose();
   }
 
   Widget _buildContinueWithGoogleButton() => Container(
@@ -174,6 +159,21 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
       ),
     ],
   );
+
+  @override
+  String get screenName => "Landing";
+
+  @override
+  Future<void> initializeScreen() async {
+    await _initPlayback();
+    await GoogleSignIn.instance.initialize();
+  }
+
+  @override
+  void handleDispose() {
+    _videoController.pause();
+    _videoController.dispose();
+  }
 
   @override
   Widget buildContent(BuildContext context) => Scaffold(

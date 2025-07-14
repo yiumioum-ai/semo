@@ -65,9 +65,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       return result.movies ?? <Movie>[];
     },
   );
-
-  @override
-  String get screenName => "Movie - ${widget.movie.title}";
   
   Future<void> _loadMovieDetails() async {
     try {
@@ -212,6 +209,9 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
 
     return "$mins ${mins == 1 ? "min" : "mins"}";
   }
+
+  @override
+  String get screenName => "Movie - ${widget.movie.title}";
 
   @override
   Future<void> initializeScreen() async {

@@ -31,9 +31,6 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
   List<FragmentScreen> _fragmentScreens = <FragmentScreen>[];
   late TabController _tabController;
 
-  @override
-  String get screenName => "Fragments";
-
   void _initFragments() {
     setState(() {
       _fragmentScreens = <FragmentScreen>[
@@ -69,17 +66,6 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
     });
   }
 
-  @override
-  Future<void> initializeScreen() async {
-    _selectedPageIndex = widget.initialPageIndex;
-    _tabController = TabController(
-      length: 2,
-      initialIndex: widget.initialFavoritesTabIndex,
-      vsync: this,
-    );
-    _initFragments();
-  }
-
   Widget _buildNavigationTile(int index) => Container(
     margin: const EdgeInsets.symmetric(
       horizontal: 18,
@@ -103,6 +89,20 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
         Navigator.pop(context);},
     ),
   );
+
+  @override
+  String get screenName => "Fragments";
+
+  @override
+  Future<void> initializeScreen() async {
+    _selectedPageIndex = widget.initialPageIndex;
+    _tabController = TabController(
+      length: 2,
+      initialIndex: widget.initialFavoritesTabIndex,
+      vsync: this,
+    );
+    _initFragments();
+  }
 
   @override
   Widget buildContent(BuildContext context) {

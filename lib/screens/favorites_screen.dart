@@ -30,9 +30,6 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
   final TMDBService _tmdbService = TMDBService();
   bool _isLoading = true;
 
-  @override
-  String get screenName => "Favorites";
-
   Future<void> _getFavorites() async {
     List<dynamic> favorites = <dynamic>[];
 
@@ -87,11 +84,6 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
     }
   }
 
-  @override
-  Future<void> initializeScreen() async {
-    await _getFavorites();
-  }
-
   //ignore: always_specify_types
   Widget _buildMediaCard(BuildContext context, var media, int index) {
     String posterPath;
@@ -141,6 +133,14 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
         onTap: onTap,
       ),
     );
+  }
+
+  @override
+  String get screenName => "Favorites";
+
+  @override
+  Future<void> initializeScreen() async {
+    await _getFavorites();
   }
 
   @override

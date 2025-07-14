@@ -40,14 +40,14 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
       if (widget.mediaType == MediaType.movies) {
         for (int id in favoritesIds) {
-          Movie? movie = await _tmdbService.getMovieDetails(id);
+          Movie? movie = await _tmdbService.getMovie(id);
           if (movie != null) {
             favorites.add(movie);
           }
         }
       } else if (widget.mediaType == MediaType.tvShows) {
         for (int id in favoritesIds) {
-          TvShow? tvShow = await _tmdbService.getTvShowDetails(id);
+          TvShow? tvShow = await _tmdbService.getTvShow(id);
           if (tvShow != null) {
             favorites.add(tvShow);
           }

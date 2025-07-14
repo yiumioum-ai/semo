@@ -69,10 +69,10 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
   Future<void> _loadMovieDetails() async {
     try {
       await Future.wait(<Future<void>>[
+        _getCompleteMovieDetails(),
         _checkIfFavorite(),
         _checkIfRecentlyWatched(),
         _loadTrailer(),
-        _loadDuration(),
         _loadCast(),
       ]);
     } catch (_) {
@@ -82,6 +82,13 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     }
 
     setState(() => _isLoading = false);
+  }
+
+  Future<void> _getCompleteMovieDetails() async {
+    final Movie? movie = await _tmdbService.getMovie(_movie.id);
+    if (movie != null) {
+      setState(() => _movie = movie);
+    }
   }
 
   Future<void> _checkIfFavorite() async {
@@ -103,13 +110,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     final String? url = await _tmdbService.getTrailerUrl(MediaType.movies, _movie.id);
     if (url != null) {
       setState(() => _movie.trailerUrl = url);
-    }
-  }
-
-  Future<void> _loadDuration() async {
-    final int? duration = await _tmdbService.getMovieDuration(_movie.id);
-    if (duration != null) {
-      setState(() => _movie.duration = duration);
     }
   }
 
@@ -260,9 +260,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
                   children: <Widget>[
                     MediaInfo(
                       title: _movie.title,
-                      subtitle: _movie.duration != null
-                          ? "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration ?? 0))}"
-                          : _movie.releaseDate.split("-")[0],
+                      subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
                       overview: _movie.overview,
                     ),
                     const SizedBox(height: 20),

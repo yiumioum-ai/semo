@@ -18,7 +18,7 @@ class Movie {
     required this.video,
     required this.voteAverage,
     required this.voteCount,
-    this.duration,
+    required this.duration,
     this.creditsStart,
     this.isRecentlyWatched,
     this.watchedProgress,
@@ -27,23 +27,24 @@ class Movie {
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) => Movie(
-      adult: json["adult"] ?? false,
-      backdropPath: json["backdrop_path"] ?? "",
-      genreIds: json["genre_ids"] != null ? List<int>.from(json["genre_ids"]) : null,
-      //ignore: always_specify_types
-      genres: json["genres"] != null ? List<Genre>.from(json["genres"].map((json) => Genre.fromJson(json)).toList()) : null,
-      id: json["id"] ?? 0,
-      originalLanguage: json["original_language"] ?? "",
-      originalTitle: json["original_title"] ?? "",
-      overview: json["overview"] ?? "",
-      popularity: double.parse((json["popularity"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
-      posterPath: json["poster_path"] ?? "",
-      releaseDate: json["release_date"] ?? "",
-      title: json["title"] ?? "",
-      video: json["video"] ?? false,
-      voteAverage: double.parse((json["vote_average"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
-      voteCount: json["vote_count"] ?? 0,
-    );
+    adult: json["adult"] ?? false,
+    backdropPath: json["backdrop_path"] ?? "",
+    genreIds: json["genre_ids"] != null ? List<int>.from(json["genre_ids"]) : null,
+    //ignore: always_specify_types
+    genres: json["genres"] != null ? List<Genre>.from(json["genres"].map((json) => Genre.fromJson(json)).toList()) : null,
+    id: json["id"] ?? 0,
+    originalLanguage: json["original_language"] ?? "",
+    originalTitle: json["original_title"] ?? "",
+    overview: json["overview"] ?? "",
+    popularity: double.parse((json["popularity"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
+    posterPath: json["poster_path"] ?? "",
+    releaseDate: json["release_date"] ?? "",
+    title: json["title"] ?? "",
+    video: json["video"] ?? false,
+    voteAverage: double.parse((json["vote_average"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
+    voteCount: json["vote_count"] ?? 0,
+    duration: json["runtime"] ?? 0,
+  );
 
   final bool adult;
   final String backdropPath;
@@ -60,7 +61,7 @@ class Movie {
   final bool video;
   final double voteAverage;
   final int voteCount;
-  int? duration;
+  final int duration;
   Duration? creditsStart;
   bool? isRecentlyWatched;
   int? watchedProgress;

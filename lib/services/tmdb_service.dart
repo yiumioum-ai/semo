@@ -64,7 +64,7 @@ class TMDBService {
   );
   Future<List<Genre>> getMovieGenres() => _getGenres(MediaType.movies);
 
-  Future<Movie?> getMovieDetails(int id) async {
+  Future<Movie?> getMovie(int id) async {
     try {
       final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
 
@@ -75,22 +75,6 @@ class TMDBService {
       throw Exception("Failed to get movie details for ID: $id");
     } catch (e, s) {
       _logger.e("Error getting movie details for ID: $id", error: e, stackTrace: s);
-      rethrow;
-    }
-  }
-
-  Future<int?> getMovieDuration(int id) async {
-    try {
-      final Response<dynamic> response = await _dio.get(Urls.getMovieDetails(id));
-
-      if (response.statusCode == 200 && response.data.isNotEmpty) {
-        final Map<String, dynamic> details = response.data as Map<String, dynamic>;
-        return details["runtime"] as int?;
-      }
-
-      throw Exception("Failed to get movie duration for ID: $id");
-    } catch (e, s) {
-      _logger.e("Error getting movie duration for ID: $id", error: e, stackTrace: s);
       rethrow;
     }
   }
@@ -111,7 +95,7 @@ class TMDBService {
   );
   Future<List<Genre>> getTvShowGenres() => _getGenres(MediaType.tvShows);
 
-  Future<TvShow?> getTvShowDetails(int id) async {
+  Future<TvShow?> getTvShow(int id) async {
     try {
       final Response<dynamic> response = await _dio.get(Urls.getTvShowDetails(id));
 

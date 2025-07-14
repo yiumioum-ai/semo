@@ -5,6 +5,7 @@ import "package:semo/components/helpers.dart";
 class HorizontalMediaList<T> extends StatelessWidget {
   const HorizontalMediaList({
     super.key,
+    this.height,
     required this.title,
     this.items,
     this.pagingController,
@@ -20,6 +21,7 @@ class HorizontalMediaList<T> extends StatelessWidget {
   "Either provide pagingController for paginated list, or items for simple list",
   );
 
+  final double? height;
   final String title;
   final List<T>? items;
   final PagingController<int, T>? pagingController;
@@ -90,33 +92,30 @@ class HorizontalMediaList<T> extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    margin: const EdgeInsets.only(top: 30),
-    child: Column(
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const Spacer(),
-            if (onViewAllTap != null)
-              GestureDetector(
-                onTap: onViewAllTap,
-                child: Text(
-                  "View all",
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
-                ),
+  Widget build(BuildContext context) => Column(
+    children: <Widget>[
+      Row(
+        children: <Widget>[
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const Spacer(),
+          if (onViewAllTap != null)
+            GestureDetector(
+              onTap: onViewAllTap,
+              child: Text(
+                "View all",
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
               ),
-          ],
-        ),
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.25,
-          child: _buildListView(context),
-        ),
-      ],
-    ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      SizedBox(
+        height: height ?? MediaQuery.of(context).size.height * 0.25,
+        child: _buildListView(context),
+      ),
+    ],
   );
 }

@@ -6,6 +6,7 @@ import "package:internet_connection_checker_plus/internet_connection_checker_plu
 import "package:logger/logger.dart";
 import "package:semo/components/spinner.dart";
 import "package:semo/screens/landing_screen.dart";
+import "package:semo/utils/navigation_helper.dart";
 import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
@@ -140,18 +141,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   }
 
   /// Navigate to a screen
-  Future<dynamic> navigate(Widget destination, {bool replace = false}) async {
-    final SwipeablePageRoute<dynamic> pageTransition = SwipeablePageRoute<dynamic>(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-
-    if (replace) {
-      return Navigator.pushReplacement(context, pageTransition);
-    } else {
-      return Navigator.push(context, pageTransition);
-    }
-  }
+  Future<dynamic> navigate(Widget destination, {bool replace = false}) async => NavigationHelper.navigate(context, destination, replace: replace);
 
   void _verifyAuthSession() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {

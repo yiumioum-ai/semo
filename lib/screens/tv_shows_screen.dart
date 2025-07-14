@@ -130,7 +130,7 @@ class _TvShowsScreenState extends State<TvShowsScreen> {
 
     for (final id in recentlyWatchedIds) {
       try {
-        final tvShow = await _tmdbService.getTvShowDetails(id);
+        final tvShow = await _tmdbService.getTvShow(id);
         if (tvShow != null) {
           tvShows.add(tvShow);
         }

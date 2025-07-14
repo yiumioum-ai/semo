@@ -7,7 +7,6 @@ import "package:logger/logger.dart";
 import "package:semo/components/spinner.dart";
 import "package:semo/screens/landing_screen.dart";
 import "package:semo/utils/navigation_helper.dart";
-import "package:swipeable_page_route/swipeable_page_route.dart";
 
 abstract class BaseScreen extends StatefulWidget {
   const BaseScreen({

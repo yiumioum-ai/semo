@@ -203,6 +203,36 @@ class TMDBService {
     }
   }
 
+  Future<String> getGenreBackdrop(MediaType mediaType, Genre genre) async {
+    if (genre.backdropPath != null && genre.backdropPath!.isNotEmpty) {
+      return genre.backdropPath!;
+    }
+
+    bool isMovie = mediaType == MediaType.movies;
+
+    try {
+      final SearchResults result = isMovie
+          ? await discoverMovies(1, parameters: <String, String>{"with_genres": "${genre.id}"})
+          : await discoverTvShows(1, parameters: <String, String>{"with_genres": "${genre.id}"});
+
+      if ((isMovie ? result.movies : result.tvShows) != null && (isMovie ? result.movies!.isNotEmpty : result.tvShows!.isNotEmpty)) {
+        final Random random = Random();
+        final List<dynamic> items = isMovie ? result.movies! : result.tvShows!;
+        final int randomIndex = random.nextInt(items.length);
+        final String backdropPath = isMovie
+            ? (items[randomIndex] as Movie).backdropPath
+            : (items[randomIndex] as TvShow).backdropPath;
+
+        return backdropPath;
+      }
+
+      throw Exception("Error getting genre backdrop for name: ${genre.name}");
+    } catch (e, s) {
+      _logger.e("Error getting genre backdrop for name: ${genre.name}", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
   Future<SearchResults> getRecommendations(MediaType mediaType, int id, int page) {
     final String url = mediaType == MediaType.movies
         ? Urls.getMovieRecommendations(id)
@@ -266,32 +296,41 @@ class TMDBService {
     }
   }
 
-  Future<String> getGenreBackdrop(MediaType mediaType, Genre genre) async {
-    if (genre.backdropPath != null && genre.backdropPath!.isNotEmpty) {
-      return genre.backdropPath!;
-    }
-
-    bool isMovie = mediaType == MediaType.movies;
-
+  Future<List<Map<String, dynamic>>> _getPersonMedia(Person person, MediaType mediaType) async {
     try {
-      final SearchResults result = isMovie
-          ? await discoverMovies(1, parameters: <String, String>{"with_genres": "${genre.id}"})
-          : await discoverTvShows(1, parameters: <String, String>{"with_genres": "${genre.id}"});
+      final String url = mediaType == MediaType.movies
+          ? Urls.getPersonMovies(person.id)
+          : Urls.getPersonTvShows(person.id);
 
-      if ((isMovie ? result.movies : result.tvShows) != null && (isMovie ? result.movies!.isNotEmpty : result.tvShows!.isNotEmpty)) {
-        final Random random = Random();
-        final List<dynamic> items = isMovie ? result.movies! : result.tvShows!;
-        final int randomIndex = random.nextInt(items.length);
-        final String backdropPath = isMovie
-            ? (items[randomIndex] as Movie).backdropPath
-            : (items[randomIndex] as TvShow).backdropPath;
+      final Response<dynamic> response = await _dio.get(url);
 
-        return backdropPath;
+      if (response.statusCode == 200 && response.data.isNotEmpty) {
+        return (response.data["cast"] as List<dynamic>).cast<Map<String, dynamic>>();
       }
 
-      throw Exception("Error getting genre backdrop for name: ${genre.name}");
+      throw Exception("Error getting ${mediaType.toString()} for person ${person.id}");
     } catch (e, s) {
-      _logger.e("Error getting genre backdrop for name: ${genre.name}", error: e, stackTrace: s);
+      _logger.e("Error getting ${mediaType.toString()} for person ${person.id}", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<List<Movie>> getPersonMovies(Person person) async {
+    try {
+      final List<Map<String, dynamic>> moviesData = await _getPersonMedia(person, MediaType.movies);
+      return moviesData.map((Map<String, dynamic> json) => Movie.fromJson(json)).toList();
+    } catch (e, s) {
+      _logger.e("Error getting movies for cast for person ${person.id}", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<List<TvShow>> getPersonTvShows(Person person) async {
+    try {
+      final List<Map<String, dynamic>> tvShowsData = await _getPersonMedia(person, MediaType.tvShows);
+      return tvShowsData.map((Map<String, dynamic> json) => TvShow.fromJson(json)).toList();
+    } catch (e, s) {
+      _logger.e("Error getting TV shows for cast for person ${person.id}", error: e, stackTrace: s);
       rethrow;
     }
   }

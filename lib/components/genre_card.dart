@@ -81,21 +81,31 @@ class _GenreCardState extends State<GenreCard> {
     ),
   );
 
-  Widget _buildFallback(BuildContext context, {required Widget child}) => Container(
+  Widget _buildFallback(BuildContext context, {required Widget child}) => SizedBox(
     width: MediaQuery.of(context).size.width * 0.6,
-    decoration: BoxDecoration(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: AspectRatio(
-      aspectRatio: _cardAspectRatio,
-      child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    child: Column(
+      children: <Widget>[
+        Expanded(
+          child: AspectRatio(
+            aspectRatio: _cardAspectRatio,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                customBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onTap: widget.onTap,
+                child: Center(child: child),
+              ),
+            ),
+          ),
         ),
-        onTap: widget.onTap,
-        child: Center(child: child),
-      ),
+        const SizedBox(height: 10),
+        const Text(""),
+      ],
     ),
   );
 

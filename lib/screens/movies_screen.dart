@@ -6,7 +6,7 @@ import "package:semo/components/carousel_slider.dart";
 import "package:semo/components/genres_list.dart";
 import "package:semo/components/horizontal_media_list.dart";
 import "package:semo/components/media_card.dart";
-import "package:semo/components/paginated_horizontal_media_list.dart";
+import "package:semo/components/media_card_horizontal_list.dart";
 import "package:semo/components/snack_bar.dart";
 import "package:semo/models/genre.dart";
 import "package:semo/models/movie.dart";
@@ -199,7 +199,7 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     required String viewAllSource,
   }) => Padding(
     padding: const EdgeInsets.only(top: 30),
-    child: PaginatedHorizontalMediaList(
+    child: MediaCardHorizontalList(
       title: title,
       pagingController: controller,
       viewAllSource: viewAllSource,

@@ -8,8 +8,8 @@ import "package:semo/models/tv_show.dart";
 import "package:semo/screens/view_all_screen.dart";
 import "package:semo/utils/navigation_helper.dart";
 
-class PaginatedHorizontalMediaList extends StatelessWidget {
-  const PaginatedHorizontalMediaList({
+class MediaCardHorizontalList extends StatelessWidget {
+  const MediaCardHorizontalList({
     super.key,
     required this.title,
     required this.pagingController,

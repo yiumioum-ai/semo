@@ -12,7 +12,7 @@ import "package:semo/models/genre.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/search_results.dart";
 import "package:semo/screens/base_screen.dart";
-import "package:semo/components/streaming_platforms_list.dart";
+import "package:semo/components/streaming_platform_card_horizontal_list.dart";
 import "package:semo/screens/movie_screen.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/tmdb_service.dart";
@@ -207,7 +207,7 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
 
   Widget _buildStreamingPlatforms() => Container(
     margin: const EdgeInsets.only(top: 30),
-    child: StreamingPlatformsList(
+    child: StreamingPlatformCardHorizontalList(
       mediaType: MediaType.movies,
       viewAllSource: Urls.discoverMovie,
     ),

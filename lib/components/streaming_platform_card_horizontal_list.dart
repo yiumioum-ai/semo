@@ -7,8 +7,8 @@ import "package:semo/models/streaming_platform.dart";
 import "package:semo/screens/view_all_screen.dart";
 import "package:semo/utils/navigation_helper.dart";
 
-class StreamingPlatformsList extends StatelessWidget {
-  StreamingPlatformsList({
+class StreamingPlatformCardHorizontalList extends StatelessWidget {
+  StreamingPlatformCardHorizontalList({
     super.key,
     required this.mediaType,
     required this.viewAllSource,

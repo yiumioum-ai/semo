@@ -136,11 +136,12 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     try {
       final Extractor extractor = Extractor(movie: _movie);
       final MediaStream? stream = await extractor.getStream();
-      final List<File> subtitles = await _subtitleService.getSubtitles(_movie.id);
-
-      spinner.dismiss();
 
       if (stream != null && stream.url != null) {
+        final List<File> subtitles = await _subtitleService.getSubtitles(_movie.id);
+
+        spinner.dismiss();
+
         final dynamic result = await navigate(
           PlayerScreen(
             id: _movie.id,

@@ -227,14 +227,15 @@ class _TvShowScreenState extends State<TvShowScreen> {
     try {
       final extractor = Extractor(episode: episode);
       final stream = await extractor.getStream();
-      final subs = await _subtitleService.getSubtitles(
-        _tvShow.id,
-        seasonNumber: episode.season,
-        episodeNumber: episode.number,
-      );
-      _spinner.dismiss();
 
-      if (stream?.url != null) {
+      if (stream != null && stream.url != null) {
+        stream.subtitleFiles = await _subtitleService.getSubtitles(
+          _tvShow.id,
+          seasonNumber: episode.season,
+          episodeNumber: episode.number,
+        );
+        _spinner.dismiss();
+
         final result = await NavigationHelper.navigate(
           context,
           PlayerScreen(
@@ -243,7 +244,6 @@ class _TvShowScreenState extends State<TvShowScreen> {
             episodeId: episode.id,
             title: episode.name,
             stream: stream!,
-            subtitles: subs,
             mediaType: MediaType.tvShows,
           ),
         );

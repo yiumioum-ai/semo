@@ -3,7 +3,7 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:semo/components/carousel_slider.dart";
-import "package:semo/components/genres_list.dart";
+import "package:semo/components/genres_horizontal_list.dart";
 import "package:semo/components/horizontal_media_list.dart";
 import "package:semo/components/media_card.dart";
 import "package:semo/components/media_card_horizontal_list.dart";

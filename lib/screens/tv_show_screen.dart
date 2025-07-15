@@ -467,10 +467,8 @@ class _TvShowScreenState extends State<TvShowScreen> {
                             right: i < (_recommendationsController.items?.length ?? 0) - 1 ? 18 : 0,
                           ),
                           child: MediaCard(
-                            posterPath: show.posterPath,
-                            title: show.name,
-                            year: show.firstAirDate.split('-')[0],
-                            voteAverage: show.voteAverage,
+                            media: show,
+                            mediaType: MediaType.tvShows,
                             onTap: () => NavigationHelper.navigate(
                               context,
                               TvShowScreen(show),
@@ -495,10 +493,8 @@ class _TvShowScreenState extends State<TvShowScreen> {
                             right: i < (_similarController.items?.length ?? 0) - 1 ? 18 : 0,
                           ),
                           child: MediaCard(
-                            posterPath: show.posterPath,
-                            title: show.name,
-                            year: show.firstAirDate.split('-')[0],
-                            voteAverage: show.voteAverage,
+                            media: show,
+                            mediaType: MediaType.tvShows,
                             onTap: () => NavigationHelper.navigate(
                               context,
                               TvShowScreen(show),

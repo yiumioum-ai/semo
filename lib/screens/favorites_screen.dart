@@ -86,26 +86,12 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
 
   //ignore: always_specify_types
   Widget _buildMediaCard(BuildContext context, var media, int index) {
-    String posterPath;
-    String title;
-    String year;
-    double voteAverage;
     VoidCallback onTap;
 
     if (widget.mediaType == MediaType.movies) {
-      final Movie movie = media as Movie;
-      posterPath = movie.posterPath;
-      title = movie.title;
-      year = movie.releaseDate.split("-")[0];
-      voteAverage = movie.voteAverage;
-      onTap = () => navigate(MovieScreen(movie));
+      onTap = () => navigate(MovieScreen(media as Movie));
     } else {
-      final TvShow tvShow = media as TvShow;
-      posterPath = tvShow.posterPath;
-      title = tvShow.name;
-      year = tvShow.firstAirDate.split("-")[0];
-      voteAverage = tvShow.voteAverage;
-      onTap = () => navigate(TvShowScreen(tvShow));
+      onTap = () => navigate(TvShowScreen(media as TvShow));
     }
 
     return PopupMenuContainer<String>(
@@ -126,10 +112,8 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
         }
       },
       child: MediaCard(
-        posterPath: posterPath,
-        title: title,
-        year: year,
-        voteAverage: voteAverage,
+        media: media,
+        mediaType: widget.mediaType,
         onTap: onTap,
       ),
     );

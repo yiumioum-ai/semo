@@ -3,8 +3,6 @@ import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:semo/components/horizontal_media_list.dart";
 import "package:semo/components/media_card.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/models/movie.dart";
-import "package:semo/models/tv_show.dart";
 import "package:semo/screens/view_all_screen.dart";
 import "package:semo/utils/navigation_helper.dart";
 
@@ -30,36 +28,16 @@ class MediaCardHorizontalList extends StatelessWidget {
     title: title,
     pagingController: pagingController,
     //ignore: avoid_annotating_with_dynamic
-    itemBuilder: (BuildContext context, dynamic media, int index) {
-      late String mediaTitle;
-      late String releaseYear;
-
-      if (mediaType == MediaType.movies) {
-        Movie movie = media as Movie;
-        mediaTitle = movie.title;
-        releaseYear = movie.releaseDate.split("-")[0];
-      } else if (mediaType == MediaType.tvShows) {
-        TvShow tvShow = media as TvShow;
-        mediaTitle = tvShow.originalName;
-        releaseYear = tvShow.firstAirDate.split("-")[0];
-      }
-
-      final String posterPath = media.posterPath;
-      final double voteAverage = media.voteAverage;
-
-      return Padding(
-        padding: EdgeInsets.only(
-          right: index < (pagingController.items?.length ?? 0) - 1 ? 18 : 0,
-        ),
-        child: MediaCard(
-          posterPath: posterPath,
-          title: mediaTitle,
-          year: releaseYear,
-          voteAverage: voteAverage,
-          onTap: () => onTap(media),
-        ),
-      );
-    },
+    itemBuilder: (BuildContext context, dynamic media, int index) => Padding(
+      padding: EdgeInsets.only(
+        right: index < (pagingController.items?.length ?? 0) - 1 ? 18 : 0,
+      ),
+      child: MediaCard(
+        media: media,
+        mediaType: mediaType,
+        onTap: () => onTap(media),
+      ),
+    ),
     onViewAllTap: () => NavigationHelper.navigate(
       context,
       ViewAllScreen(

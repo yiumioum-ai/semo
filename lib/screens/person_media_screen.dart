@@ -65,43 +65,14 @@ class _PersonMediaScreenState extends BaseScreenState<PersonMediaScreen> with Ti
     setState(() => _mediaType = mediaType);
   }
 
-  //ignore: always_specify_types
-  Widget _buildMediaCard(var media) {
-    String posterPath;
-    String title;
-    String year;
-    double voteAverage;
-    VoidCallback onTap;
-
-    if (_mediaType == MediaType.movies) {
-      final Movie movie = media as Movie;
-      posterPath = movie.posterPath;
-      title = movie.title;
-      year = movie.releaseDate.split("-")[0];
-      voteAverage = movie.voteAverage;
-      onTap = () => navigate(MovieScreen(movie));
-    } else {
-      final TvShow tvShow = media as TvShow;
-      posterPath = tvShow.posterPath;
-      title = tvShow.name;
-      year = tvShow.firstAirDate.split("-")[0];
-      voteAverage = tvShow.voteAverage;
-      onTap = () => navigate(TvShowScreen(tvShow));
-    }
-
-    return MediaCard(
-      posterPath: posterPath,
-      title: title,
-      year: year,
-      voteAverage: voteAverage,
-      onTap: onTap,
-    );
-  }
-
   Widget _buildMoviesList() => VerticalMediaList<Movie>(
     isLoading: _isLoading,
     items: _movies,
-    itemBuilder: (BuildContext context, Movie movie, int index) => _buildMediaCard(movie),
+    itemBuilder: (BuildContext context, Movie movie, int index) => MediaCard(
+      media: movie,
+      mediaType: MediaType.movies,
+      onTap: () => navigate(MovieScreen(movie)),
+    ),
     crossAxisCount: 3,
     childAspectRatio: 0.5,
     crossAxisSpacing: 10,
@@ -115,7 +86,11 @@ class _PersonMediaScreenState extends BaseScreenState<PersonMediaScreen> with Ti
   Widget _buildTvShowsList() => VerticalMediaList<TvShow>(
     isLoading: _isLoading,
     items: _tvShows,
-    itemBuilder: (BuildContext context, TvShow tvShow, int index) => _buildMediaCard(tvShow),
+    itemBuilder: (BuildContext context, TvShow tvShow, int index) => MediaCard(
+      media: tvShow,
+      mediaType: MediaType.tvShows,
+      onTap: () => navigate(TvShowScreen(tvShow)),
+    ),
     crossAxisCount: 3,
     childAspectRatio: 0.5,
     crossAxisSpacing: 10,

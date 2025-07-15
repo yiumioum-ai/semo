@@ -107,19 +107,15 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         if (widget.mediaType == MediaType.movies) {
           final movie = media as Movie;
           return MediaCard(
-            posterPath: movie.posterPath,
-            title: movie.title,
-            year: movie.releaseDate.split('-')[0],
-            voteAverage: movie.voteAverage,
+            media: movie,
+            mediaType: MediaType.movies,
             onTap: () => _navigateToMedia(movie),
           );
         } else {
           final tvShow = media as TvShow;
           return MediaCard(
-            posterPath: tvShow.posterPath,
-            title: tvShow.name,
-            year: tvShow.firstAirDate.split('-')[0],
-            voteAverage: tvShow.voteAverage,
+            media: tvShow,
+            mediaType: MediaType.tvShows,
             onTap: () => _navigateToMedia(tvShow),
           );
         }

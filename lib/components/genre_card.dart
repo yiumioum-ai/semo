@@ -2,13 +2,14 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/models/genre.dart";
+import "package:semo/services/tmdb_service.dart";
 import "package:semo/utils/urls.dart";
 
-class GenreCard extends StatelessWidget {
+class GenreCard extends StatefulWidget {
   const GenreCard({
     super.key,
-    required this.mediaType,
     required this.genre,
+    required this.mediaType,
     this.onTap,
   });
 
@@ -16,22 +17,39 @@ class GenreCard extends StatelessWidget {
   final MediaType mediaType;
   final VoidCallback? onTap;
 
-  final double _aspectRatio = 16 / 10;
+  @override
+  State<GenreCard> createState() => _GenreCardState();
+}
 
-  Widget _buildGenreCardContent(BuildContext context, {ImageProvider? image}) => SizedBox(
-    width: MediaQuery.of(context).size.width * .6,
+class _GenreCardState extends State<GenreCard> {
+  static const double _cardAspectRatio = 16 / 10;
+  final TMDBService _tmdbService = TMDBService();
+
+  late Genre _genre;
+  Future<String?>? _backdropFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _genre = widget.genre;
+    if (_genre.backdropPath == null || _genre.backdropPath!.isEmpty) {
+      _backdropFuture = _tmdbService.getGenreBackdrop(widget.mediaType, _genre);
+    }
+  }
+
+  Widget _buildCardContent(BuildContext context, {ImageProvider? imageProvider}) => SizedBox(
+    width: MediaQuery.of(context).size.width * 0.6,
     child: Column(
       children: <Widget>[
         Expanded(
           child: AspectRatio(
-            aspectRatio: _aspectRatio,
+            aspectRatio: _cardAspectRatio,
             child: Container(
-              height: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: image == null ? Theme.of(context).cardColor : null,
-                image: image != null ? DecorationImage(
-                  image: image,
+                color: imageProvider == null ? Theme.of(context).cardColor : null,
+                image: imageProvider != null ? DecorationImage(
+                  image: imageProvider,
                   fit: BoxFit.cover,
                 ) : null,
               ),
@@ -39,71 +57,98 @@ class GenreCard extends StatelessWidget {
                 customBorder: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                onTap: onTap,
-                child: image == null ? const Center(
+                onTap: widget.onTap,
+                child: imageProvider == null ? const Center(
                   child: Icon(
                     Icons.image,
                     color: Colors.white54,
                     size: 48,
                   ),
-                ) : Container(),
+                ) : const SizedBox.shrink(),
               ),
             ),
           ),
         ),
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(top: 10),
-          child: Text(
-            genre.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.displayMedium,
-            textAlign: TextAlign.center,
-          ),
+        const SizedBox(height: 10),
+        Text(
+          _genre.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.displayMedium,
+          textAlign: TextAlign.center,
         ),
       ],
     ),
   );
 
   Widget _buildFallback(BuildContext context, {required Widget child}) => Container(
-    width: MediaQuery.of(context).size.width * .6,
+    width: MediaQuery.of(context).size.width * 0.6,
     decoration: BoxDecoration(
       color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(12),
     ),
     child: AspectRatio(
-      aspectRatio: _aspectRatio,
+      aspectRatio: _cardAspectRatio,
       child: InkWell(
         customBorder: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Center(child: child),
       ),
     ),
   );
 
+  Widget _buildImage(String url) => CachedNetworkImage(
+    imageUrl: url,
+    placeholder: (BuildContext context, String url) => _buildFallback(
+      context,
+      child: const CircularProgressIndicator(),
+    ),
+    imageBuilder: (BuildContext context, ImageProvider imageProvider) => _buildCardContent(
+      context,
+      imageProvider: imageProvider,
+    ),
+    errorWidget: (BuildContext context, String url, Object error) => _buildFallback(
+      context,
+      child: const Icon(Icons.error, color: Colors.white54),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    if (genre.backdropPath == null || genre.backdropPath!.isEmpty) {
-      return _buildGenreCardContent(context);
+    if (_backdropFuture != null) {
+      return FutureBuilder<String?>(
+        future: _backdropFuture,
+        builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildFallback(
+              context,
+              child: const CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+            return _buildFallback(
+              context,
+              child: const Icon(Icons.error, color: Colors.white54),
+            );
+          }
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _genre.backdropPath = snapshot.data;
+                _backdropFuture = null;
+              });
+            }
+          });
+
+          return _buildImage("${Urls.getBestImageUrl(context)}${snapshot.data}");
+        },
+      );
     }
 
-    return CachedNetworkImage(
-      imageUrl: "${Urls.getBestImageUrl(context)}${genre.backdropPath}",
-      placeholder: (BuildContext context, String url) => _buildFallback(
-        context,
-        child: const CircularProgressIndicator(),
-      ),
-      imageBuilder: (BuildContext context, ImageProvider image) => _buildGenreCardContent(context, image: image),
-      errorWidget: (BuildContext context, String url, Object error) => _buildFallback(
-        context,
-        child: const Icon(
-          Icons.error,
-          color: Colors.white54,
-        ),
-      ),
-    );
+    return _buildImage("${Urls.getBestImageUrl(context)}${_genre.backdropPath}");
   }
 }

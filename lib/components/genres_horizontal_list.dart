@@ -12,17 +12,14 @@ class GenresList extends StatelessWidget {
     required this.genres,
     required this.mediaType,
     required this.viewAllSource,
-    required this.isLoading,
   });
 
   final List<Genre> genres;
   final MediaType mediaType;
   final String viewAllSource;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context) => HorizontalMediaList<Genre>(
-    isLoading: isLoading,
     title: "Genres",
     height: MediaQuery.of(context).size.height * 0.2,
     items: genres,

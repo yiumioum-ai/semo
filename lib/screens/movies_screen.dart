@@ -193,7 +193,7 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     );
   }
 
-  Widget _buildPaginatedHorizontalList({
+  Widget _buildMediaCardHorizontalList({
     required PagingController<int, Movie> controller,
     required String title,
     required String viewAllSource,
@@ -256,17 +256,17 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
               children: <Widget>[
                 _buildNowPlaying(),
                 _buildRecentlyWatched(),
-                _buildPaginatedHorizontalList(
+                _buildMediaCardHorizontalList(
                   title: "Trending",
                   controller: _trendingController,
                   viewAllSource: Urls.trendingMovies,
                 ),
-                _buildPaginatedHorizontalList(
+                _buildMediaCardHorizontalList(
                   title: "Popular",
                   controller: _popularController,
                   viewAllSource: Urls.popularMovies,
                 ),
-                _buildPaginatedHorizontalList(
+                _buildMediaCardHorizontalList(
                   title: "Top rated",
                   controller: _topRatedController,
                   viewAllSource: Urls.topRatedMovies,

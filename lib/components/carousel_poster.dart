@@ -53,7 +53,7 @@ class CarouselPoster extends StatelessWidget {
                   colors: <Color>[
                     Theme.of(context).primaryColor,
                     Colors.transparent,
-                    Theme.of(context).primaryColor.withValues(alpha: .1),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,

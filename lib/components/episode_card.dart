@@ -40,7 +40,7 @@ class EpisodeCard extends StatelessWidget {
                 CachedNetworkImage(
                   imageUrl: Urls.getBestImageUrl(context) + episode.stillPath,
                   placeholder: (BuildContext context, String url) => Container(
-                      width: MediaQuery.of(context).size.width * .3,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
                         child: Container(
@@ -56,7 +56,7 @@ class EpisodeCard extends StatelessWidget {
                       ),
                     ),
                   imageBuilder: (BuildContext context, ImageProvider<Object> image) => Container(
-                      width: MediaQuery.of(context).size.width * .3,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: AspectRatio(
@@ -83,7 +83,7 @@ class EpisodeCard extends StatelessWidget {
                       ),
                     ),
                   errorWidget: (BuildContext context, String url, Object error) => Container(
-                      width: MediaQuery.of(context).size.width * .3,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
                         child: Container(

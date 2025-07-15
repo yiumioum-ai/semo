@@ -181,7 +181,7 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
       children: <Widget>[
         VideoPlayer(_videoController),
         Container(
-          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .5),
+          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
         ),
         _buildContent(),
       ],

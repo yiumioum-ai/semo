@@ -73,7 +73,7 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
     child: ListTile(
       iconColor: Colors.white,
       selectedColor: Theme.of(context).primaryColor,
-      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .3),
+      selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
       titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
         fontWeight: _selectedPageIndex == index ? FontWeight.w900 : FontWeight.normal,
       ),

@@ -73,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return ListTile(
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
-                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
+                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -112,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return ListTile(
                   selected: isSelected,
                   selectedColor: Theme.of(context).primaryColor,
-                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: .2),
+                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -387,8 +387,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: MediaQuery.of(context).size.width * .2,
-            height: MediaQuery.of(context).size.width * .2,
+            width: MediaQuery.of(context).size.width * 0.2,
+            height: MediaQuery.of(context).size.width * 0.2,
             child: CircleAvatar(
               backgroundColor: Theme.of(context).cardColor,
               child: CachedNetworkImage(

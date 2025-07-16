@@ -47,9 +47,8 @@ class RecentlyWatchedService {
 
   //ignore: prefer_expression_function_bodies
   Map<String, Map<String, dynamic>> _mapDynamicDynamicToMapStringDynamic(Map<dynamic, dynamic> map) {
-    return map
-        //ignore: always_specify_types
-        .map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
+    //ignore: always_specify_types
+    return map.map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
   }
 
   Future<int?> getMovieProgress(int movieId) async {
@@ -62,22 +61,6 @@ class RecentlyWatchedService {
       return movie?["progress"] as int?;
     } catch (e, s) {
       _logger.e("Error getting recently watched movie", error: e, stackTrace: s);
-      rethrow;
-    }
-  }
-
-  Future<void> updateMovieProgress(int movieId, int progress) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
-
-    recentlyWatched["movies"]["$movieId"] = <String, dynamic>{
-      "progress": progress,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
-    };
-
-    try {
-      await _getDocReference().set(<String, dynamic>{"movies": recentlyWatched["movies"]}, SetOptions(merge: true));
-    } catch (e, s) {
-      _logger.e("Error updating movie's watch progress", error: e, stackTrace: s);
       rethrow;
     }
   }
@@ -102,6 +85,38 @@ class RecentlyWatchedService {
     }
 
     return null;
+  }
+
+  Future<int?> getEpisodeProgress(int tvShowId, int seasonId, int episodeId) async {
+    try {
+      final Map<String, Map<String, dynamic>>? episodes = await getEpisodes(tvShowId, seasonId);
+
+      if (episodes != null) {
+        final Map<String, dynamic>? episode = episodes["$episodeId"];
+        return episode?["progress"] as int?;
+      }
+    } catch (e, s) {
+      _logger.e("Error getting recently watched episode progress", error: e, stackTrace: s);
+      rethrow;
+    }
+
+    return null;
+  }
+
+  Future<void> updateMovieProgress(int movieId, int progress) async {
+    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+
+    recentlyWatched["movies"]["$movieId"] = <String, dynamic>{
+      "progress": progress,
+      "timestamp": DateTime.now().millisecondsSinceEpoch,
+    };
+
+    try {
+      await _getDocReference().set(<String, dynamic>{"movies": recentlyWatched["movies"]}, SetOptions(merge: true));
+    } catch (e, s) {
+      _logger.e("Error updating movie's watch progress", error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   Future<void> updateEpisodeProgress(int tvShowId, int seasonId, int episodeId, int progress) async {

@@ -41,7 +41,7 @@ class AutoEmbed {
         }
       }
 
-      return MediaStream(url: streamUrl);
+      return MediaStream(url: streamUrl ?? "");
     } catch (err) {
       print('AutoEmbed - Error fetching stream: $err');
       return MediaStream();

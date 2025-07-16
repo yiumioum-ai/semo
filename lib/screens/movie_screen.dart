@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:io";
 
 import "package:flutter/material.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
@@ -137,14 +136,14 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       final Extractor extractor = Extractor(movie: _movie);
       final MediaStream? stream = await extractor.getStream();
 
-      if (stream != null && stream.url != null) {
+      if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(_movie.id);
 
         spinner.dismiss();
 
         final dynamic result = await navigate(
           PlayerScreen(
-            id: _movie.id,
+            tmdbId: _movie.id,
             title: _movie.title,
             stream: stream,
             mediaType: MediaType.movies,

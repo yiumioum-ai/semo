@@ -13,7 +13,7 @@ class RiveStream {
         params['season'],
         params['episode'],
       );
-      return MediaStream(url: link);
+      return MediaStream(url: link ?? "");
     } catch (e) {
       print('Rive - Extraction error: $e');
       return MediaStream();

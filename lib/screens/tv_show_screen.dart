@@ -239,7 +239,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
         final result = await NavigationHelper.navigate(
           context,
           PlayerScreen(
-            id: _tvShow.id,
+            tmdbId: _tvShow.id,
             seasonId: season.id,
             episodeId: episode.id,
             title: episode.name,

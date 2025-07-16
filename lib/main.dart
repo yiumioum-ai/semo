@@ -41,101 +41,103 @@ class Semo extends StatelessWidget {
   static const Color _onPrimary = Colors.white;
   static const Color _onSurface = Colors.white54;
 
+  ThemeData _buildTheme() => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    primaryColor: _primary,
+    scaffoldBackgroundColor: _background,
+    cardColor: _surface,
+    appBarTheme: AppBarTheme(
+      scrolledUnderElevation: 0,
+      backgroundColor: _background,
+      titleTextStyle: GoogleFonts.freckleFace(
+        textStyle: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
+          color: _onPrimary,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: _onPrimary),
+      centerTitle: false,
+    ),
+    textTheme: TextTheme(
+      titleLarge: GoogleFonts.freckleFace(
+        textStyle: const TextStyle(
+          fontSize: 38,
+          fontWeight: FontWeight.w900,
+          color: _onPrimary,
+        ),
+      ),
+      titleMedium: GoogleFonts.freckleFace(
+        textStyle: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          color: _onPrimary,
+        ),
+      ),
+      titleSmall: GoogleFonts.freckleFace(
+        textStyle: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
+          color: _onPrimary,
+        ),
+      ),
+      displayLarge: GoogleFonts.lexend(
+        textStyle: const TextStyle(
+          fontSize: 18,
+          color: _onPrimary,
+        ),
+      ),
+      displayMedium: GoogleFonts.lexend(
+        textStyle: const TextStyle(
+          fontSize: 15,
+          color: _onPrimary,
+        ),
+      ),
+      displaySmall: GoogleFonts.lexend(
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: _onPrimary,
+        ),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: _primary,
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: _surface,
+    ),
+    tabBarTheme: const TabBarThemeData(
+      indicatorColor: _primary,
+      labelColor: _primary,
+      dividerColor: _surface,
+      unselectedLabelColor: _onSurface,
+    ),
+    menuTheme: const MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll<Color>(_surface),
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      showDragHandle: true,
+      backgroundColor: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: _surface,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: "Semo",
     debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      primaryColor: _primary,
-      scaffoldBackgroundColor: _background,
-      cardColor: _surface,
-      appBarTheme: AppBarTheme(
-        scrolledUnderElevation: 0,
-        backgroundColor: _background,
-        titleTextStyle: GoogleFonts.freckleFace(
-          textStyle: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: _onPrimary,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: _onPrimary),
-        centerTitle: false,
-      ),
-      textTheme: TextTheme(
-        titleLarge: GoogleFonts.freckleFace(
-          textStyle: const TextStyle(
-            fontSize: 38,
-            fontWeight: FontWeight.w900,
-            color: _onPrimary,
-          ),
-        ),
-        titleMedium: GoogleFonts.freckleFace(
-          textStyle: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            color: _onPrimary,
-          ),
-        ),
-        titleSmall: GoogleFonts.freckleFace(
-          textStyle: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: _onPrimary,
-          ),
-        ),
-        displayLarge: GoogleFonts.lexend(
-          textStyle: const TextStyle(
-            fontSize: 18,
-            color: _onPrimary,
-          ),
-        ),
-        displayMedium: GoogleFonts.lexend(
-          textStyle: const TextStyle(
-            fontSize: 15,
-            color: _onPrimary,
-          ),
-        ),
-        displaySmall: GoogleFonts.lexend(
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: _onPrimary,
-          ),
-        ),
-      ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: _primary,
-      ),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: _surface,
-      ),
-      tabBarTheme: const TabBarThemeData(
-        indicatorColor: _primary,
-        labelColor: _primary,
-        dividerColor: _surface,
-        unselectedLabelColor: _onSurface,
-      ),
-      menuTheme: const MenuThemeData(
-        style: MenuStyle(
-          backgroundColor: WidgetStatePropertyAll<Color>(_surface),
-        ),
-      ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        showDragHandle: true,
-        backgroundColor: _surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(25),
-          ),
-        ),
-      ),
-      snackBarTheme: const SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _surface,
-      ),
-    ),
+    theme: _buildTheme(),
     home: SplashScreen(),
   );
 }

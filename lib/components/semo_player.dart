@@ -332,7 +332,9 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
-    _lastZoomGestureScale = details.scale;
+    if (mounted) {
+      _lastZoomGestureScale = details.scale;
+    }
   }
 
   void _handleScaleEnd(ScaleEndDetails details) {
@@ -452,8 +454,12 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
                           _scaleVideoAnimationController.forward();
                         }
 
-                        _isZoomedIn = !_isZoomedIn;
-                        _lastZoomGestureScale = 1.0;
+                        if (mounted) {
+                          setState(() {
+                            _isZoomedIn = !_isZoomedIn;
+                            _lastZoomGestureScale = 1.0;
+                          });
+                        }
                       }),
                     ),
                   ],

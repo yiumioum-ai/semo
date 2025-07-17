@@ -18,13 +18,7 @@ class SubtitleService {
 
   final Logger _logger = Logger();
 
-  Future<List<File>> getSubtitles(int tmdbId, {int? seasonNumber, int? episodeNumber}) => _getSubtitles(
-    tmdbId,
-    seasonNumber: seasonNumber,
-    episodeNumber: episodeNumber,
-  );
-
-  Future<List<File>> _getSubtitles(int tmdbId, {int? seasonNumber, int? episodeNumber}) async {
+  Future<List<File>> getSubtitles(int tmdbId, {int? seasonNumber, int? episodeNumber}) async {
     try {
       final List<File> srtFiles = <File>[];
 

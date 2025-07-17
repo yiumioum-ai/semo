@@ -255,13 +255,14 @@ class WikiUpdater:
         if failure_path:
             # Failed build
             wiki_link = failure_path.replace('.md', '')
-            latest_link = f"[Latest Build (Failed)]({wiki_link}) - {commit_info['short_hash']} ❌"
+            latest_link = f"- [Latest Build (Failed)]({wiki_link}) - {commit_info['short_hash']} ❌"
         else:
             # Successful build
             changelog_wiki_link = changelog_path.replace('.md', '') if changelog_path else '#'
-            code_review_wiki_link = code_review_path.replace('.md', '') if changelog_path else '#'
-            latest_link = f"""[Latest Changelog]({changelog_wiki_link}) - {commit_info['short_hash']}
-[Latest Code Review]({code_review_wiki_link}) - {commit_info['short_hash']}
+            code_review_wiki_link = code_review_path.replace('.md', '') if code_review_path else '#'
+            latest_link = f"""
+- [Latest Changelog]({changelog_wiki_link}) - {commit_info['short_hash']}
+- [Latest Code Review]({code_review_wiki_link}) - {commit_info['short_hash']}
 """
 
         content = f"""# Semo Project Documentation
@@ -269,7 +270,7 @@ class WikiUpdater:
 Welcome to the Semo project documentation wiki!
 
 ## 📋 Latest Updates
-- {latest_link}
+{latest_link}
 
 ## 📁 Documentation Structure
 All documentation is organized in the sidebar by type and date:

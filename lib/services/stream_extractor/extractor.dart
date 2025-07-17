@@ -19,7 +19,7 @@ class StreamExtractor {
 
   static List<StreamingServer> get streamingServers => _streamingServers;
 
-  static Future<MediaStream?> extract({Movie? movie, Episode? episode}) async {
+  static Future<MediaStream?> getStream({Movie? movie, Episode? episode}) async {
     try {
       math.Random random = math.Random();
       String serverName = Preferences().getServer();
@@ -60,7 +60,7 @@ class StreamExtractor {
           extractor = server.extractor;
         }
 
-        stream = await extractor?.extract(streamExtractorOptions);
+        stream = await extractor?.getStream(streamExtractorOptions);
 
         if (stream == null || stream.url.isEmpty) {
           _logger.w("Stream not found.\nStreamingServer: $serverName");

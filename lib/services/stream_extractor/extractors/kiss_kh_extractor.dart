@@ -89,7 +89,7 @@ class KissKhExtractor implements BaseStreamExtractor {
   }
 
   @override
-  Future<MediaStream?> extract(StreamExtractorOptions options) async {
+  Future<MediaStream?> getStream(StreamExtractorOptions options) async {
     try {
       final String? baseUrl = await _streamingServerBaseUrlService.getBaseUrl(_providerKey);
       if (baseUrl == null || baseUrl.isEmpty) {

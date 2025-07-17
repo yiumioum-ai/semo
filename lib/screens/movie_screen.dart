@@ -133,7 +133,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     spinner.show();
 
     try {
-      final MediaStream? stream = await StreamExtractor.extract(movie: _movie);
+      final MediaStream? stream = await StreamExtractor.getStream(movie: _movie);
 
       if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(_movie.id);

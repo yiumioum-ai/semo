@@ -226,7 +226,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
     final season = _tvShow.seasons![_currentSeasonIndex];
     _spinner.show();
     try {
-      final MediaStream? stream = await StreamExtractor.extract(episode: episode);
+      final MediaStream? stream = await StreamExtractor.getStream(episode: episode);
 
       if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(

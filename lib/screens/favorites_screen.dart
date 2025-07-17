@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:semo/components/media_card.dart";
 import "package:semo/components/snack_bar.dart";
@@ -10,7 +12,6 @@ import "package:semo/screens/tv_show_screen.dart";
 import "package:semo/services/favorites_service.dart";
 import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/components/pop_up_menu.dart";
 
 class FavoritesScreen extends BaseScreen {
   const FavoritesScreen({
@@ -64,28 +65,24 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _removeFromFavorites(int id) async {
+  void _removeFromFavorites(int id) {
     List<dynamic> favorites = _favorites;
 
     try {
       if (widget.mediaType == MediaType.movies) {
-        await _favoritesService.removeMovie(id);
+        unawaited(_favoritesService.removeMovie(id));
       } else if (widget.mediaType == MediaType.tvShows) {
-        await _favoritesService.removeTvShow(id);
+        unawaited(_favoritesService.removeTvShow(id));
       }
+    } catch (_) {}
 
-      //ignore: always_specify_types
-      favorites.removeWhere((media) => media.id == id);
-      setState(() => _favorites = favorites);
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "An error occurred.");
-      }
-    }
+    //ignore: avoid_annotating_with_dynamic
+    favorites.removeWhere((dynamic media) => media.id == id);
+    setState(() => _favorites = favorites);
   }
 
-  //ignore: always_specify_types
-  Widget _buildMediaCard(BuildContext context, var media, int index) {
+  //ignore: avoid_annotating_with_dynamic
+  Widget _buildMediaCard(BuildContext context, dynamic media, int index) {
     VoidCallback onTap;
 
     if (widget.mediaType == MediaType.movies) {
@@ -94,28 +91,12 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
       onTap = () => navigate(TvShowScreen(media as TvShow));
     }
 
-    return PopupMenuContainer<String>(
-      items: <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
-          value: "remove",
-          child: Text(
-            "Remove",
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-        ),
-      ],
-      onItemSelected: (String? action) async {
-        if (action != null) {
-          if (action == "remove") {
-            await _removeFromFavorites(media.id);
-          }
-        }
-      },
-      child: MediaCard(
-        media: media,
-        mediaType: widget.mediaType,
-        onTap: onTap,
-      ),
+    return MediaCard(
+      media: media,
+      mediaType: widget.mediaType,
+      onTap: onTap,
+      showRemoveOption: true,
+      onRemove: () => _removeFromFavorites(media.id),
     );
   }
 
@@ -135,8 +116,8 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
         child: VerticalMediaList<dynamic>(
           isLoading: _isLoading,
           items: _favorites,
-          //ignore: always_specify_types
-          itemBuilder: (BuildContext context, media, int index) => _buildMediaCard(context, media, index),
+          //ignore: avoid_annotating_with_dynamic
+          itemBuilder: (BuildContext context, dynamic media, int index) => _buildMediaCard(context, media, index),
           crossAxisCount: 3,
           childAspectRatio: 0.5,
           crossAxisSpacing: 10,

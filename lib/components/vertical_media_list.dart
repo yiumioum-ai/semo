@@ -62,13 +62,13 @@ class VerticalMediaList<T> extends StatelessWidget {
             firstPageErrorIndicatorBuilder: (BuildContext context) => buildErrorIndicator(
               context,
               errorMessage ?? "Failed to load items",
-                  () => pagingController?.refresh(),
+              () => pagingController?.refresh(),
               isFirstPage: true,
             ),
             newPageErrorIndicatorBuilder: (BuildContext context) => buildErrorIndicator(
               context,
               "Failed to load more items",
-                  () => pagingController?.fetchNextPage(),
+              () => pagingController?.fetchNextPage(),
               isFirstPage: false,
             ),
             firstPageProgressIndicatorBuilder: (BuildContext context) => buildLoadingIndicator(isFirstPage: true),

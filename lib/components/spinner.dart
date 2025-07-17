@@ -72,30 +72,29 @@ class Spinner {
       transitionDuration: transitionDuration,
       pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) => Container(),
       transitionBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget widget) => PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (bool didPop, Object? result) {
-            return;
-          },
-          child: Transform.scale(
-            scale: animation.value,
-            child: Opacity(
-              opacity: animation.value,
-              child: AlertDialog(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                content: Center(
-                  child: Container(
-                    width: width,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: backgroundColor ?? Theme.of(context).dialogTheme.backgroundColor,
-                      borderRadius: BorderRadius.circular(borderRadius),
-                    ),
-                    padding: EdgeInsets.all(spinnerMargin),
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        spinnerColor ?? Theme.of(context).primaryColor,
-                      ),
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, Object? result) {
+          return;
+        },
+        child: Transform.scale(
+          scale: animation.value,
+          child: Opacity(
+            opacity: animation.value,
+            child: AlertDialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              content: Center(
+                child: Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: backgroundColor ?? Theme.of(context).dialogTheme.backgroundColor,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                  ),
+                  padding: EdgeInsets.all(spinnerMargin),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      spinnerColor ?? Theme.of(context).primaryColor,
                     ),
                   ),
                 ),
@@ -103,6 +102,7 @@ class Spinner {
             ),
           ),
         ),
+      ),
     ).whenComplete(() {
       if (duration != null) {
         _autoCloseTimer = Timer(duration!, () {

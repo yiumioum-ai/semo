@@ -16,79 +16,79 @@ class CarouselPoster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: CachedNetworkImage(
-              imageUrl: "${Urls.getBestImageUrl(context)}$backdropPath",
-              fit: BoxFit.cover,
-              placeholder: (BuildContext context, String url) => Container(
-                  decoration: BoxDecoration(color: Theme.of(context).cardColor),
-                  child: const Align(
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              errorWidget: (BuildContext context, String url, Object error) => Container(
-                  decoration: BoxDecoration(color: Theme.of(context).cardColor),
-                  child: const Align(
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.error,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+    borderRadius: BorderRadius.circular(10),
+    child: Stack(
+      children: <Widget>[
+        Positioned.fill(
+          child: CachedNetworkImage(
+            imageUrl: "${Urls.getBestImageUrl(context)}$backdropPath",
+            fit: BoxFit.cover,
+            placeholder: (BuildContext context, String url) => Container(
+              decoration: BoxDecoration(color: Theme.of(context).cardColor),
+              child: const Align(
+                alignment: Alignment.center,
+                child: CircularProgressIndicator(),
+              ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            top: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[
-                    Theme.of(context).primaryColor,
-                    Colors.transparent,
-                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+            errorWidget: (BuildContext context, String url, Object error) => Container(
+              decoration: BoxDecoration(color: Theme.of(context).cardColor),
+              child: const Align(
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.error,
+                  color: Colors.white,
                 ),
               ),
-              child: Column(
-                children: <Widget>[
-                  const Spacer(),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.only(
-                      left: 14,
-                      bottom: 8,
-                    ),
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          top: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: <Color>[
+                  Theme.of(context).primaryColor,
+                  Colors.transparent,
+                  Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 ],
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
               ),
             ),
-          ),
-          Positioned.fill(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(onTap: onTap),
+            child: Column(
+              children: <Widget>[
+                const Spacer(),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(
+                    left: 14,
+                    bottom: 8,
+                  ),
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        ),
+        Positioned.fill(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(onTap: onTap),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -13,24 +13,24 @@ class StreamingPlatformCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+    height: double.infinity,
+    decoration: BoxDecoration(
+      color: Theme.of(context).primaryColor,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: InkWell(
+      customBorder: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          child: Image.asset(
-            platform.logoPath,
-            width: MediaQuery.of(context).size.width * 0.4,
-            color: Colors.white,
-          ),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        child: Image.asset(
+          platform.logoPath,
+          width: MediaQuery.of(context).size.width * 0.4,
+          color: Colors.white,
         ),
       ),
-    );
+    ),
+  );
 }

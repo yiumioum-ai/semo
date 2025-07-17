@@ -258,8 +258,11 @@ class WikiUpdater:
             latest_link = f"[Latest Build (Failed)]({wiki_link}) - {commit_info['short_hash']} ❌"
         else:
             # Successful build
-            wiki_link = changelog_path.replace('.md', '') if changelog_path else '#'
-            latest_link = f"[Latest Changelog]({wiki_link}) - {commit_info['short_hash']}"
+            changelog_wiki_link = changelog_path.replace('.md', '') if changelog_path else '#'
+            code_review_wiki_link = code_review_path.replace('.md', '') if changelog_path else '#'
+            latest_link = f"""[Latest Changelog]({changelog_wiki_link}) - {commit_info['short_hash']}
+[Latest Code Review]({code_review_wiki_link}) - {commit_info['short_hash']}
+"""
 
         content = f"""# Semo Project Documentation
 

@@ -11,6 +11,7 @@ import 'package:semo/components/media_poster.dart';
 import 'package:semo/components/person_card.dart';
 import 'package:semo/components/season_selector.dart';
 import "package:semo/models/episode.dart";
+import "package:semo/models/media_stream.dart";
 import "package:semo/models/season.dart";
 import 'package:semo/models/tv_show.dart';
 import 'package:semo/screens/person_media_screen.dart';
@@ -18,10 +19,10 @@ import 'package:semo/screens/player_screen.dart';
 import 'package:semo/screens/view_all_screen.dart';
 import 'package:semo/services/favorites_service.dart';
 import 'package:semo/services/recently_watched_service.dart';
+import "package:semo/services/stream_extractor/extractor.dart";
 import 'package:semo/services/subtitle_service.dart';
 import 'package:semo/services/tmdb_service.dart';
 import 'package:semo/enums/media_type.dart';
-import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/navigation_helper.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -225,10 +226,9 @@ class _TvShowScreenState extends State<TvShowScreen> {
     final season = _tvShow.seasons![_currentSeasonIndex];
     _spinner.show();
     try {
-      final extractor = Extractor(episode: episode);
-      final stream = await extractor.getStream();
+      final MediaStream? stream = await StreamExtractor.extract(episode: episode);
 
-      if (stream != null && stream.url != null) {
+      if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(
           _tvShow.id,
           seasonNumber: episode.season,
@@ -243,7 +243,7 @@ class _TvShowScreenState extends State<TvShowScreen> {
             seasonId: season.id,
             episodeId: episode.id,
             title: episode.name,
-            stream: stream!,
+            stream: stream,
             mediaType: MediaType.tvShows,
           ),
         );

@@ -15,10 +15,10 @@ import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
 import "package:semo/services/favorites_service.dart";
 import "package:semo/services/recently_watched_service.dart";
+import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
 import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/utils/extractor.dart";
 import "package:semo/utils/urls.dart";
 
 class MovieScreen extends BaseScreen {
@@ -133,8 +133,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     spinner.show();
 
     try {
-      final Extractor extractor = Extractor(movie: _movie);
-      final MediaStream? stream = await extractor.getStream();
+      final MediaStream? stream = await StreamExtractor.extract(movie: _movie);
 
       if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(_movie.id);

@@ -14,8 +14,8 @@ import 'package:semo/screens/landing_screen.dart';
 import 'package:semo/models/streaming_server.dart';
 import 'package:semo/screens/open_source_libraries_screen.dart';
 import 'package:semo/screens/subtitles_preferences_screen.dart';
+import "package:semo/services/stream_extractor/extractor.dart";
 import 'package:semo/utils/db_names.dart';
-import 'package:semo/utils/extractor.dart';
 import 'package:semo/utils/preferences.dart';
 import 'package:semo/components/spinner.dart';
 import 'package:semo/utils/urls.dart';
@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   openServerSelector() async {
     String savedServerName = await _preferences.getServer();
-    List<StreamingServer> servers = Extractor.getServers();
+    List<StreamingServer> servers = StreamExtractor.streamingServers;
 
     await showModalBottomSheet(
       context: context,

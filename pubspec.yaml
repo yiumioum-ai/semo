@@ -24,6 +24,7 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   google_fonts: ^6.2.1
   google_sign_in: ^7.0.0
+  html: ^0.15.6
   infinite_scroll_pagination: ^5.1.0
   internet_connection_checker_plus: ^2.7.2
   logger: ^2.6.0

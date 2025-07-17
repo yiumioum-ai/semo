@@ -40,10 +40,6 @@ class AuthService {
 
   User? getUser() {
     try {
-      if (_auth.currentUser == null) {
-        throw Exception("User is null");
-      }
-
       return _auth.currentUser;
     } catch (e, s) {
       _logger.e("Failed to get current user", error: e, stackTrace: s);

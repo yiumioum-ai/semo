@@ -35,7 +35,10 @@ class RecentlyWatchedService {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
       if (!doc.exists) {
-        throw Exception("Recently watched doc not found");
+        await _getDocReference().set(<String, dynamic>{
+          "movies": <String, Map<String, dynamic>>{},
+          "tv_shows": <String, Map<String, dynamic>>{},
+        });
       }
 
       return doc.data() ?? <String, dynamic>{};
@@ -276,6 +279,15 @@ class RecentlyWatchedService {
       }
     } catch (e, s) {
       _logger.e("Error removing TV show from recently watched", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
+  Future<void> clear() async {
+    try {
+      await _getDocReference().delete();
+    } catch (e, s) {
+      _logger.e("Error clearing recently watched", error: e, stackTrace: s);
       rethrow;
     }
   }

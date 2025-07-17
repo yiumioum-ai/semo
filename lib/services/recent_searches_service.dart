@@ -36,7 +36,10 @@ class RecentSearchesService {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
       if (!doc.exists) {
-        throw Exception("Recent searches doc not found");
+        await _getDocReference().set(<String, dynamic>{
+          "movies": <String>[],
+          "tv_shows": <String>[],
+        });
       }
 
       final Map<String, dynamic> data = doc.data() ?? <String, dynamic>{};
@@ -91,10 +94,9 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> clear(MediaType mediaType) async {
+  Future<void> clear() async {
     try {
-      final String fieldName = _getFieldName(mediaType);
-      await _getDocReference().set(<String, dynamic>{fieldName: <dynamic>[]}, SetOptions(merge: true));
+      await _getDocReference().delete();
     } catch (e, s) {
       _logger.e("Error clearing recent searches", error: e, stackTrace: s);
       rethrow;

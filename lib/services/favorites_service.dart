@@ -33,7 +33,10 @@ class FavoritesService {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
       if (!doc.exists) {
-        throw Exception("Favorites doc not found");
+        await _getDocReference().set(<String, dynamic>{
+          "movies": <int>[],
+          "tv_shows": <int>[],
+        });
       }
 
       return doc.data() ?? <String, dynamic>{};
@@ -118,6 +121,15 @@ class FavoritesService {
         _logger.e("Error removing TV show from favorites", error: e, stackTrace: s);
         rethrow;
       }
+    }
+  }
+
+  Future<void> clear() async {
+    try {
+      await _getDocReference().delete();
+    } catch (e, s) {
+      _logger.e("Error clearing favorites", error: e, stackTrace: s);
+      rethrow;
     }
   }
 }

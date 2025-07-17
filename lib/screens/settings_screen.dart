@@ -1,112 +1,91 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_settings_ui/flutter_settings_ui.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import "package:cached_network_image/cached_network_image.dart";
+import "package:firebase_auth/firebase_auth.dart";
+import "package:flutter/gestures.dart";
+import "package:flutter/material.dart";
+import "package:flutter_settings_ui/flutter_settings_ui.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:semo/components/snack_bar.dart";
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/landing_screen.dart';
-import 'package:semo/models/streaming_server.dart';
-import 'package:semo/screens/open_source_libraries_screen.dart';
-import 'package:semo/screens/subtitles_preferences_screen.dart';
+import "package:semo/screens/base_screen.dart";
+import "package:semo/screens/landing_screen.dart";
+import "package:semo/models/streaming_server.dart";
+import "package:semo/screens/open_source_libraries_screen.dart";
+import "package:semo/screens/subtitles_preferences_screen.dart";
+import "package:semo/services/auth_service.dart";
+import "package:semo/services/favorites_service.dart";
+import "package:semo/services/recent_searches_service.dart";
+import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
-import 'package:semo/utils/db_names.dart';
-import 'package:semo/utils/preferences.dart';
-import 'package:semo/components/spinner.dart';
-import 'package:semo/utils/urls.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
-import 'package:url_launcher/url_launcher.dart';
+import "package:semo/utils/preferences.dart";
+import "package:semo/utils/urls.dart";
+import "package:url_launcher/url_launcher.dart";
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends BaseScreen {
+  const SettingsScreen({super.key});
+
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  BaseScreenState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  Preferences _preferences = Preferences();
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  Spinner? _spinner;
+class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
+  final Preferences _preferences = Preferences();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthService _authService = AuthService();
 
-  navigate({required Widget destination, bool replace = false}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        pageTransition,
-      );
-    } else {
-      await Navigator.push(
-        context,
-        pageTransition,
-      );
-    }
-  }
-
-  openServerSelector() async {
-    String savedServerName = await _preferences.getServer();
+  Future<void> _openServerSelector() async {
+    String savedServerName = _preferences.getServer();
     List<StreamingServer> servers = StreamExtractor.streamingServers;
 
     await showModalBottomSheet(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         String serverName = savedServerName;
 
         return StatefulBuilder(
-          builder: (context, setState) {
-            return ListView.builder(
-              shrinkWrap: true,
-              itemCount: servers.length,
-              itemBuilder: (context, index) {
-                StreamingServer server = servers[index];
-                bool isSelected = server.name == serverName;
+          builder: (BuildContext context, StateSetter setState) => ListView.builder(
+            shrinkWrap: true,
+            itemCount: servers.length,
+            itemBuilder: (BuildContext context, int index) {
+              StreamingServer server = servers[index];
+              bool isSelected = server.name == serverName;
 
-                return ListTile(
-                  selected: isSelected,
-                  selectedColor: Theme.of(context).primaryColor,
-                  selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                  titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  title: Text(server.name),
-                  leading: isSelected ? Icon(Icons.check) : null,
-                  onTap: () async {
-                    await _preferences.setServer(server);
-                    setState(() => serverName = server.name);
-                  },
-                );
-              },
-            );
-          },
+              return ListTile(
+                selected: isSelected,
+                selectedColor: Theme.of(context).primaryColor,
+                selectedTileColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                title: Text(server.name),
+                leading: isSelected ? const Icon(Icons.check) : null,
+                onTap: () async {
+                  await _preferences.setServer(server);
+                  setState(() => serverName = server.name);
+                },
+              );
+            },
+          ),
         );
       },
     );
   }
 
-  openSeekDurationSelector() async {
-    int savedSeekDuration = await _preferences.getSeekDuration();
-    List<int> seekDurations = [5, 15, 30, 45, 60];
+  Future<void> _openSeekDurationSelector() async {
+    int savedSeekDuration = _preferences.getSeekDuration();
+    List<int> seekDurations = <int>[5, 15, 30, 45, 60];
 
     await showModalBottomSheet(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         int seekDuration = savedSeekDuration;
 
         return StatefulBuilder(
-          builder: (context, setState) {
-            return ListView.builder(
+          builder: (BuildContext context, StateSetter setState) => ListView.builder(
               shrinkWrap: true,
               itemCount: seekDurations.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
                 bool isSelected = seekDurations[index] == seekDuration;
 
                 return ListTile(
@@ -116,53 +95,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   titleTextStyle: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  title: Text(seekDurations[index] != 60 ? '${seekDurations[index]} s' : '1 m'),
-                  leading: isSelected ? Icon(Icons.check) : null,
+                  title: Text(seekDurations[index] != 60 ? "${seekDurations[index]} s" : "1 m"),
+                  leading: isSelected ? const Icon(Icons.check) : null,
                   onTap: () async {
                     await _preferences.setSeekDuration(seekDurations[index]);
                     setState(() => seekDuration = seekDurations[index]);
                   },
                 );
               },
-            );
-          },
+            ),
         );
       },
     );
   }
 
-  openAbout() async {
+  Future<void> _openAbout() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String version = packageInfo.version;
 
-    await showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
+    if (mounted) {
+      await showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) => Container(
           width: double.infinity,
-          margin: EdgeInsets.all(18),
+          margin: const EdgeInsets.all(18),
           child: SafeArea(
             top: false,
             left: false,
             right: false,
-            bottom: Platform.isIOS,
+            bottom: true,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
                 Assets.images.appIcon.image(
                   width: 200,
                   height: 200,
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: 25),
+                  margin: const EdgeInsets.only(top: 25),
                   child: RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: Theme.of(context).textTheme.displayMedium,
-                      children: [
-                        TextSpan(text: 'Developed by '),
+                      children: <TextSpan>[
+                        const TextSpan(text: "Developed by "),
                         TextSpan(
-                          text: 'Moses Mbaga',
+                          text: "Moses Mbaga",
                           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
@@ -176,19 +154,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.only(top: 10),
+                  margin: const EdgeInsets.only(top: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        child: Text(
-                          '$version',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.displayMedium,
-                        ),
+                    children: <Widget>[
+                      Text(
+                        version,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.displayMedium,
                       ),
                       Text(
-                        ' · ',
+                        " · ",
                         style: Theme.of(context).textTheme.displayMedium,
                       ),
                       GestureDetector(
@@ -196,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await launchUrl(Uri.parse(Urls.github));
                         },
                         child: Text(
-                          'GitHub',
+                          "GitHub",
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                             color: Theme.of(context).primaryColor,
@@ -210,182 +186,139 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    }
   }
 
-  showDeleteAccountConfirmation() async {
+  Future<void> _showDeleteAccountConfirmation() async {
     await showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Delete account'),
-          content: Text('Are you sure that you want to close your account? Your account will be delete your account, along with all the saved data.\nYou can create a new account at any time.\n\nFor security reasons, you will be asked to re-authenticate first'),
-          actions: [
-            TextButton(
-              child: Text(
-                'Cancel',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Delete account"),
+        content: const Text("Are you sure that you want to close your account? Your account will be delete your account, along with all the saved data.\nYou can create a new account at any time.\n\nFor security reasons, you will be asked to re-authenticate first"),
+        actions: <Widget>[
+          TextButton(
+            child: Text(
+              "Cancel",
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                color: Colors.white54,
               ),
-              onPressed: () => Navigator.of(context).pop(),
             ),
-            TextButton(
-              child: Text(
-                'Delete',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Theme.of(context).primaryColor),
-              ),
-              onPressed: () => reauthenticate(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  reauthenticate() async {
-    _spinner!.show();
-
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
-
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth?.idToken,
-    );
-
-    try {
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      _spinner!.dismiss();
-
-      deleteAccount();
-    } catch (e) {
-      print(e);
-
-      _spinner!.dismiss();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to re-authenticate',
-            style: Theme.of(context).textTheme.displayMedium,
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
-      );
-    }
-  }
-
-  deleteAccount() async {
-    _spinner!.show();
-
-    await Future.wait([
-      clearRecentSearches(showSpinner: false, showSnackBar: false),
-      clearFavorites(showSpinner: false, showSnackBar: false),
-      clearRecentlyWatched(showSpinner: false, showSnackBar: false),
-    ]);
-    await _preferences.clear();
-
-    await _auth.currentUser!.delete();
-
-    _spinner!.dismiss();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Account deleted',
-          style: Theme.of(context).textTheme.displayMedium,
-        ),
-        backgroundColor: Theme.of(context).cardColor,
+          TextButton(
+            child: Text(
+              "Delete",
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            onPressed: () async {
+              await _reAuthenticate();
+              await _deleteAccount();
+            },
+          ),
+        ],
       ),
     );
-
-    navigate(destination: LandingScreen(), replace: true);
   }
 
-  Future<void> clearRecentSearches({bool showSpinner = true, bool showSnackBar = true}) async {
-    if (showSpinner) _spinner!.show();
-    await _firestore.collection(DB.recentSearches).doc(_auth.currentUser!.uid).delete();
-    if (showSpinner) _spinner!.dismiss();
+  Future<void> _reAuthenticate() async {
+    spinner.show();
 
-    if (showSnackBar) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Recent searches cleared successfully',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
+    try {
+      UserCredential? credential = await _authService.reAuthenticate();
+
+      if (credential == null) {
+        throw Exception("Credential is null");
+      }
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, "Failed to re-authenticate");
+      }
+    }
+
+    spinner.dismiss();
+  }
+
+  Future<void> _deleteAccount() async {
+    try {
+      spinner.show();
+
+      await Future.wait(<Future<void>>[
+        _clearRecentSearches(showResponse: false),
+        _clearFavorites(showResponse: false),
+        _clearRecentlyWatched(showResponse: false),
+        _preferences.clear(),
+        _authService.deleteAccount(),
+      ]);
+
+      spinner.dismiss();
+
+      if (mounted) {
+        showSnackBar(context, "Account deleted");
+      }
+
+      await navigate(
+        const LandingScreen(),
+        replace: true,
       );
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, "Failed to delete account");
+      }
     }
   }
 
-  Future<void> clearFavorites({bool showSpinner = true, bool showSnackBar = true}) async {
-    if (showSpinner) _spinner!.show();
-    await _firestore.collection(DB.favorites).doc(_auth.currentUser!.uid).delete();
-    if (showSpinner) _spinner!.dismiss();
-
-    if (showSnackBar) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Favorites cleared successfully',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
-      );
+  Future<void> _clearRecentSearches({bool showResponse = true}) async {
+    await RecentSearchesService().clear();
+    if (showResponse && mounted) {
+      showSnackBar(context, "Cleared");
     }
   }
 
-  Future<void> clearRecentlyWatched({bool showSpinner = true, bool showSnackBar = true}) async {
-    if (showSpinner) _spinner!.show();
-    await _firestore.collection(DB.recentlyWatched).doc(_auth.currentUser!.uid).delete();
-    if (showSpinner) _spinner!.dismiss();
-
-    if (showSnackBar) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Recently watched cleared successfully',
-            style: Theme.of(context).textTheme.displayMedium,
-          ),
-          backgroundColor: Theme.of(context).cardColor,
-        ),
-      );
+  Future<void> _clearFavorites({bool showResponse = true}) async {
+    await FavoritesService().clear();
+    if (showResponse && mounted) {
+      showSnackBar(context, "Cleared");
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _spinner = Spinner(context);
-
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Settings',
-      );
-    });
+  Future<void> _clearRecentlyWatched({bool showResponse = true}) async {
+    await RecentlyWatchedService().clear();
+    if (showResponse && mounted) {
+      showSnackBar(context, "Cleared");
+    }
   }
 
-  Widget UserCard() {
-    String photoUrl = _auth.currentUser!.photoURL ?? '';
-    String name = _auth.currentUser!.displayName ?? 'User';
-    String email = _auth.currentUser!.email ?? 'user@email.com';
+  Future<void> _signOut() async {
+    try {
+      await _authService.signOut();
+      await navigate(
+        const LandingScreen(),
+        replace: true,
+      );
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, "Failed to sign out");
+      }
+    }
+  }
+
+  Widget _buildUserCard() {
+    String photoUrl = _auth.currentUser?.photoURL ?? "";
+    String name = _auth.currentUser?.displayName ?? "User";
+    String email = _auth.currentUser?.email ?? "user@email.com";
 
     return Container(
-      margin: EdgeInsets.only(
+      margin: const EdgeInsets.only(
         top: 18,
         left: 18,
         right: 18,
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           SizedBox(
             width: MediaQuery.of(context).size.width * 0.2,
             height: MediaQuery.of(context).size.width * 0.2,
@@ -393,51 +326,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: Theme.of(context).cardColor,
               child: CachedNetworkImage(
                 imageUrl: photoUrl,
-                placeholder: (context, url) {
-                  return Align(
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(),
-                  );
-                },
-                imageBuilder: (context, image) {
-                  return Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(1000),
-                      image: DecorationImage(
-                        image: image,
-                        fit: BoxFit.cover,
-                      ),
+                placeholder: (BuildContext context, String url) => const Align(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                ),
+                imageBuilder: (BuildContext context, ImageProvider image) => Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(1000),
+                    image: DecorationImage(
+                      image: image,
+                      fit: BoxFit.cover,
                     ),
-                  );
-                },
-                errorWidget: (context, url, error) {
-                  return Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(1000)),
-                    child: Icon(
-                      Icons.account_circle,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  );
-                },
+                  ),
+                ),
+                errorWidget: (BuildContext context, String url, Object? error) => Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(1000)),
+                  child: Icon(
+                    Icons.account_circle,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
               ),
             ),
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(left: 18),
+              padding: const EdgeInsets.only(left: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Text(
                     name,
                     style: Theme.of(context).textTheme.displayLarge,
                   ),
-                  Padding(padding: EdgeInsets.symmetric(vertical: 2.5)),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 2.5),
+                  ),
                   Text(
                     email,
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white54),
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: Colors.white54,
+                    ),
                   ),
                 ],
               ),
@@ -448,40 +379,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Text SectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontSize: 20,
-        color: Theme.of(context).primaryColor,
-      ),
-    );
-  }
+  Widget _buildSectionTitle(String title) => Text(
+    title,
+    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontSize: 20,
+      color: Theme.of(context).primaryColor,
+    ),
+  );
 
-  SettingsTile SectionTile({
+  SettingsTile _buildSectionTile({
     required String title,
     String? description,
     required IconData icon,
     Widget? trailing,
     required Function(BuildContext context) onPressed,
-  }) {
-    return SettingsTile(
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.displayMedium,
+  }) => SettingsTile(
+    title: Text(
+      title,
+      style: Theme.of(context).textTheme.displayMedium,
+    ),
+    description: description != null ? Text(
+      description,
+      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+        color: Colors.white54,
       ),
-      description: description != null ? Text(
-        description,
-        style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white54),
-      ) : null,
-      leading: Icon(icon),
-      trailing: trailing,
-      backgroundColor: Platform.isIOS ? Theme.of(context).cardColor: Colors.transparent,
-      onPressed: onPressed,
-    );
-  }
+    ) : null,
+    leading: Icon(icon),
+    trailing: trailing,
+    backgroundColor: Platform.isIOS ? Theme.of(context).cardColor: Colors.transparent,
+    onPressed: onPressed,
+  );
 
-  SettingsList Settings() {
+  Widget _buildSettingsList() {
     SettingsThemeData settingsThemeData = SettingsThemeData(
       titleTextColor: Theme.of(context).primaryColor,
       settingsListBackground: Theme.of(context).scaffoldBackgroundColor,
@@ -490,92 +419,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return SettingsList(
       lightTheme: settingsThemeData,
       darkTheme: settingsThemeData,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      sections: [
+      sections: <SettingsSection>[
         SettingsSection(
-          title: SectionTitle('Playback'),
-          tiles: [
-            SectionTile(
-              title: 'Server',
-              description: 'Select a server that works best for you',
+          title: _buildSectionTitle("Playback"),
+          tiles: <SettingsTile>[
+            _buildSectionTile(
+              title: "Server",
+              description: "Select a server that works best for you",
               icon: Icons.dns_outlined,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => openServerSelector(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _openServerSelector(),
             ),
-            SectionTile(
-              title: 'Subtitles',
-              description: 'Customize the subtitles style to fit your preference',
+            _buildSectionTile(
+              title: "Subtitles",
+              description: "Customize the subtitles style to fit your preference",
               icon: Icons.subtitles_outlined,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => navigate(destination: SubtitlesPreferencesScreen()),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => navigate(SubtitlesPreferencesScreen()),
             ),
-            SectionTile(
-              title: 'Seek duration',
-              description: 'Adjust how long the seek forward/backward duration is',
+            _buildSectionTile(
+              title: "Seek duration",
+              description: "Adjust how long the seek forward/backward duration is",
               icon: Icons.update,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => openSeekDurationSelector(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _openSeekDurationSelector(),
             ),
           ],
         ),
         SettingsSection(
-          title: SectionTitle('App'),
-          tiles: [
-            SectionTile(
-              title: 'About',
+          title: _buildSectionTitle("App"),
+          tiles: <SettingsTile>[
+            _buildSectionTile(
+              title: "About",
               icon: Icons.info_outline_rounded,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => openAbout(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _openAbout(),
             ),
-            SectionTile(
-              title: 'Open Source libraries',
+            _buildSectionTile(
+              title: "Open Source libraries",
               icon: Icons.description_outlined,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => navigate(destination: OpenSourceLibrariesScreen()),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => navigate(const OpenSourceLibrariesScreen()),
             ),
           ],
         ),
         SettingsSection(
-          title: SectionTitle('Other'),
-          tiles: [
-            SectionTile(
-              title: 'Clear recent searches',
-              description: 'Deletes all the recent search queries',
+          title: _buildSectionTitle("Other"),
+          tiles: <SettingsTile>[
+            _buildSectionTile(
+              title: "Clear recent searches",
+              description: "Deletes all the recent search queries",
               icon: Icons.search_off,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => clearRecentSearches(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _clearRecentSearches(),
             ),
-            SectionTile(
-              title: 'Clear favorites',
-              description: 'Deletes all your favorites',
+            _buildSectionTile(
+              title: "Clear favorites",
+              description: "Deletes all your favorites",
               icon: Icons.favorite_border,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => clearFavorites(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _clearFavorites(),
             ),
-            SectionTile(
-              title: 'Clear recently watched',
-              description: 'Deletes all the progress of recently watched movies and TV shows',
+            _buildSectionTile(
+              title: "Clear recently watched",
+              description: "Deletes all the progress of recently watched movies and TV shows",
               icon: Icons.video_library_outlined,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => clearRecentlyWatched(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _clearRecentlyWatched(),
             ),
-            SectionTile(
-              title: 'Delete account',
-              description: 'Delete your account, along with all the saved data. You can create a new account at any time',
+            _buildSectionTile(
+              title: "Delete account",
+              description: "Delete your account, along with all the saved data. You can create a new account at any time",
               icon: Icons.no_accounts_rounded,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) => showDeleteAccountConfirmation(),
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _showDeleteAccountConfirmation(),
             ),
-            SectionTile(
-              title: 'Sign out',
+            _buildSectionTile(
+              title: "Sign out",
               icon: Icons.exit_to_app,
-              trailing: Platform.isIOS ? Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (context) async {
-                await GoogleSignIn.instance.signOut();
-                await FirebaseAuth.instance.signOut();
-                navigate(destination: LandingScreen(), replace: true);
-              },
+              trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
+              onPressed: (BuildContext context) => _signOut(),
             ),
           ],
         ),
@@ -584,16 +509,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
+  String get screenName => "Settings";
+
+  @override
+  Widget buildContent(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: SingleChildScrollView(
         child: Column(
-          children: [
-            UserCard(),
-            Settings(),
+          children: <Widget>[
+            _buildUserCard(),
+            _buildSettingsList(),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }

@@ -144,12 +144,14 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   void _verifyAuthSession() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
-      setState(() => _isAuthenticated = user != null);
-      if (user == null) {
-        await navigate(
-          const LandingScreen(),
-          replace: true,
-        );
+      if (mounted) {
+        setState(() => _isAuthenticated = user != null);
+        if (user == null) {
+          await navigate(
+            const LandingScreen(),
+            replace: true,
+          );
+        }
       }
     });
   }

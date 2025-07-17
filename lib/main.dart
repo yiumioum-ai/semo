@@ -2,9 +2,12 @@ import "dart:async";
 
 import "package:firebase_core/firebase_core.dart";
 import "package:firebase_crashlytics/firebase_crashlytics.dart";
+import "package:firebase_remote_config/firebase_remote_config.dart";
 import "package:flutter/material.dart";
 import "package:flutter/foundation.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:logger/logger.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:semo/firebase_options.dart";
 import "package:semo/screens/splash_screen.dart";
 import "package:semo/services/tmdb_service.dart";
@@ -12,15 +15,19 @@ import "package:semo/utils/preferences.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _initializeFirebase();
   await Preferences.init();
-  await initializeFirebase();
   TMDBService.init();
   runApp(const Semo());
 }
 
-Future<void> initializeFirebase() async {
+Future<void> _initializeFirebase() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await _initializeCrashlytics();
+  await _initializeRemoteConfig();
+}
 
+Future<void> _initializeCrashlytics() async {
   if (!kIsWeb) {
     FirebaseCrashlytics crashlytics = FirebaseCrashlytics.instance;
     await runZonedGuarded<Future<void>>(() async {
@@ -28,7 +35,33 @@ Future<void> initializeFirebase() async {
       FlutterError.onError = crashlytics.recordFlutterFatalError;
     }, (Object error, StackTrace stack) async {
       await crashlytics.recordError(error, stack, fatal: true);
-    }); 
+    });
+  }
+}
+
+Future<void> _initializeRemoteConfig() async {
+  try {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
+
+    await remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: const Duration(hours: 1),
+      ),
+    );
+
+    await remoteConfig.setDefaults(<String, dynamic>{
+      "appVersion": packageInfo.version,
+    });
+
+    await remoteConfig.fetchAndActivate();
+
+    if (!kIsWeb) {
+      remoteConfig.onConfigUpdated.listen((RemoteConfigUpdate event) async => remoteConfig.activate());
+    }
+  } catch (e, s) {
+    Logger().e("Failed to initialize remote config", error: e, stackTrace: s);
   }
 }
 
@@ -138,6 +171,6 @@ class Semo extends StatelessWidget {
     title: "Semo",
     debugShowCheckedModeBanner: false,
     theme: _buildTheme(),
-    home: SplashScreen(),
+    home: const SplashScreen(),
   );
 }

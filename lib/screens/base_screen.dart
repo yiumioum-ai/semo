@@ -12,11 +12,11 @@ abstract class BaseScreen extends StatefulWidget {
   const BaseScreen({
     super.key,
     this.shouldLogScreenView = true,
-    this.shouldVerifySession = true
+    this.shouldListenToAuthStateChanges = true
   });
 
   final bool shouldLogScreenView;
-  final bool shouldVerifySession;
+  final bool shouldListenToAuthStateChanges;
 }
 
 abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
@@ -142,7 +142,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   /// Navigate to a screen
   Future<dynamic> navigate(Widget destination, {bool replace = false}) async => NavigationHelper.navigate(context, destination, replace: replace);
 
-  void _verifyAuthSession() {
+  void _initAuthStateListener() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
       if (mounted) {
         setState(() => _isAuthenticated = user != null);
@@ -174,8 +174,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
       if (mounted) {
         spinner = Spinner(context);
-        if (widget.shouldVerifySession) {
-          _verifyAuthSession();
+        if (widget.shouldListenToAuthStateChanges) {
+          _initAuthStateListener();
         }
         await initializeScreen();
       }
@@ -185,7 +185,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   @override
   void dispose() {
     _connectionSubscription.cancel();
-    if (widget.shouldVerifySession) {
+    if (widget.shouldListenToAuthStateChanges) {
       _authSubscription?.cancel();
     }
     handleDispose();

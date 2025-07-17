@@ -38,7 +38,7 @@ class AuthService {
     }
   }
 
-  Future<User?> getUser() async {
+  User? getUser() {
     try {
       if (_auth.currentUser == null) {
         throw Exception("User is null");

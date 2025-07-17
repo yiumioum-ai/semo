@@ -1,136 +1,97 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import "package:firebase_auth/firebase_auth.dart";
+import "package:flutter/material.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/screens/fragments_screen.dart';
-import 'package:semo/screens/landing_screen.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
+import "package:semo/screens/base_screen.dart";
+import "package:semo/screens/fragments_screen.dart";
+import "package:semo/screens/landing_screen.dart";
+import "package:semo/services/auth_service.dart";
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends BaseScreen {
+  const SplashScreen({super.key}) : super(shouldListenToAuthStateChanges: false);
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  BaseScreenState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  String version = '1.0.0';
+class _SplashScreenState extends BaseScreenState<SplashScreen> {
+  String _appVersion = "1.0.0";
 
-  getAppVersion() async {
+  Future<void> _getAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      version = packageInfo.version;
-    });
+    setState(() => _appVersion = packageInfo.version);
   }
 
-  navigate({required Widget destination}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
+  void _checkAuthState() {
+    User? user = AuthService().getUser();
+    Widget destination;
+    
+    if (user == null) {
+      destination = const LandingScreen();
+    } else {
+      destination = const FragmentsScreen();
+    }
 
-    Future.delayed(Duration(seconds: 3), () async {
+    Future<void>.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        await Navigator.pushReplacement(
-          context,
-          pageTransition,
-        );
+        await navigate(destination, replace: true);
       }
     });
   }
+  
+  @override
+  String get screenName => "Splash";
 
-  checkUserSession() {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      Widget destination;
-      if (user == null) {
-        destination = LandingScreen();
-      } else {
-        destination = FragmentsScreen();
-      }
-      navigate(destination: destination);
-    });
-  }
-
-  initRemoteConfig() async {
-    FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
-
-    await remoteConfig.setConfigSettings(
-      RemoteConfigSettings(
-        fetchTimeout: const Duration(minutes: 1),
-        minimumFetchInterval: const Duration(hours: 1),
-      ),
-    );
-
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    await remoteConfig.setDefaults({
-      'appVersion': packageInfo.version,
-    });
-
-    await remoteConfig.fetchAndActivate();
-
-    if (!kIsWeb) remoteConfig.onConfigUpdated.listen((event) async => await remoteConfig.activate());
+  @override
+  Future<void> initializeScreen() async {
+    await _getAppVersion();
+    _checkAuthState();
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      initRemoteConfig();
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Splash',
-      );
-      getAppVersion();
-      checkUserSession();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            children: [
-              Spacer(),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Assets.images.appIcon.image(
-                    width: 200,
-                    height: 200,
+  Widget buildContent(BuildContext context) => Scaffold(
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    body: SafeArea(
+      child: Center(
+        child: Column(
+          children: <Widget>[
+            const Spacer(),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Assets.images.appIcon.image(
+                  width: 200,
+                  height: 200,
+                ),
+              ],
+            ),
+            const Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 10,
+                    right: 16,
+                    left: 16,
                   ),
-                ],
-              ),
-              Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 10,
-                      right: 16,
-                      left: 16,
-                    ),
-                    child: Text(
-                      'Version $version',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: Colors.white54,
-                      ),
+                  child: Text(
+                    "Version $_appVersion",
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: Colors.white54,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }

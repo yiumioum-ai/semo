@@ -6,6 +6,7 @@ import "package:semo/components/snack_bar.dart";
 import "package:semo/gen/assets.gen.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/fragments_screen.dart";
+import "package:semo/services/auth_service.dart";
 import "package:video_player/video_player.dart";
 
 class LandingScreen extends BaseScreen {
@@ -16,6 +17,7 @@ class LandingScreen extends BaseScreen {
 }
 
 class _LandingScreenState extends BaseScreenState<LandingScreen> {
+  final AuthService _authService = AuthService();
   final VideoPlayerController _videoController = VideoPlayerController.asset(Assets.videos.coverPortrait);
 
   Future<void> _initPlayback() async {
@@ -28,17 +30,12 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
     spinner.show();
 
     try {
-      final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
-      final GoogleSignInAuthentication auth = user.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(idToken: auth.idToken);
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      await _authService.signIn();
       await navigate(
         const FragmentsScreen(),
         replace: true,
       );
-    } catch (e, s) {
-      logger.e("Failed to authenticate", error: e, stackTrace: s);
+    } catch (_) {
       if (mounted) {
         showSnackBar(context, "An error occurred.");
       }

@@ -60,7 +60,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       return result.movies ?? <Movie>[];
     },
   );
-  
+
   Future<void> _loadMovieDetails() async {
     try {
       await Future.wait(<Future<void>>[
@@ -113,20 +113,16 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     setState(() => _movie.cast = cast);
   }
 
-  Future<void> _toggleFavorite() async {
-    setState(() => _isFavorite = !_isFavorite);
+  void _toggleFavorite() {
     try {
       if (_isFavorite) {
-        await _favoritesService.removeMovie(_movie.id);
+        unawaited(_favoritesService.removeMovie(_movie.id));
       } else {
-        await _favoritesService.addMovie(_movie.id);
+        unawaited(_favoritesService.addMovie(_movie.id));
       }
-    } catch (_) {
-      setState(() => _isFavorite = !_isFavorite);
-      if (mounted) {
-        showSnackBar(context, "Failed to update favorites");
-      }
-    }
+    } catch (_) {}
+
+    setState(() => _isFavorite = !_isFavorite);
   }
 
   Future<void> _playMovie() async {

@@ -2,7 +2,7 @@
 
 ![Semo Screenshots](https://raw.githubusercontent.com/moses-mbaga/semo/d4ed0519764b78d729cc459476086928d0a2d54b/banner.png)
 
-Semo is an open-source Flutter application designed to offer a seamless movie and TV show streaming experience. With support for multiple streaming servers, synced watch progress, and fully customizable subtitles, Semo aims to be your go-to streaming app for enjoying your favorite content.
+Semo is designed to offer a seamless movie and TV show streaming experience. With support for multiple streaming servers, synced watch progress, and fully customizable subtitles, Semo aims to be your go-to streaming app for enjoying your favorite content.
 
 ## Features
 
@@ -44,7 +44,7 @@ Download IPA
 
 Prerequisites:
 - [Flutter SDK](https://flutter.dev/) (latest stable version).
-- A code editor (e.g., [VSCode](https://code.visualstudio.com/), [Android Studio](https://developer.android.com/studio)).
+- A code editor (e.g., [Android Studio](https://developer.android.com/studio), [VSCode](https://code.visualstudio.com/)).
 - A Firebase account
 
 Instructions:
@@ -60,12 +60,11 @@ cd semo
 flutter pub get
 ```
 
-- Under libs/utils folder, create a dart file named **api_keys.dart** and add the following code:
-```dart
-class APIKeys {
-  static const String tmdbAccessTokenAuth = 'Your TMDB access token auth';
-  static const String subdl = 'Your SUBDL API Key';
-}
+- Under the parent directory, create a ```.env``` file, which will contains required to run the app. An example can be found in ```.env.example```.
+
+- Auto generate asset and env helpers using build_runner:
+```bash
+dart run build_runner build --delete-conflicting-outputs;
 ```
 
 - Add Firebase to the app using FlutterFire CLI. You can follow insructions from the [official documentation](https://firebase.google.com/docs/flutter/setup)
@@ -74,6 +73,7 @@ class APIKeys {
 ```bash
 flutter run
 ```
+
 ## Support
 
 If you encounter any issues or have suggestions, please open an issue in the [GitHub Issues](https://github.com/moses-mbaga/semo/issues) section.

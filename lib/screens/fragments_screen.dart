@@ -57,7 +57,7 @@ class _FragmentsScreenState extends BaseScreenState<FragmentsScreen> with Ticker
             ],
           )
         ),
-        FragmentScreen(
+        const FragmentScreen(
           icon: Icons.settings,
           title: "Settings",
           widget: SettingsScreen()

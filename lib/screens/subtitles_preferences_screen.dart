@@ -61,7 +61,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
     );
   }
 
-  Text SectionTitle(String title) => Text(
+  Text _buildSectionTitle(String title) => Text(
     title,
     style: Theme.of(context).textTheme.titleSmall?.copyWith(
       fontSize: 20,
@@ -69,7 +69,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
     ),
   );
 
-  SettingsTile SectionTile({
+  SettingsTile _buildSectionTile({
     required String title,
     required Widget trailing,
     bool enabled = true,
@@ -106,9 +106,9 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
       shrinkWrap: true,
       sections: <SettingsSection>[
         SettingsSection(
-          title: SectionTitle("Font"),
+          title: _buildSectionTitle("Font"),
           tiles: <SettingsTile>[
-            SectionTile(
+            _buildSectionTile(
               title: "Size",
               trailing: Container(
                 padding: const EdgeInsets.symmetric(vertical: 5),
@@ -133,7 +133,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                 ),
               ),
             ),
-            SectionTile(
+            _buildSectionTile(
               title: "Color",
               trailing: Container(
                 padding: const EdgeInsets.symmetric(vertical: 5),
@@ -161,9 +161,9 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
           ],
         ),
         SettingsSection(
-          title: SectionTitle("Border"),
+          title: _buildSectionTitle("Border"),
           tiles: <SettingsTile>[
-            SectionTile(
+            _buildSectionTile(
               title: "Has border",
               trailing: Switch(
                 value: _subtitleStyle.hasBorder,
@@ -178,7 +178,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                 await _preferences.setSubtitlesStyle(_subtitleStyle);
               },
             ),
-            SectionTile(
+            _buildSectionTile(
               title: "Width",
               enabled: _subtitleStyle.hasBorder,
               trailing: Container(
@@ -204,7 +204,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                 ),
               ),
             ),
-            SectionTile(
+            _buildSectionTile(
               title: "Color",
               enabled: _subtitleStyle.hasBorder,
               trailing: Container(
@@ -230,7 +230,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                 ),
               ),
             ),
-            SectionTile(
+            _buildSectionTile(
               title: "Style",
               enabled: _subtitleStyle.hasBorder,
               trailing: Container(

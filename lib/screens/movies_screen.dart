@@ -111,18 +111,15 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     }
   }
 
-  Future<void> _removeFromRecentlyWatched(Movie movie) async {
+  void _removeFromRecentlyWatched(Movie movie) {
     List<Movie> recentlyWatched = _recentlyWatched;
 
     try {
-      await _recentlyWatchedService.removeMovie(movie.id);
-      recentlyWatched.removeWhere((Movie m) => m.id == movie.id);
-      setState(() => _recentlyWatched = recentlyWatched);
-    } catch (e) {
-      if (mounted) {
-        showSnackBar(context, "Failed to remove from recently watched");
-      }
-    }
+      unawaited(_recentlyWatchedService.removeMovie(movie.id));
+    } catch (_) {}
+
+    recentlyWatched.removeWhere((Movie m) => m.id == movie.id);
+    setState(() => _recentlyWatched = recentlyWatched);
   }
 
   Future<void> _refreshData() async {

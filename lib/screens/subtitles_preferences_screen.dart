@@ -1,75 +1,30 @@
-import 'dart:io';
+import "dart:io";
 
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_settings_ui/flutter_settings_ui.dart';
+import "package:flutter/material.dart";
+import "package:flutter_settings_ui/flutter_settings_ui.dart";
 import "package:semo/gen/assets.gen.dart";
-import 'package:semo/models/subtitle_style.dart';
-import 'package:semo/utils/preferences.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
+import "package:semo/models/subtitle_style.dart";
+import "package:semo/screens/base_screen.dart";
+import "package:semo/utils/preferences.dart";
+import "package:semo/utils/string_extension.dart";
 
-class SubtitlesPreferencesScreen extends StatefulWidget {
+class SubtitlesPreferencesScreen extends BaseScreen {
+  const SubtitlesPreferencesScreen({super.key});
+
   @override
-  _SubtitlesPreferencesScreenState createState() => _SubtitlesPreferencesScreenState();
+  BaseScreenState<SubtitlesPreferencesScreen> createState() => _SubtitlesPreferencesScreenState();
 }
 
-class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen> {
-  Preferences _preferences = Preferences();
-  SubtitleStyle? _subtitleStyle;
+class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferencesScreen> {
+  final Preferences _preferences = Preferences();
+  late final SubtitleStyle _subtitleStyle = _preferences.getSubtitlesStyle();
 
-  navigate({required Widget destination, bool replace = false}) async {
-    SwipeablePageRoute pageTransition = SwipeablePageRoute(
-      canOnlySwipeFromEdge: true,
-      builder: (BuildContext context) => destination,
-    );
-
-    if (replace) {
-      await Navigator.pushReplacement(
-        context,
-        pageTransition,
-      );
-    } else {
-      await Navigator.push(
-        context,
-        pageTransition,
-      );
-    }
-  }
-
-  initSubtitleStyle() async {
-    SubtitleStyle subtitleStyle = await _preferences.getSubtitlesStyle();
-    setState(() => _subtitleStyle = subtitleStyle);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    initSubtitleStyle();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await FirebaseAnalytics.instance.logScreenView(
-        screenName: 'Subtitles Preferences',
-      );
-    });
-  }
-
-  Text SectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontSize: 20,
-        color: Theme.of(context).primaryColor,
-      ),
-    );
-  }
-
-  Widget VisualPresentation() {
-    String subtitle = 'Just like everything else in this place. [Chair scrapes floor]\nThe coordinates point to the old lighthouse.';
+  Widget _buildVisualExample() {
+    String subtitle = "Just like everything else in this place. [Chair scrapes floor]\nThe coordinates point to the old lighthouse.";
     Paint foreground  = Paint()
-      ..style = _subtitleStyle!.borderStyle.style
-      ..strokeWidth = _subtitleStyle!.borderStyle.strokeWidth
-      ..color = SubtitleStyle.getColors()[_subtitleStyle!.borderStyle.color]!;
+      ..style = _subtitleStyle.borderStyle.style
+      ..strokeWidth = _subtitleStyle.borderStyle.strokeWidth
+      ..color = SubtitleStyle.getColors()[_subtitleStyle.borderStyle.color]!;
 
     return Container(
       width: double.infinity,
@@ -80,24 +35,24 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
           fit: BoxFit.cover,
         ),
       ),
-      padding: EdgeInsets.all(18),
+      padding: const EdgeInsets.all(18),
       child: Center(
         child: Stack(
-          children: [
+          children: <Widget>[
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: _subtitleStyle!.fontSize,
-                foreground: _subtitleStyle!.hasBorder ? foreground : null,
+                fontSize: _subtitleStyle.fontSize,
+                foreground: _subtitleStyle.hasBorder ? foreground : null,
               ),
             ),
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: _subtitleStyle!.fontSize,
-                color: SubtitleStyle.getColors()[_subtitleStyle!.color],
+                fontSize: _subtitleStyle.fontSize,
+                color: SubtitleStyle.getColors()[_subtitleStyle.color],
               ),
             ),
           ],
@@ -106,25 +61,31 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
     );
   }
 
+  Text SectionTitle(String title) => Text(
+    title,
+    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontSize: 20,
+      color: Theme.of(context).primaryColor,
+    ),
+  );
+
   SettingsTile SectionTile({
     required String title,
     required Widget trailing,
     bool enabled = true,
     Function(BuildContext context)? onPressed,
-  }) {
-    return SettingsTile(
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.displayMedium,
-      ),
-      leading: null,
-      trailing: trailing,
-      backgroundColor: Platform.isIOS ? Theme.of(context).cardColor: Colors.transparent,
-      onPressed: onPressed,
-    );
-  }
+  }) => SettingsTile(
+    title: Text(
+      title,
+      style: Theme.of(context).textTheme.displayMedium,
+    ),
+    leading: null,
+    trailing: trailing,
+    backgroundColor: Platform.isIOS ? Theme.of(context).cardColor: Colors.transparent,
+    onPressed: onPressed,
+  );
 
-  SettingsList Customizations() {
+  SettingsList _buildCustomizations() {
     SettingsThemeData settingsThemeData = SettingsThemeData(
       settingsListBackground: Theme.of(context).scaffoldBackgroundColor,
     );
@@ -141,18 +102,18 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
     return SettingsList(
       lightTheme: settingsThemeData,
       darkTheme: settingsThemeData,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      sections: [
+      sections: <SettingsSection>[
         SettingsSection(
-          title: SectionTitle('Font'),
-          tiles: [
+          title: SectionTitle("Font"),
+          tiles: <SettingsTile>[
             SectionTile(
-              title: 'Size',
+              title: "Size",
               trailing: Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: DropdownMenu<double>(
-                  initialSelection: _subtitleStyle!.fontSize,
+                  initialSelection: _subtitleStyle.fontSize,
                   requestFocusOnTap: false,
                   enableFilter: false,
                   enableSearch: false,
@@ -160,25 +121,24 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                   inputDecorationTheme: inputDecorationTheme,
                   onSelected: (double? size) async {
                     if (size != null) {
-                      setState(() => _subtitleStyle!.fontSize = size);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                      setState(() => _subtitleStyle.fontSize = size);
+                      await _preferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.getFontSizes().map<DropdownMenuEntry<double>>((double size) {
-                    return DropdownMenuEntry<double>(
-                      value: size,
-                      label: '${size}'.replaceAll('.0', ''),
-                    );
-                  }).toList(),
+                  dropdownMenuEntries: SubtitleStyle.getFontSizes()
+                      .map<DropdownMenuEntry<double>>((double size) => DropdownMenuEntry<double>(
+                    value: size,
+                    label: "$size".replaceAll(".0", ""),
+                  )).toList(),
                 ),
               ),
             ),
             SectionTile(
-              title: 'Color',
+              title: "Color",
               trailing: Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: DropdownMenu<String>(
-                  initialSelection: _subtitleStyle!.color,
+                  initialSelection: _subtitleStyle.color,
                   requestFocusOnTap: false,
                   enableFilter: false,
                   enableSearch: false,
@@ -186,46 +146,45 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                   inputDecorationTheme: inputDecorationTheme,
                   onSelected: (String? color) async {
                     if (color != null) {
-                      setState(() => _subtitleStyle!.color = color);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                      setState(() => _subtitleStyle.color = color);
+                      await _preferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.getColors().keys.map<DropdownMenuEntry<String>>((String color) {
-                    return DropdownMenuEntry<String>(
-                      value: color,
-                      label: color,
-                    );
-                  }).toList(),
+                  dropdownMenuEntries: SubtitleStyle.getColors().keys
+                      .map<DropdownMenuEntry<String>>((String color) => DropdownMenuEntry<String>(
+                    value: color,
+                    label: color,
+                  )).toList(),
                 ),
               ),
             ),
           ],
         ),
         SettingsSection(
-          title: SectionTitle('Border'),
-          tiles: [
+          title: SectionTitle("Border"),
+          tiles: <SettingsTile>[
             SectionTile(
-              title: 'Has border',
+              title: "Has border",
               trailing: Switch(
-                value: _subtitleStyle!.hasBorder,
-                onChanged: (isSelected) async {
-                  setState(() => _subtitleStyle!.hasBorder = isSelected);
-                  await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                value: _subtitleStyle.hasBorder,
+                onChanged: (bool isSelected) async {
+                  setState(() => _subtitleStyle.hasBorder = isSelected);
+                  await _preferences.setSubtitlesStyle(_subtitleStyle);
                 },
                 activeColor: Theme.of(context).primaryColor,
               ),
-              onPressed: (context) async {
-                setState(() => _subtitleStyle!.hasBorder = !_subtitleStyle!.hasBorder);
-                await _preferences.setSubtitlesStyle(_subtitleStyle!);
+              onPressed: (BuildContext context) async {
+                setState(() => _subtitleStyle.hasBorder = !_subtitleStyle.hasBorder);
+                await _preferences.setSubtitlesStyle(_subtitleStyle);
               },
             ),
             SectionTile(
-              title: 'Width',
-              enabled: _subtitleStyle!.hasBorder,
+              title: "Width",
+              enabled: _subtitleStyle.hasBorder,
               trailing: Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: DropdownMenu<double>(
-                  initialSelection: _subtitleStyle!.borderStyle.strokeWidth,
+                  initialSelection: _subtitleStyle.borderStyle.strokeWidth,
                   requestFocusOnTap: false,
                   enableFilter: false,
                   enableSearch: false,
@@ -233,26 +192,25 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                   inputDecorationTheme: inputDecorationTheme,
                   onSelected: (double? size) async {
                     if (size != null) {
-                      setState(() => _subtitleStyle!.borderStyle.strokeWidth = size);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                      setState(() => _subtitleStyle.borderStyle.strokeWidth = size);
+                      await _preferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.getBorderWidths().map<DropdownMenuEntry<double>>((double size) {
-                    return DropdownMenuEntry<double>(
-                      value: size,
-                      label: '${size}'.replaceAll('.0', ''),
-                    );
-                  }).toList(),
+                  dropdownMenuEntries: SubtitleStyle.getBorderWidths()
+                      .map<DropdownMenuEntry<double>>((double size) => DropdownMenuEntry<double>(
+                    value: size,
+                    label: "$size".replaceAll(".0", ""),
+                  )).toList(),
                 ),
               ),
             ),
             SectionTile(
-              title: 'Color',
-              enabled: _subtitleStyle!.hasBorder,
+              title: "Color",
+              enabled: _subtitleStyle.hasBorder,
               trailing: Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: DropdownMenu<String>(
-                  initialSelection: _subtitleStyle!.borderStyle.color,
+                  initialSelection: _subtitleStyle.borderStyle.color,
                   requestFocusOnTap: false,
                   enableFilter: false,
                   enableSearch: false,
@@ -260,26 +218,25 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                   inputDecorationTheme: inputDecorationTheme,
                   onSelected: (String? color) async {
                     if (color != null) {
-                      setState(() => _subtitleStyle!.borderStyle.color = color);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                      setState(() => _subtitleStyle.borderStyle.color = color);
+                      await _preferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
-                  dropdownMenuEntries: SubtitleStyle.getColors().keys.map<DropdownMenuEntry<String>>((String color) {
-                    return DropdownMenuEntry<String>(
-                      value: color,
-                      label: color,
-                    );
-                  }).toList(),
+                  dropdownMenuEntries: SubtitleStyle.getColors().keys
+                      .map<DropdownMenuEntry<String>>((String color) => DropdownMenuEntry<String>(
+                    value: color,
+                    label: color,
+                  )).toList(),
                 ),
               ),
             ),
             SectionTile(
-              title: 'Style',
-              enabled: _subtitleStyle!.hasBorder,
+              title: "Style",
+              enabled: _subtitleStyle.hasBorder,
               trailing: Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 child: DropdownMenu<String>(
-                  initialSelection: _subtitleStyle!.borderStyle.style.name,
+                  initialSelection: _subtitleStyle.borderStyle.style.name,
                   requestFocusOnTap: false,
                   enableFilter: false,
                   enableSearch: false,
@@ -287,16 +244,15 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
                   inputDecorationTheme: inputDecorationTheme,
                   onSelected: (String? style) async {
                     if (style != null) {
-                      setState(() => _subtitleStyle!.borderStyle.style = PaintingStyle.values.byName(style));
-                      await _preferences.setSubtitlesStyle(_subtitleStyle!);
+                      setState(() => _subtitleStyle.borderStyle.style = PaintingStyle.values.byName(style));
+                      await _preferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
-                  dropdownMenuEntries: PaintingStyle.values.map((e) => e.name).toList().map<DropdownMenuEntry<String>>((String style) {
-                    return DropdownMenuEntry<String>(
-                      value: style,
-                      label: style.capitalize(),
-                    );
-                  }).toList(),
+                  dropdownMenuEntries: PaintingStyle.values
+                      .map((PaintingStyle style) => style.name).toList().map<DropdownMenuEntry<String>>((String style) => DropdownMenuEntry<String>(
+                    value: style,
+                    label: style.capitalize(),
+                  )).toList(),
                 ),
               ),
             ),
@@ -305,28 +261,22 @@ class _SubtitlesPreferencesScreenState extends State<SubtitlesPreferencesScreen>
       ],
     );
   }
+  
+  @override
+  String get screenName => "Subtitles Preferences";
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Subtitles'),
+  Widget buildContent(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text("Subtitles"),
+    ),
+    body: SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          _buildVisualExample(),
+          _buildCustomizations(),
+        ],
       ),
-      body: _subtitleStyle != null ? SingleChildScrollView(
-        child: Column(
-          children: [
-            VisualPresentation(),
-            Customizations(),
-          ],
-        ),
-      ) : Container(),
-    );
-  }
-}
-
-extension StringExtension on String {
-  capitalize() {
-    if (this.isEmpty) return this;
-    return this[0].toUpperCase() + this.substring(1);
-  }
+    ),
+  );
 }

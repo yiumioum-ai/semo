@@ -34,7 +34,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "net.examnet.semo"
+    namespace = "com.mosesmbaga.semo"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.2.12479018"
 
@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "net.examnet.semo"
+        applicationId = "com.mosesmbaga.semo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()

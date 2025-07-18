@@ -1,4 +1,4 @@
-package net.examnet.semo;
+package com.mosesmbaga.semo;
 
 import io.flutter.embedding.android.FlutterActivity;
 

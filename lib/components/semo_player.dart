@@ -5,7 +5,7 @@ import "package:flutter/material.dart";
 import "package:font_awesome_flutter/font_awesome_flutter.dart";
 import "package:semo/models/media_progress.dart";
 import "package:semo/models/media_stream.dart";
-import "package:semo/utils/preferences.dart";
+import "package:semo/services/preferences.dart";
 import "package:semo/models/subtitle_style.dart" as local;
 import "package:subtitle_wrapper_package/subtitle_wrapper_package.dart";
 import "package:video_player/video_player.dart";
@@ -51,10 +51,10 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
     subtitleType: SubtitleType.srt,
     showSubtitles: false,
   );
-  final Preferences _preferences = Preferences();
+  final AppPreferences _appPreferences = AppPreferences();
   SubtitleStyle _subtitleStyle = const SubtitleStyle();
   MediaProgress _mediaProgress = const MediaProgress();
-  late final int _seekDuration = _preferences.getSeekDuration();
+  late final int _seekDuration = _appPreferences.getSeekDuration();
   bool _isSeekedToInitialProgress = false;
   bool _isPlaying = false;
   bool _showControls = true;
@@ -94,7 +94,7 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
   Future<void> _initializePlayer() async {
     try {
       // Initialize subtitle style
-      local.SubtitleStyle localSubtitlesStyle = _preferences.getSubtitlesStyle();
+      local.SubtitleStyle localSubtitlesStyle = _appPreferences.getSubtitlesStyle();
       SubtitleStyle subtitleStyle = SubtitleStyle(
         fontSize: localSubtitlesStyle.fontSize,
         textColor: local.SubtitleStyle.getColors()[localSubtitlesStyle.color] ?? Colors.white,

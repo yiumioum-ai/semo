@@ -23,7 +23,17 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
   final InternetConnection _internetConnection = InternetConnection();
-  late StreamSubscription<InternetStatus> _connectionSubscription;
+  late final StreamSubscription<InternetStatus> _connectionSubscription = _internetConnection.onStatusChange
+      .listen((InternetStatus status) async {
+    if (mounted) {
+      switch (status) {
+        case InternetStatus.connected:
+          setState(() => _isConnectedToInternet = true);
+        case InternetStatus.disconnected:
+          setState(() => _isConnectedToInternet = false);
+      }
+    }
+  });
   StreamSubscription<User?>? _authSubscription;
   bool _isConnectedToInternet = true;
   bool _isAuthenticated = false;
@@ -83,23 +93,6 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
       ),
     ),
   );
-
-  /// Initialize connectivity checking
-  Future<void> _initConnectivity() async {
-    await _checkConnectivity();
-
-    _connectionSubscription = _internetConnection.onStatusChange.listen((InternetStatus status) async {
-        if (mounted) {
-          switch (status) {
-            case InternetStatus.connected:
-              setState(() => _isConnectedToInternet = true);
-            case InternetStatus.disconnected:
-              setState(() => _isConnectedToInternet = false);
-          }
-        }
-      },
-    );
-  }
 
   /// Check current connectivity status
   Future<void> _checkConnectivity() async {
@@ -166,17 +159,19 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _initConnectivity();
-
-      if (_isConnectedToInternet && widget.shouldLogScreenView) {
-        await _logScreenView();
-      }
-
       if (mounted) {
         spinner = Spinner(context);
+
+        await _checkConnectivity();
+
+        if (_isConnectedToInternet && widget.shouldLogScreenView) {
+          await _logScreenView();
+        }
+
         if (widget.shouldListenToAuthStateChanges) {
           _initAuthStateListener();
         }
+
         await initializeScreen();
       }
     });
@@ -184,12 +179,12 @@ abstract class BaseScreenState<T extends BaseScreen> extends State<T> {
 
   @override
   void dispose() {
+    super.dispose();
     _connectionSubscription.cancel();
     if (widget.shouldListenToAuthStateChanges) {
       _authSubscription?.cancel();
     }
     handleDispose();
-    super.dispose();
   }
 
   @override

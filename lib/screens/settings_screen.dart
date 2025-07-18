@@ -18,7 +18,7 @@ import "package:semo/services/favorites_service.dart";
 import "package:semo/services/recent_searches_service.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
-import "package:semo/utils/preferences.dart";
+import "package:semo/services/preferences.dart";
 import "package:semo/utils/urls.dart";
 import "package:url_launcher/url_launcher.dart";
 
@@ -30,12 +30,12 @@ class SettingsScreen extends BaseScreen {
 }
 
 class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
-  final Preferences _preferences = Preferences();
+  final AppPreferences _appPreferences = AppPreferences();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final AuthService _authService = AuthService();
 
   Future<void> _openServerSelector() async {
-    String savedServerName = _preferences.getServer();
+    String savedServerName = _appPreferences.getStreamingServer();
     List<StreamingServer> servers = StreamExtractor.streamingServers;
 
     await showModalBottomSheet(
@@ -61,7 +61,7 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
                 title: Text(server.name),
                 leading: isSelected ? const Icon(Icons.check) : null,
                 onTap: () async {
-                  await _preferences.setServer(server);
+                  await _appPreferences.setStreamingServer(server);
                   setState(() => serverName = server.name);
                 },
               );
@@ -73,7 +73,7 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
   }
 
   Future<void> _openSeekDurationSelector() async {
-    int savedSeekDuration = _preferences.getSeekDuration();
+    int savedSeekDuration = _appPreferences.getSeekDuration();
     List<int> seekDurations = <int>[5, 15, 30, 45, 60];
 
     await showModalBottomSheet(
@@ -98,7 +98,7 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
                   title: Text(seekDurations[index] != 60 ? "${seekDurations[index]} s" : "1 m"),
                   leading: isSelected ? const Icon(Icons.check) : null,
                   onTap: () async {
-                    await _preferences.setSeekDuration(seekDurations[index]);
+                    await _appPreferences.setSeekDuration(seekDurations[index]);
                     setState(() => seekDuration = seekDurations[index]);
                   },
                 );
@@ -250,7 +250,7 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
         _clearRecentSearches(showResponse: false),
         _clearFavorites(showResponse: false),
         _clearRecentlyWatched(showResponse: false),
-        _preferences.clear(),
+        _appPreferences.clear(),
         _authService.deleteAccount(),
       ]);
 
@@ -437,7 +437,7 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
               description: "Customize the subtitles style to fit your preference",
               icon: Icons.subtitles_outlined,
               trailing: Platform.isIOS ? const Icon(Icons.keyboard_arrow_right_outlined) : null,
-              onPressed: (BuildContext context) => navigate(SubtitlesPreferencesScreen()),
+              onPressed: (BuildContext context) => navigate(const SubtitlesPreferencesScreen()),
             ),
             _buildSectionTile(
               title: "Seek duration",

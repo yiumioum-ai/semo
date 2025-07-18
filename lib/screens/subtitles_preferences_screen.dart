@@ -5,7 +5,7 @@ import "package:flutter_settings_ui/flutter_settings_ui.dart";
 import "package:semo/gen/assets.gen.dart";
 import "package:semo/models/subtitle_style.dart";
 import "package:semo/screens/base_screen.dart";
-import "package:semo/utils/preferences.dart";
+import "package:semo/services/preferences.dart";
 import "package:semo/utils/string_extension.dart";
 
 class SubtitlesPreferencesScreen extends BaseScreen {
@@ -16,9 +16,9 @@ class SubtitlesPreferencesScreen extends BaseScreen {
 }
 
 class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferencesScreen> {
-  final Preferences _preferences = Preferences();
+  final AppPreferences _appPreferences = AppPreferences();
   //ignore: prefer_final_fields
-  late SubtitleStyle _subtitleStyle = _preferences.getSubtitlesStyle();
+  late SubtitleStyle _subtitleStyle = _appPreferences.getSubtitlesStyle();
 
   Widget _buildVisualExample() {
     String subtitle = "Just like everything else in this place. [Chair scrapes floor]\nThe coordinates point to the old lighthouse.";
@@ -123,7 +123,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                   onSelected: (double? size) async {
                     if (size != null) {
                       setState(() => _subtitleStyle.fontSize = size);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle);
+                      await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
                   dropdownMenuEntries: SubtitleStyle.getFontSizes()
@@ -148,7 +148,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                   onSelected: (String? color) async {
                     if (color != null) {
                       setState(() => _subtitleStyle.color = color);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle);
+                      await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
                   dropdownMenuEntries: SubtitleStyle.getColors().keys
@@ -170,13 +170,13 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                 value: _subtitleStyle.hasBorder,
                 onChanged: (bool isSelected) async {
                   setState(() => _subtitleStyle.hasBorder = isSelected);
-                  await _preferences.setSubtitlesStyle(_subtitleStyle);
+                  await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                 },
                 activeColor: Theme.of(context).primaryColor,
               ),
               onPressed: (BuildContext context) async {
                 setState(() => _subtitleStyle.hasBorder = !_subtitleStyle.hasBorder);
-                await _preferences.setSubtitlesStyle(_subtitleStyle);
+                await _appPreferences.setSubtitlesStyle(_subtitleStyle);
               },
             ),
             _buildSectionTile(
@@ -194,7 +194,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                   onSelected: (double? size) async {
                     if (size != null) {
                       setState(() => _subtitleStyle.borderStyle.strokeWidth = size);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle);
+                      await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
                   dropdownMenuEntries: SubtitleStyle.getBorderWidths()
@@ -220,7 +220,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                   onSelected: (String? color) async {
                     if (color != null) {
                       setState(() => _subtitleStyle.borderStyle.color = color);
-                      await _preferences.setSubtitlesStyle(_subtitleStyle);
+                      await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
                   dropdownMenuEntries: SubtitleStyle.getColors().keys
@@ -246,7 +246,7 @@ class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferen
                   onSelected: (String? style) async {
                     if (style != null) {
                       setState(() => _subtitleStyle.borderStyle.style = PaintingStyle.values.byName(style));
-                      await _preferences.setSubtitlesStyle(_subtitleStyle);
+                      await _appPreferences.setSubtitlesStyle(_subtitleStyle);
                     }
                   },
                   dropdownMenuEntries: PaintingStyle.values

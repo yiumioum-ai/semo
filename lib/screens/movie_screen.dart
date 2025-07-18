@@ -150,12 +150,12 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
         }
       } else {
         if (mounted) {
-          showSnackBar(context, "No stream link found.");
+          showSnackBar(context, "No stream found");
         }
       }
     } catch (_) {
       if (mounted) {
-        showSnackBar(context, "Failed to load stream.");
+        showSnackBar(context, "Failed to load stream");
       }
     }
 
@@ -163,16 +163,18 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
   }
 
   void _handlePlayerResult(Map<String, dynamic> result) {
-    if (mounted) {
-      if (result["error"] != null) {
-        showSnackBar(context, "Playback error. Try again");
-      } else if (result["progress"] != null) {
-        setState(() {
-          _movie.isRecentlyWatched = true;
-          _movie.watchedProgress = result["progress"];
-        });
+    try {
+      if (mounted) {
+        if (result["error"] != null) {
+          showSnackBar(context, "Playback error. Try again");
+        } else if (result["progress"] != null) {
+          setState(() {
+            _movie.isRecentlyWatched = true;
+            _movie.watchedProgress = result["progress"];
+          });
+        }
       }
-    }
+    } catch (_) {}
   }
 
   Future<void> _refreshData() async {
@@ -241,7 +243,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: PersonCardHorizontalList(
         title: "Cast",
-        people: _movie.cast ?? <Person>[],
+        people: _movie.cast!,
       ),
     );
   }

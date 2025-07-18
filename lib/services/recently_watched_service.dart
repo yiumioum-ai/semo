@@ -75,6 +75,7 @@ class RecentlyWatchedService {
       final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
       if (tvShows.containsKey("$tvShowId")) {
+        tvShows["$tvShowId"]!.remove("visibleInMenu");
         final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
 
         if (seasons.containsKey("$seasonId")) {

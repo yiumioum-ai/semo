@@ -36,7 +36,7 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
       );
     } catch (_) {
       if (mounted) {
-        showSnackBar(context, "An error occurred.");
+        showSnackBar(context, "An error occurred");
       }
     }
 

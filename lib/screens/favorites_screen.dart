@@ -58,7 +58,7 @@ class _FavoritesScreenState extends BaseScreenState<FavoritesScreen> {
       setState(() => _favorites = favorites);
     } catch (_) {
       if (mounted) {
-        showSnackBar(context, "An error occurred.");
+        showSnackBar(context, "An error occurred");
       }
     }
 

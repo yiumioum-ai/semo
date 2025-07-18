@@ -175,7 +175,12 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
   Widget buildContent(BuildContext context) => Scaffold(
     body: Stack(
       children: <Widget>[
-        VideoPlayer(_videoController),
+        Positioned.fill(
+          child: AspectRatio(
+            aspectRatio: _videoController.value.aspectRatio,
+            child: VideoPlayer(_videoController),
+          ),
+        ),
         Container(
           color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.5),
         ),

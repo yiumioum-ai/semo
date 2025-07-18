@@ -34,6 +34,13 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
   int _currentOnTheAirIndex = 0;
   List<TvShow> _recentlyWatched = <TvShow>[];
   List<Genre> _genres = <Genre>[];
+  late final PagingController<int, TvShow> _trendingController = PagingController<int, TvShow>(
+    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (int pageKey) async {
+      final SearchResults results = await _tmdbService.getTrendingTvShows(pageKey);
+      return results.tvShows ?? <TvShow>[];
+    },
+  );
   late final PagingController<int, TvShow> _popularController = PagingController<int, TvShow>(
     getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (int pageKey) async {
@@ -240,6 +247,11 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
               children: <Widget>[
                 _buildOnTheAir(),
                 _buildRecentlyWatchedSection(),
+                _buildMediaCardHorizontalList(
+                  title: "Trending",
+                  controller: _trendingController,
+                  viewAllSource: Urls.trendingTvShows,
+                ),
                 _buildMediaCardHorizontalList(
                   title: "Popular",
                   controller: _popularController,

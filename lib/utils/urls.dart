@@ -8,6 +8,7 @@ class Urls {
   static const String onTheAirTvShows = "$tmdbApiBase/tv/on_the_air";
   static const String trendingMovies = "$tmdbApiBase/trending/movie/week";
   static const String popularMovies = "$tmdbApiBase/movie/popular";
+  static const String trendingTvShows = "$tmdbApiBase/trending/tv/week";
   static const String popularTvShows = "$tmdbApiBase/tv/popular";
   static const String topRatedMovies = "$tmdbApiBase/movie/top_rated";
   static const String topRatedTvShows = "$tmdbApiBase/tv/top_rated";

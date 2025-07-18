@@ -81,6 +81,7 @@ class TMDBService {
 
   // TV Show Methods
   Future<SearchResults> getOnTheAirTvShows() => _search(MediaType.tvShows, Urls.onTheAirTvShows, 1);
+  Future<SearchResults> getTrendingTvShows(int page) => _search(MediaType.tvShows, Urls.trendingTvShows, page);
   Future<SearchResults> getPopularTvShows(int page) => _search(MediaType.tvShows, Urls.popularTvShows, page);
   Future<SearchResults> getTopRatedTvShows(int page) => _search(MediaType.tvShows, Urls.topRatedTvShows, page);
   Future<SearchResults> discoverTvShows(int page, {Map<String, String>? parameters}) => _search(MediaType.tvShows, Urls.discoverTvShow, page, parameters: parameters);

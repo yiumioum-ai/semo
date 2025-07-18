@@ -1,4 +1,3 @@
-import "dart:convert";
 import "dart:io";
 import "dart:typed_data";
 
@@ -40,7 +39,7 @@ class SubtitleService {
       final Response<dynamic> response = await dio.get(Urls.subtitles, queryParameters: parameters);
 
       if (response.statusCode == 200) {
-        final dynamic subtitlesData = jsonDecode(response.data);
+        final dynamic subtitlesData = response.data;
         final List<dynamic> subtitles = subtitlesData["subtitles"] as List<dynamic>;
 
         final Directory directory = await getTemporaryDirectory();

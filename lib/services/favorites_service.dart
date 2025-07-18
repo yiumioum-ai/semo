@@ -1,7 +1,7 @@
 import "package:cloud_firestore/cloud_firestore.dart";
 import "package:firebase_auth/firebase_auth.dart";
 import "package:logger/logger.dart";
-import "package:semo/utils/db_names.dart";
+import "package:semo/services/firestore_collection_names.dart";
 
 class FavoritesService {
   factory FavoritesService() => _instance;
@@ -20,7 +20,7 @@ class FavoritesService {
 
     try {
       return _firestore
-          .collection(DB.favorites)
+          .collection(FirestoreCollection.favorites)
           .doc(_auth.currentUser?.uid);
     } catch (e, s) {
       _logger.e("Error getting favorites document reference", error: e, stackTrace: s);

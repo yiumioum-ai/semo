@@ -1,7 +1,7 @@
 import "package:cloud_firestore/cloud_firestore.dart";
 import "package:firebase_auth/firebase_auth.dart";
 import "package:logger/logger.dart";
-import "package:semo/utils/db_names.dart";
+import "package:semo/services/firestore_collection_names.dart";
 import "package:semo/enums/media_type.dart";
 
 class RecentSearchesService {
@@ -23,7 +23,7 @@ class RecentSearchesService {
 
     try {
       return _firestore
-          .collection(DB.recentSearches)
+          .collection(FirestoreCollection.recentSearches)
           .doc(_auth.currentUser?.uid);
     } catch (e, s) {
       _logger.e("Error getting recent searches document reference", error: e, stackTrace: s);

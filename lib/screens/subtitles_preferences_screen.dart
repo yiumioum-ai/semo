@@ -17,7 +17,8 @@ class SubtitlesPreferencesScreen extends BaseScreen {
 
 class _SubtitlesPreferencesScreenState extends BaseScreenState<SubtitlesPreferencesScreen> {
   final Preferences _preferences = Preferences();
-  late final SubtitleStyle _subtitleStyle = _preferences.getSubtitlesStyle();
+  //ignore: prefer_final_fields
+  late SubtitleStyle _subtitleStyle = _preferences.getSubtitlesStyle();
 
   Widget _buildVisualExample() {
     String subtitle = "Just like everything else in this place. [Chair scrapes floor]\nThe coordinates point to the old lighthouse.";

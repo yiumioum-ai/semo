@@ -154,11 +154,11 @@ class _GenreCardState extends State<GenreCard> {
             }
           });
 
-          return _buildImage("${Urls.getBestImageUrl(context)}${snapshot.data}");
+          return _buildImage("${Urls.getResponsiveImageUrl(context)}${snapshot.data}");
         },
       );
     }
 
-    return _buildImage("${Urls.getBestImageUrl(context)}${_genre.backdropPath}");
+    return _buildImage("${Urls.getResponsiveImageUrl(context)}${_genre.backdropPath}");
   }
 }

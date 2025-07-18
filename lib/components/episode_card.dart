@@ -38,7 +38,7 @@ class EpisodeCard extends StatelessWidget {
           Row(
             children: <Widget>[
               CachedNetworkImage(
-                imageUrl: Urls.getBestImageUrl(context) + episode.stillPath,
+                imageUrl: Urls.getResponsiveImageUrl(context) + episode.stillPath,
                 placeholder: (BuildContext context, String url) => Container(
                   width: MediaQuery.of(context).size.width * 0.3,
                   child: AspectRatio(

@@ -49,7 +49,7 @@ class Urls {
   static String getMovieSimilar(int id) => "$tmdbApiBase/movie/$id/similar";
   static String getTvShowSimilar(int id) => "$tmdbApiBase/tv/$id/similar";
 
-  static String getBestImageUrl(BuildContext context) {
+  static String getResponsiveImageUrl(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth <= 45) {

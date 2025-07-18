@@ -21,7 +21,7 @@ class CarouselPoster extends StatelessWidget {
       children: <Widget>[
         Positioned.fill(
           child: CachedNetworkImage(
-            imageUrl: "${Urls.getBestImageUrl(context)}$backdropPath",
+            imageUrl: "${Urls.getResponsiveImageUrl(context)}$backdropPath",
             fit: BoxFit.cover,
             placeholder: (BuildContext context, String url) => Container(
               decoration: BoxDecoration(color: Theme.of(context).cardColor),

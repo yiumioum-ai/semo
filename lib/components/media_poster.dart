@@ -18,7 +18,7 @@ class MediaPoster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CachedNetworkImage(
-    imageUrl: Urls.getBestImageUrl(context) + backdropPath,
+    imageUrl: Urls.getResponsiveImageUrl(context) + backdropPath,
     placeholder: (BuildContext context, String url) => Container(
       width: double.infinity,
       height: MediaQuery.of(context).size.width * 0.4,

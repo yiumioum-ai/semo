@@ -128,8 +128,8 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Assets.images.appIcon.image(
-                  width: 200,
-                  height: 200,
+                  width: 125,
+                  height: 125,
                 ),
                 Container(
                   margin: const EdgeInsets.only(top: 25),

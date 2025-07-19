@@ -1,7 +1,11 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/components/episode_card.dart";
 import "package:semo/components/media_card_horizontal_list.dart";
 import "package:semo/components/media_info.dart";
@@ -17,7 +21,6 @@ import "package:semo/models/season.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
-import "package:semo/services/favorites_service.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
@@ -36,7 +39,6 @@ class TvShowScreen extends BaseScreen {
 
 class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   final TMDBService _tmdbService = TMDBService();
-  final FavoritesService _favoritesService = FavoritesService();
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
   final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
@@ -68,7 +70,6 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   Future<void> _loadTvShowDetails() async {
     try {
       await Future.wait(<Future<void>>[
-        _checkIfFavorite(),
         _loadSeasons(),
         _loadTrailer(),
         _loadCast(),
@@ -81,13 +82,6 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _checkIfFavorite() async {
-    final List<int> favorites = await _favoritesService.getTvShows();
-    if (mounted) {
-      setState(() => _isFavorite = favorites.contains(widget.tvShow.id));
     }
   }
 
@@ -165,14 +159,13 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
 
   void _toggleFavorite() {
     try {
-      if (_isFavorite) {
-        unawaited(_favoritesService.removeTvShow(widget.tvShow.id));
-      } else {
-        unawaited(_favoritesService.addTvShow(widget.tvShow.id));
-      }
+      Timer(const Duration(milliseconds: 500), () {
+        AppEvent event = _isFavorite
+            ? RemoveFavorite(widget.tvShow, MediaType.tvShows)
+            : AddFavorite(widget.tvShow, MediaType.tvShows);
+        context.read<AppBloc>().add(event);
+      });
     } catch (_) {}
-
-    setState(() => _isFavorite = !_isFavorite);
   }
 
   Future<void> _playEpisode(Episode episode) async {
@@ -406,62 +399,74 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   }
 
   @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      leading: BackButton(onPressed: () => Navigator.pop(context, "refresh")),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(
-            _isFavorite ? Icons.favorite : Icons.favorite_border,
+  Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
+    listener: (BuildContext context, AppState state) {
+      if (mounted) {
+        _isFavorite = state.favoriteTvShows?.any((TvShow tvShow) => tvShow.id == widget.tvShow.id) ?? false;
+      }
+
+      if (state.error != null) {
+        showSnackBar(context, state.error!);
+        context.read<AppBloc>().add(ClearError());
+      }
+    },
+    builder: (BuildContext context, AppState state) => Scaffold(
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => Navigator.pop(context, "refresh")),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+            ),
+            color: _isFavorite ? Colors.red : Colors.white,
+            onPressed: _toggleFavorite,
           ),
-          color: _isFavorite ? Colors.red : Colors.white,
-          onPressed: _toggleFavorite,
-        ),
-      ],
-    ),
-    body: SafeArea(
-      child: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: Theme.of(context).primaryColor,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        child: !_isLoading ? SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              MediaPoster(
-                backdropPath: widget.tvShow.backdropPath,
-                trailerUrl: widget.tvShow.trailerUrl,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    MediaInfo(
-                      title: widget.tvShow.name,
-                      subtitle: "${widget.tvShow.firstAirDate.split("-")[0]} · ${widget.tvShow.seasons?.length ?? 1} Seasons",
-                      overview: widget.tvShow.overview,
-                    ),
-                    const SizedBox(height: 30),
-                    _buildSeasonSelector(),
-                    const SizedBox(height: 30),
-                    _buildSelectedSeasonEpisodes(),
-                    _buildPersonCardHorizontalList(),
-                    _buildMediaCardHorizontalList(
-                      title: "Recommendations",
-                      controller: _recommendationsController,
-                      viewAllSource: Urls.getTvShowRecommendations(widget.tvShow.id),
-                    ),
-                    _buildMediaCardHorizontalList(
-                      title: "Similar",
-                      controller: _similarController,
-                      viewAllSource: Urls.getTvShowSimilar(widget.tvShow.id),
-                    ),
-                  ],
+        ],
+      ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: Theme.of(context).primaryColor,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          child: !_isLoading ? SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                MediaPoster(
+                  backdropPath: widget.tvShow.backdropPath,
+                  trailerUrl: widget.tvShow.trailerUrl,
                 ),
-              ),
-            ],
-          ),
-        ) : const Center(child: CircularProgressIndicator()),
+                Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      MediaInfo(
+                        title: widget.tvShow.name,
+                        subtitle: "${widget.tvShow.firstAirDate.split("-")[0]} · ${widget.tvShow.seasons?.length ?? 1} Seasons",
+                        overview: widget.tvShow.overview,
+                      ),
+                      const SizedBox(height: 30),
+                      _buildSeasonSelector(),
+                      const SizedBox(height: 30),
+                      _buildSelectedSeasonEpisodes(),
+                      _buildPersonCardHorizontalList(),
+                      _buildMediaCardHorizontalList(
+                        title: "Recommendations",
+                        controller: _recommendationsController,
+                        viewAllSource: Urls.getTvShowRecommendations(widget.tvShow.id),
+                      ),
+                      _buildMediaCardHorizontalList(
+                        title: "Similar",
+                        controller: _similarController,
+                        viewAllSource: Urls.getTvShowSimilar(widget.tvShow.id),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ) : const Center(child: CircularProgressIndicator()),
+        ),
       ),
     ),
   );

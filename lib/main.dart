@@ -5,9 +5,12 @@ import "package:firebase_crashlytics/firebase_crashlytics.dart";
 import "package:firebase_remote_config/firebase_remote_config.dart";
 import "package:flutter/material.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:logger/logger.dart";
 import "package:package_info_plus/package_info_plus.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/firebase_options.dart";
 import "package:semo/screens/splash_screen.dart";
 import "package:semo/services/tmdb_service.dart";
@@ -167,10 +170,15 @@ class Semo extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: "Semo",
-    debugShowCheckedModeBanner: false,
-    theme: _buildTheme(),
-    home: const SplashScreen(),
+  Widget build(BuildContext context) => BlocProvider<AppBloc>(
+    create: (BuildContext context) => AppBloc()..loadInitialData(),
+    child: BlocBuilder<AppBloc, AppState>(
+      builder: (BuildContext context, AppState state) => MaterialApp(
+        title: "Semo",
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(),
+        home: const SplashScreen(),
+      ),
+    ),
   );
 }

@@ -14,8 +14,6 @@ class RecentSearchesService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Logger _logger = Logger();
 
-  String _getFieldName(MediaType mediaType) => mediaType == MediaType.movies ? "movies" : "tv_shows";
-
   DocumentReference<Map<String, dynamic>> _getDocReference() {
     if (_auth.currentUser == null) {
       throw Exception("User isn't authenticated");
@@ -43,7 +41,7 @@ class RecentSearchesService {
       }
 
       final Map<String, dynamic> data = doc.data() ?? <String, dynamic>{};
-      final String fieldName = _getFieldName(mediaType);
+      final String fieldName = mediaType.toJsonField();
       final List<String> searches = ((data[fieldName] ?? <dynamic>[]) as List<dynamic>).cast<String>();
 
       // Return in reverse order (most recent first)
@@ -55,7 +53,7 @@ class RecentSearchesService {
   }
 
   Future<void> add(MediaType mediaType, String query) async {
-    final String fieldName = _getFieldName(mediaType);
+    final String fieldName = mediaType.toJsonField();
     final List<String> searches = await getRecentSearches(mediaType);
 
     // Remove duplicate entry
@@ -80,7 +78,7 @@ class RecentSearchesService {
   }
 
   Future<void> remove(MediaType mediaType, String query) async {
-    final String fieldName = _getFieldName(mediaType);
+    final String fieldName = mediaType.toJsonField();
     final List<String> searches = await getRecentSearches(mediaType);
 
     if (searches.contains(query)) {

@@ -28,7 +28,7 @@ class FavoritesService {
     }
   }
 
-  Future<Map<String, dynamic>> _getFavorites() async {
+  Future<Map<String, dynamic>> getFavorites() async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
@@ -47,7 +47,7 @@ class FavoritesService {
   }
 
   Future<List<int>> getMovies() async {
-    final Map<String, dynamic> favorites = await _getFavorites();
+    final Map<String, dynamic> favorites = await getFavorites();
 
     try {
       return ((favorites["movies"] ?? <dynamic>[]) as List<dynamic>).cast<int>();
@@ -58,7 +58,7 @@ class FavoritesService {
   }
 
   Future<List<int>> getTvShows() async {
-    final Map<String, dynamic> favorites = await _getFavorites();
+    final Map<String, dynamic> favorites = await getFavorites();
 
     try {
       return ((favorites["tv_shows"] ?? <dynamic>[]) as List<dynamic>).cast<int>();

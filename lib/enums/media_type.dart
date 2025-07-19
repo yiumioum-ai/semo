@@ -14,4 +14,15 @@ enum MediaType {
         return "TV Shows";
     }
   }
+
+  String toJsonField() {
+    switch (this) {
+      case MediaType.none:
+        return "none";
+      case MediaType.movies:
+        return "movies";
+      case MediaType.tvShows:
+        return "tv_shows";
+    }
+  }
 }

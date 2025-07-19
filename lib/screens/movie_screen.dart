@@ -1,7 +1,11 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/components/media_card_horizontal_list.dart";
 import "package:semo/components/media_info.dart";
 import "package:semo/components/media_poster.dart";
@@ -13,7 +17,6 @@ import "package:semo/models/person.dart";
 import "package:semo/models/search_results.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
-import "package:semo/services/favorites_service.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
@@ -33,7 +36,6 @@ class MovieScreen extends BaseScreen {
 class _MovieScreenState extends BaseScreenState<MovieScreen> {
   late Movie _movie;
   final TMDBService _tmdbService = TMDBService();
-  final FavoritesService _favoritesService = FavoritesService();
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
   final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
@@ -65,7 +67,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     try {
       await Future.wait(<Future<void>>[
         _getCompleteMovieDetails(),
-        _checkIfFavorite(),
         _checkIfRecentlyWatched(),
         _loadTrailer(),
         _loadCast(),
@@ -84,11 +85,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     if (movie != null) {
       setState(() => _movie = movie);
     }
-  }
-
-  Future<void> _checkIfFavorite() async {
-    final List<int> favorites = await _favoritesService.getMovies();
-    setState(() => _isFavorite = favorites.contains(_movie.id));
   }
 
   Future<void> _checkIfRecentlyWatched() async {
@@ -115,14 +111,13 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
 
   void _toggleFavorite() {
     try {
-      if (_isFavorite) {
-        unawaited(_favoritesService.removeMovie(_movie.id));
-      } else {
-        unawaited(_favoritesService.addMovie(_movie.id));
-      }
+      Timer(const Duration(milliseconds: 500), () {
+        AppEvent event = _isFavorite
+          ? RemoveFavorite(_movie, MediaType.movies)
+          : AddFavorite(_movie, MediaType.movies);
+        context.read<AppBloc>().add(event);
+      });
     } catch (_) {}
-
-    setState(() => _isFavorite = !_isFavorite);
   }
 
   Future<void> _playMovie() async {
@@ -282,62 +277,74 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
   }
 
   @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      leading: BackButton(
-        onPressed: () => Navigator.pop(context, "refresh"),
-      ),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(
-            _isFavorite ? Icons.favorite : Icons.favorite_border,
-          ),
-          color: _isFavorite ? Colors.red : Colors.white,
-          onPressed: _toggleFavorite,
+  Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
+    listener: (BuildContext context, AppState state) {
+      if (mounted) {
+        _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false;
+      }
+
+      if (state.error != null) {
+        showSnackBar(context, state.error!);
+        context.read<AppBloc>().add(ClearError());
+      }
+    },
+    builder: (BuildContext context, AppState state) => Scaffold(
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () => Navigator.pop(context, "refresh"),
         ),
-      ],
-    ),
-    body: !_isLoading ? SafeArea(
-      child: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: Theme.of(context).primaryColor,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              MediaPoster(
-                backdropPath: _movie.backdropPath,
-                trailerUrl: _movie.trailerUrl,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    MediaInfo(
-                      title: _movie.title,
-                      subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
-                      overview: _movie.overview,
-                    ),
-                    _buildPlayButton(),
-                    _buildPersonCardHorizontalList(),
-                    _buildMediaCardHorizontalList(
-                      title: "Recommendations",
-                      controller: _recommendationsController,
-                      viewAllSource: Urls.getMovieRecommendations(_movie.id),
-                    ),
-                    _buildMediaCardHorizontalList(
-                      title: "Similar",
-                      controller: _similarController,
-                      viewAllSource: Urls.getMovieSimilar(_movie.id),
-                    ),
-                  ],
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+            ),
+            color: _isFavorite ? Colors.red : Colors.white,
+            onPressed: _toggleFavorite,
+          ),
+        ],
+      ),
+      body: !_isLoading ? SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: Theme.of(context).primaryColor,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                MediaPoster(
+                  backdropPath: _movie.backdropPath,
+                  trailerUrl: _movie.trailerUrl,
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      MediaInfo(
+                        title: _movie.title,
+                        subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
+                        overview: _movie.overview,
+                      ),
+                      _buildPlayButton(),
+                      _buildPersonCardHorizontalList(),
+                      _buildMediaCardHorizontalList(
+                        title: "Recommendations",
+                        controller: _recommendationsController,
+                        viewAllSource: Urls.getMovieRecommendations(_movie.id),
+                      ),
+                      _buildMediaCardHorizontalList(
+                        title: "Similar",
+                        controller: _similarController,
+                        viewAllSource: Urls.getMovieSimilar(_movie.id),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ) : const Center(child: CircularProgressIndicator())
+      ) : const Center(child: CircularProgressIndicator()),
+    ),
   );
 }

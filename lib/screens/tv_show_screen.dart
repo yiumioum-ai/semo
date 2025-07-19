@@ -402,7 +402,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
     listener: (BuildContext context, AppState state) {
       if (mounted) {
-        _isFavorite = state.favoriteTvShows?.any((TvShow tvShow) => tvShow.id == widget.tvShow.id) ?? false;
+        setState(() => _isFavorite = state.favoriteTvShows?.any((TvShow tvShow) => tvShow.id == widget.tvShow.id) ?? false);
       }
 
       if (state.error != null) {

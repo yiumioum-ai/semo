@@ -280,7 +280,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
   Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
     listener: (BuildContext context, AppState state) {
       if (mounted) {
-        _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false;
+        setState(() => _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false);
       }
 
       if (state.error != null) {

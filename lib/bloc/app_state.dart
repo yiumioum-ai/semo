@@ -6,7 +6,7 @@ import "package:semo/models/tv_show.dart";
 class AppState {
   const AppState({
     this.nowPlayingMovies,
-    this.onAirTvShows,
+    this.onTheAirTvShows,
     this.trendingMoviesPagingController,
     this.trendingTvShowsPagingController,
     this.popularMoviesPagingController,
@@ -35,7 +35,7 @@ class AppState {
   });
 
   final List<Movie>? nowPlayingMovies;
-  final List<TvShow>? onAirTvShows;
+  final List<TvShow>? onTheAirTvShows;
 
   final PagingController<int, Movie>? trendingMoviesPagingController;
   final PagingController<int, TvShow>? trendingTvShowsPagingController;
@@ -72,7 +72,7 @@ class AppState {
 
   AppState copyWith({
     List<Movie>? nowPlayingMovies,
-    List<TvShow>? onAirTvShows,
+    List<TvShow>? onTheAirTvShows,
     PagingController<int, Movie>? trendingMoviesPagingController,
     PagingController<int, TvShow>? trendingTvShowsPagingController,
     PagingController<int, Movie>? popularMoviesPagingController,
@@ -100,7 +100,7 @@ class AppState {
     String? error,
   }) => AppState(
     nowPlayingMovies: nowPlayingMovies ?? this.nowPlayingMovies,
-    onAirTvShows: onAirTvShows ?? this.onAirTvShows,
+    onTheAirTvShows: onTheAirTvShows ?? this.onTheAirTvShows,
     trendingMoviesPagingController: trendingMoviesPagingController ?? this.trendingMoviesPagingController,
     trendingTvShowsPagingController: trendingTvShowsPagingController ?? this.trendingTvShowsPagingController,
     popularMoviesPagingController: popularMoviesPagingController ?? this.popularMoviesPagingController,

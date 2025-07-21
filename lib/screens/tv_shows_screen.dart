@@ -1,7 +1,11 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/components/carousel_slider.dart";
 import "package:semo/components/genres_horizontal_list.dart";
 import "package:semo/components/horizontal_media_list.dart";
@@ -10,12 +14,9 @@ import "package:semo/components/media_card_horizontal_list.dart";
 import "package:semo/components/snack_bar.dart";
 import "package:semo/components/streaming_platform_card_horizontal_list.dart";
 import "package:semo/models/genre.dart";
-import "package:semo/models/search_results.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/tv_show_screen.dart";
-import "package:semo/services/recently_watched_service.dart";
-import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/utils/urls.dart";
 
@@ -27,141 +28,45 @@ class TvShowsScreen extends BaseScreen {
 }
 
 class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
-  final TMDBService _tmdbService = TMDBService();
-  final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
-  bool _isLoading = true;
-  List<TvShow> _onTheAir = <TvShow>[];
   int _currentOnTheAirIndex = 0;
-  List<TvShow> _recentlyWatched = <TvShow>[];
-  List<Genre> _genres = <Genre>[];
-  late final PagingController<int, TvShow> _trendingController = PagingController<int, TvShow>(
-    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getTrendingTvShows(pageKey);
-      return results.tvShows ?? <TvShow>[];
-    },
-  );
-  late final PagingController<int, TvShow> _popularController = PagingController<int, TvShow>(
-    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getPopularTvShows(pageKey);
-      return results.tvShows ?? <TvShow>[];
-    },
-  );
-  late final PagingController<int, TvShow> _topRatedController = PagingController<int, TvShow>(
-    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getTopRatedTvShows(pageKey);
-      return results.tvShows ?? <TvShow>[];
-    },
-  );
 
-  Future<void> _loadAllData() async {
-    await Future.wait(<Future<void>>[
-      _loadOnTheAir(),
-      _loadRecentlyWatched(),
-      _loadGenres(),
-    ]);
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadOnTheAir() async {
-    try {
-      final SearchResults results = await _tmdbService.getOnTheAirTvShows();
-      final List<TvShow> tvShows = results.tvShows ?? <TvShow>[];
-      if (mounted) {
-        setState(() => _onTheAir = tvShows.length > 10 ? tvShows.sublist(0, 10) : tvShows);
-      }
-    } catch (_) {
-     if (mounted) {
-       showSnackBar(context, "Failed to load On The Air");
-     }
-    }
-  }
-
-  Future<void> _loadRecentlyWatched() async {
-    try {
-      final List<int> recentlyWatchedIds = await _recentlyWatchedService.getTvShowIds();
-      final List<TvShow> tvShows = <TvShow>[];
-
-      for (final int id in recentlyWatchedIds) {
-        final TvShow? tvShow = await _tmdbService.getTvShow(id);
-        if (tvShow != null) {
-          tvShows.add(tvShow);
-        }
-      }
-
-      if (mounted) {
-        setState(() => _recentlyWatched = tvShows);
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _loadGenres() async {
-    try {
-      final List<Genre> genres = await _tmdbService.getTvShowGenres();
-      if (mounted) {
-        setState(() => _genres = genres);
-      }
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to load genres");
-      }
-    }
+  void _hideFromMenu(TvShow tvShow) {
+    Timer(const Duration(milliseconds: 500), () {
+      context.read<AppBloc>().add(HideTvShowProgress(tvShow.id));
+    });
   }
 
   void _removeFromRecentlyWatched(TvShow tvShow) {
-    final List<TvShow> recentlyWatched = _recentlyWatched;
-
-    try {
-      unawaited(_recentlyWatchedService.removeTvShow(tvShow.id));
-    } catch (_) {}
-
-    recentlyWatched.removeWhere((TvShow tv) => tv.id == tvShow.id);
-    setState(() => _recentlyWatched = recentlyWatched);
+    Timer(const Duration(milliseconds: 500), () {
+      context.read<AppBloc>().add(DeleteTvShowProgress(tvShow.id));
+    });
   }
 
   Future<void> _refreshData() async {
-
-    setState(() {
-      _isLoading = true;
-      _onTheAir = <TvShow>[];
-      _recentlyWatched = <TvShow>[];
-      _genres = <Genre>[];
+    Timer(const Duration(milliseconds: 500), () {
+      try {
+        context.read<AppBloc>().add(RefreshTvShows());
+        context.read<AppBloc>().add(const RefreshGenres(MediaType.tvShows));
+      } catch (_) {}
     });
-
-    _popularController.refresh();
-    _topRatedController.refresh();
-
-    await _loadAllData();
   }
 
-  Future<void> _navigateToTvShow(TvShow tvShow) async {
-    final dynamic result = await navigate(TvShowScreen(tvShow));
-    if (result == "refresh") {
-      await _loadRecentlyWatched();
-    }
-  }
-
-  Widget _buildOnTheAir() {
-    if (_onTheAir.isEmpty) {
+  Widget _buildOnTheAir(List<TvShow>? onTheAir) {
+    if (onTheAir == null || onTheAir.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return CarouselSlider(
-      items: _onTheAir,
+      items: onTheAir,
       currentItemIndex: _currentOnTheAirIndex,
       onItemChanged: (int index) => setState(() => _currentOnTheAirIndex = index),
-      onItemTap: (int index) => _navigateToTvShow(_onTheAir[index]),
+      onItemTap: (int index) => navigate(TvShowScreen(onTheAir[index])),
       mediaType: MediaType.tvShows,
     );
   }
 
-  Widget _buildRecentlyWatchedSection() {
-    if (_recentlyWatched.isEmpty) {
+  Widget _buildRecentlyWatchedSection(List<TvShow>? recentlyWatched) {
+    if (recentlyWatched == null || recentlyWatched.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -169,15 +74,17 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
       margin: const EdgeInsets.only(top: 30),
       child: HorizontalMediaList<TvShow>(
         title: "Recently watched",
-        items: _recentlyWatched,
+        items: recentlyWatched,
         itemBuilder: (BuildContext context, TvShow tvShow, int index) => Padding(
           padding: EdgeInsets.only(
-            right: index < (_recentlyWatched.length) - 1 ? 18 : 0,
+            right: index < (recentlyWatched.length) - 1 ? 18 : 0,
           ),
           child: MediaCard(
             media: tvShow,
             mediaType: MediaType.tvShows,
-            onTap: () => _navigateToTvShow(tvShow),
+            onTap: () => navigate(TvShowScreen(tvShow)),
+            showHideOption: true,
+            onHide: () => _hideFromMenu(tvShow),
             showRemoveOption: true,
             onRemove: () => _removeFromRecentlyWatched(tvShow),
           ),
@@ -187,20 +94,26 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
   }
 
   Widget _buildMediaCardHorizontalList({
-    required PagingController<int, TvShow> controller,
+    required PagingController<int, TvShow>? controller,
     required String title,
     required String viewAllSource,
-  }) => Padding(
-    padding: const EdgeInsets.only(top: 30),
-    child: MediaCardHorizontalList(
-      title: title,
-      pagingController: controller,
-      viewAllSource: viewAllSource,
-      mediaType: MediaType.tvShows,
-      //ignore: avoid_annotating_with_dynamic
-      onTap: (dynamic media) => _navigateToTvShow(media as TvShow),
-    ),
-  );
+  }) {
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 30),
+      child: MediaCardHorizontalList(
+        title: title,
+        pagingController: controller,
+        viewAllSource: viewAllSource,
+        mediaType: MediaType.tvShows,
+        //ignore: avoid_annotating_with_dynamic
+        onTap: (dynamic media) => navigate(TvShowScreen(media as TvShow)),
+      ),
+    );
+  }
 
   Widget _buildStreamingPlatforms() => Container(
     margin: const EdgeInsets.only(top: 30),
@@ -210,10 +123,10 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
     ),
   );
 
-  Widget _buildGenres() => Container(
+  Widget _buildGenres(List<Genre>? genres) => Container(
     margin: const EdgeInsets.only(top: 30),
     child: GenresList(
-      genres: _genres,
+      genres: genres ?? <Genre>[],
       mediaType: MediaType.tvShows,
       viewAllSource: Urls.discoverTvShow,
     ),
@@ -223,52 +136,49 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
   String get screenName => "TV Shows";
 
   @override
-  Future<void> initializeScreen() async {
-    await _loadAllData();
-  }
-
-  @override
-  void handleDispose() {
-    _popularController.dispose();
-    _topRatedController.dispose();
-  }
-
-  @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    body: RefreshIndicator(
-      color: Theme.of(context).primaryColor,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      onRefresh: _refreshData,
-      child: !_isLoading ? SingleChildScrollView(
-        child: SafeArea(
-          child: Container(
-            margin: const EdgeInsets.all(18),
-            child: Column(
-              children: <Widget>[
-                _buildOnTheAir(),
-                _buildRecentlyWatchedSection(),
-                _buildMediaCardHorizontalList(
-                  title: "Trending",
-                  controller: _trendingController,
-                  viewAllSource: Urls.trendingTvShows,
-                ),
-                _buildMediaCardHorizontalList(
-                  title: "Popular",
-                  controller: _popularController,
-                  viewAllSource: Urls.popularTvShows,
-                ),
-                _buildMediaCardHorizontalList(
-                  title: "Top rated",
-                  controller: _topRatedController,
-                  viewAllSource: Urls.topRatedTvShows,
-                ),
-                _buildStreamingPlatforms(),
-                _buildGenres(),
-              ],
+  Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
+    listener: (BuildContext context, AppState state) {
+      if (state.error != null) {
+        showSnackBar(context, state.error!);
+        context.read<AppBloc>().add(ClearError());
+      }
+    },
+    builder: (BuildContext context, AppState state) => Scaffold(
+      body: RefreshIndicator(
+        color: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        onRefresh: _refreshData,
+        child: !state.isLoadingTvShows ? SingleChildScrollView(
+          child: SafeArea(
+            child: Container(
+              margin: const EdgeInsets.all(18),
+              child: Column(
+                children: <Widget>[
+                  _buildOnTheAir(state.onTheAirTvShows),
+                  _buildRecentlyWatchedSection(state.recentlyWatchedTvShows),
+                  _buildMediaCardHorizontalList(
+                    title: "Trending",
+                    controller: state.trendingTvShowsPagingController,
+                    viewAllSource: Urls.trendingTvShows,
+                  ),
+                  _buildMediaCardHorizontalList(
+                    title: "Popular",
+                    controller: state.popularTvShowsPagingController,
+                    viewAllSource: Urls.popularTvShows,
+                  ),
+                  _buildMediaCardHorizontalList(
+                    title: "Top rated",
+                    controller: state.topRatedTvShowsPagingController,
+                    viewAllSource: Urls.topRatedTvShows,
+                  ),
+                  _buildStreamingPlatforms(),
+                  _buildGenres(state.tvShowGenres),
+                ],
+              ),
             ),
           ),
-        ),
-      ) : const Center(child: CircularProgressIndicator()),
+        ) : const Center(child: CircularProgressIndicator()),
+      ),
     ),
   );
 }

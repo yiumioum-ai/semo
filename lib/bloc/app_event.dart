@@ -1,9 +1,12 @@
 import "package:semo/enums/media_type.dart";
 import "package:semo/models/movie.dart";
+import "package:semo/models/tv_show.dart";
 
 abstract class AppEvent {
   const AppEvent();
 }
+
+// Movies
 
 class LoadMovies extends AppEvent {}
 
@@ -14,6 +17,20 @@ class AddIncompleteMovies extends AppEvent {
 
   final List<Movie> movies;
 }
+
+// TV Shows
+
+class LoadTvShows extends AppEvent {}
+
+class RefreshTvShows extends AppEvent {}
+
+class AddIncompleteTvShows extends AppEvent {
+  const AddIncompleteTvShows(this.tvShows);
+
+  final List<TvShow> tvShows;
+}
+
+// Genres
 
 class LoadGenres extends AppEvent {
   const LoadGenres(this.mediaType);
@@ -26,6 +43,8 @@ class RefreshGenres extends AppEvent {
 
   final MediaType mediaType;
 }
+
+// Recently Watched
 
 class LoadRecentlyWatched extends AppEvent {}
 
@@ -84,6 +103,8 @@ class HideTvShowProgress extends AppEvent {
 
   final int tvShowId;
 }
+
+// Favorites
 
 class LoadFavorites extends AppEvent {}
 

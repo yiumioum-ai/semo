@@ -18,17 +18,22 @@ import "package:semo/utils/urls.dart";
 
 class TMDBService {
   factory TMDBService() {
-    _dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        enabled: kDebugMode,
-      ),
-    );
+    if (!_instance._isDioLoggerInitialized) {
+      TMDBService._dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: false,
+          error: true,
+          compact: true,
+          enabled: kDebugMode,
+        ),
+      );
+
+      _instance._isDioLoggerInitialized = true;
+    }
+
     return _instance;
   }
 
@@ -45,6 +50,7 @@ class TMDBService {
       },
     ),
   );
+  bool _isDioLoggerInitialized = false;
   final Logger _logger = Logger();
 
   // Movie Methods

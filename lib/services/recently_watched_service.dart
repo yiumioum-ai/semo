@@ -30,7 +30,7 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<Map<String, dynamic>> _getRecentlyWatched() async {
+  Future<Map<String, dynamic>> getRecentlyWatched() async {
     try {
       final DocumentSnapshot<Map<String, dynamic>> doc = await _getDocReference().get();
 
@@ -54,8 +54,8 @@ class RecentlyWatchedService {
     return map.map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
   }
 
-  Future<int?> getMovieProgress(int movieId) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<int?> getMovieProgress(int movieId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -68,8 +68,8 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<Map<String, Map<String, dynamic>>?> getEpisodes(int tvShowId, int seasonId) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, Map<String, dynamic>>?> getEpisodes(int tvShowId, int seasonId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -91,9 +91,9 @@ class RecentlyWatchedService {
     return null;
   }
 
-  Future<int?> getEpisodeProgress(int tvShowId, int seasonId, int episodeId) async {
+  Future<int?> getEpisodeProgress(int tvShowId, int seasonId, int episodeId, {Map<String, dynamic>? recentlyWatched}) async {
     try {
-      final Map<String, Map<String, dynamic>>? episodes = await getEpisodes(tvShowId, seasonId);
+      final Map<String, Map<String, dynamic>>? episodes = await getEpisodes(tvShowId, seasonId, recentlyWatched: recentlyWatched);
 
       if (episodes != null) {
         final Map<String, dynamic>? episode = episodes["$episodeId"];
@@ -107,8 +107,8 @@ class RecentlyWatchedService {
     return null;
   }
 
-  Future<void> updateMovieProgress(int movieId, int progress) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, dynamic>> updateMovieProgress(int movieId, int progress, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     recentlyWatched["movies"]["$movieId"] = <String, dynamic>{
       "progress": progress,
@@ -121,10 +121,12 @@ class RecentlyWatchedService {
       _logger.e("Error updating movie's watch progress", error: e, stackTrace: s);
       rethrow;
     }
+
+    return recentlyWatched;
   }
 
-  Future<void> updateEpisodeProgress(int tvShowId, int seasonId, int episodeId, int progress) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, dynamic>> updateEpisodeProgress(int tvShowId, int seasonId, int episodeId, int progress, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
     Map<String, Map<String, dynamic>> watchedEpisodes = await getEpisodes(tvShowId, seasonId) ?? <String, Map<String, dynamic>>{};
     final Map<String, dynamic> updatedEpisodeData = <String, dynamic>{
       "progress": progress,
@@ -154,10 +156,12 @@ class RecentlyWatchedService {
       _logger.e("Error updating episode's watch progress", error: e, stackTrace: s);
       rethrow;
     }
+
+    return recentlyWatched;
   }
 
-  Future<void> removeEpisodeProgress(int tvShowId, int seasonId, int episodeId) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, dynamic>> removeEpisodeProgress(int tvShowId, int seasonId, int episodeId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
     Map<String, Map<String, dynamic>> watchedEpisodes = await getEpisodes(tvShowId, seasonId) ?? <String, Map<String, dynamic>>{};
 
     try {
@@ -184,10 +188,12 @@ class RecentlyWatchedService {
       _logger.e("Error removing episode's watch progress", error: e, stackTrace: s);
       rethrow;
     }
+
+    return recentlyWatched;
   }
 
-  Future<List<int>> getMovieIds() async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<List<int>> getMovieIds({Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -206,8 +212,8 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<void> removeMovie(int movieId) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, dynamic>> removeMovie(int movieId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -217,10 +223,12 @@ class RecentlyWatchedService {
       _logger.e("Error removing movie from recently watched", error: e, stackTrace: s);
       rethrow;
     }
+
+    return recentlyWatched;
   }
 
-  Future<List<int>> getTvShowIds() async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<List<int>> getTvShowIds({Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -268,8 +276,8 @@ class RecentlyWatchedService {
     }
   }
 
-  Future<void> removeTvShow(int tvShowId) async {
-    final Map<String, dynamic> recentlyWatched = await _getRecentlyWatched();
+  Future<Map<String, dynamic>> hideTvShow(int tvShowId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
 
     try {
       final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
@@ -282,6 +290,26 @@ class RecentlyWatchedService {
       _logger.e("Error removing TV show from recently watched", error: e, stackTrace: s);
       rethrow;
     }
+
+    return recentlyWatched;
+  }
+
+  Future<Map<String, dynamic>> removeTvShow(int tvShowId, {Map<String, dynamic>? recentlyWatched}) async {
+    recentlyWatched ??= await getRecentlyWatched();
+
+    try {
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
+
+      if (tvShows.containsKey("$tvShowId")) {
+        tvShows.remove("$tvShowId");
+        await _getDocReference().set(<String, dynamic>{"tv_shows": tvShows}, SetOptions(merge: true));
+      }
+    } catch (e, s) {
+      _logger.e("Error removing TV show from recently watched", error: e, stackTrace: s);
+      rethrow;
+    }
+
+    return recentlyWatched;
   }
 
   Future<void> clear() async {

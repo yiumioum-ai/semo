@@ -13,6 +13,8 @@ class MediaCard extends StatelessWidget {
     this.onTap,
     this.showRemoveOption = false,
     this.onRemove,
+    this.showHideOption = false,
+    this.onHide,
   });
 
   final dynamic media;
@@ -20,6 +22,8 @@ class MediaCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showRemoveOption;
   final VoidCallback? onRemove;
+  final bool showHideOption;
+  final VoidCallback? onHide;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +111,7 @@ class MediaCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (showRemoveOption && onRemove != null)
+                  if ((showRemoveOption && onRemove != null) || (showHideOption && onHide != null))
                     Positioned(
                       top: 5,
                       left: 5,
@@ -115,16 +119,27 @@ class MediaCard extends StatelessWidget {
                         onSelected: (String action) {
                           if (action == "remove") {
                             onRemove!();
+                          } else if (action == "hide") {
+                            onHide!();
                           }
                         },
                         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                          PopupMenuItem<String>(
-                            value: "remove",
-                            child: Text(
-                              "Remove",
-                              style: Theme.of(context).textTheme.displaySmall,
+                          if (showHideOption && onHide != null)
+                            PopupMenuItem<String>(
+                              value: "hide",
+                              child: Text(
+                                "Hide",
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
                             ),
-                          ),
+                          if (showRemoveOption && onRemove != null)
+                            PopupMenuItem<String>(
+                              value: "remove",
+                              child: Text(
+                                "Remove",
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
                         ],
                         child: Container(
                           padding: const EdgeInsets.all(4),

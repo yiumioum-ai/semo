@@ -4,16 +4,16 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "package:logger/logger.dart";
 import "package:semo/bloc/app_event.dart";
 import "package:semo/bloc/app_state.dart";
+import "package:semo/bloc/handlers/helpers.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/services/favorites_service.dart";
-import "package:semo/services/tmdb_service.dart";
 
 mixin FavoritesHandler on Bloc<AppEvent, AppState> {
   final Logger _logger = Logger();
-  final TMDBService _tmdbService = TMDBService();
   final FavoritesService _favoritesService = FavoritesService();
+  late final HandlerHelpers _helpers = HandlerHelpers(state);
 
   Future<void> onLoadFavorites(LoadFavorites event, Emitter<AppState> emit) async {
     if ((state.favoriteMovies != null && state.favoriteTvShows != null) || state.isLoadingFavorites) {
@@ -31,8 +31,8 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
       final List<int> movieIds = favorites[MediaType.movies.toJsonField()] ?? <int>[];
       final List<int> tvShowIds = favorites[MediaType.tvShows.toJsonField()] ?? <int>[];
 
-      final List<Movie> favoriteMovies = await _fetchMoviesByIds(movieIds);
-      final List<TvShow> favoriteTvShows = await _fetchTvShowsByIds(tvShowIds);
+      final List<Movie> favoriteMovies = await _helpers.fetchMoviesByIds(movieIds);
+      final List<TvShow> favoriteTvShows = await _helpers.fetchTvShowsByIds(tvShowIds);
 
       emit(state.copyWith(
         favoriteMovies: favoriteMovies,
@@ -157,53 +157,5 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
   Map<String, List<int>> _convertToIntListMap(Map<String, dynamic> favorites) {
     // ignore: avoid_annotating_with_dynamic
     return favorites.map((String key, dynamic value) => MapEntry<String, List<int>>(key, List<int>.from(value)));
-  }
-
-  Future<List<Movie>> _fetchMoviesByIds(List<int> ids) async {
-    List<Movie> movies = <Movie>[];
-
-    for (final int id in ids) {
-      if (state.movies != null && state.movies!.any((Movie movie) => movie.id == id)) {
-        movies.add(state.movies!.firstWhere((Movie movie) => movie.id == id));
-      } else {
-        try {
-          final Movie? movie = await _tmdbService.getMovie(id);
-
-          if (movie != null) {
-            movies.add(movie);
-          } else {
-            _logger.w("Movie with ID $id not found");
-          }
-        } catch (e, s) {
-          _logger.e("Error fetching movie with ID $id", error: e, stackTrace: s);
-        }
-      }
-    }
-
-    return movies;
-  }
-
-  Future<List<TvShow>> _fetchTvShowsByIds(List<int> ids) async {
-    List<TvShow> tvShows = <TvShow>[];
-
-    for (final int id in ids) {
-      if (state.tvShows != null && state.tvShows!.any((TvShow tvShow) => tvShow.id == id)) {
-        tvShows.add(state.tvShows!.firstWhere((TvShow tvShow) => tvShow.id == id));
-      } else {
-        try {
-          final TvShow? tvShow = await _tmdbService.getTvShow(id);
-
-          if (tvShow != null) {
-            tvShows.add(tvShow);
-          } else {
-            _logger.w("TV Show with ID $id not found");
-          }
-        } catch (e, s) {
-          _logger.e("Error fetching TV Show with ID $id", error: e, stackTrace: s);
-        }
-      }
-    }
-
-    return tvShows;
   }
 }

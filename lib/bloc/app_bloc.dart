@@ -48,9 +48,7 @@ class AppBloc extends Bloc<AppEvent, AppState>
   }
 
   void init() {
-    AuthService authService = AuthService();
-
-    if (authService.isAuthenticated()) {
+    if (AuthService().isAuthenticated()) {
       add(LoadInitialData());
     }
   }

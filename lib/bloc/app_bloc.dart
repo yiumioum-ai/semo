@@ -7,10 +7,15 @@ import "package:semo/bloc/handlers/movies_handler.dart";
 import "package:semo/bloc/handlers/recently_watched_handler.dart";
 import "package:semo/bloc/handlers/tv_shows_handler.dart";
 import "package:semo/enums/media_type.dart";
+import "package:semo/services/auth_service.dart";
 
 class AppBloc extends Bloc<AppEvent, AppState>
     with MoviesHandler, TvShowsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler {
   AppBloc() : super(const AppState()) {
+    // General
+    on<LoadInitialData>(_onLoadInitialData);
+    on<ClearError>(_onClearError);
+
     // Movies
     on<LoadMovies>(onLoadMovies);
     on<RefreshMovies>(onRefreshMovies);
@@ -40,22 +45,28 @@ class AppBloc extends Bloc<AppEvent, AppState>
     on<LoadFavorites>(onLoadFavorites);
     on<AddFavorite>(onAddFavorite);
     on<RemoveFavorite>(onRemoveFavorite);
-
-    on<ClearError>(_onClearError);
   }
 
-  void _onClearError(ClearError event, Emitter<AppState> emit) {
-    emit(state.copyWith(
-      error: null,
-    ));
+  void init() {
+    AuthService authService = AuthService();
+
+    if (authService.isAuthenticated()) {
+      add(LoadInitialData());
+    }
   }
 
-  void loadInitialData() {
+  void _onLoadInitialData(LoadInitialData event, Emitter<AppState> emit) {
     add(LoadMovies());
     add(LoadTvShows());
     add(const LoadGenres(MediaType.movies));
     add(const LoadGenres(MediaType.tvShows));
     add(LoadRecentlyWatched());
     add(LoadFavorites());
+  }
+
+  void _onClearError(ClearError event, Emitter<AppState> emit) {
+    emit(state.copyWith(
+      error: null,
+    ));
   }
 }

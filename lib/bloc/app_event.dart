@@ -6,6 +6,12 @@ abstract class AppEvent {
   const AppEvent();
 }
 
+// General
+
+class LoadInitialData extends AppEvent {}
+
+class ClearError extends AppEvent {}
+
 // Movies
 
 class LoadMovies extends AppEvent {}
@@ -121,5 +127,3 @@ class RemoveFavorite extends AppEvent {
   final dynamic media;
   final MediaType mediaType;
 }
-
-class ClearError extends AppEvent {}

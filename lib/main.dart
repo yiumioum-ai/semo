@@ -171,7 +171,7 @@ class Semo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider<AppBloc>(
-    create: (BuildContext context) => AppBloc()..loadInitialData(),
+    create: (BuildContext context) => AppBloc()..init(),
     child: BlocBuilder<AppBloc, AppState>(
       builder: (BuildContext context, AppState state) => MaterialApp(
         title: "Semo",

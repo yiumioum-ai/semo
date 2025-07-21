@@ -38,6 +38,16 @@ class AuthService {
     }
   }
 
+  bool isAuthenticated() {
+    try {
+      User? user = getUser();
+      return user != null;
+    } catch (e, s) {
+      _logger.e("Failed to check authentication status", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
   User? getUser() {
     try {
       return _auth.currentUser;

@@ -1,6 +1,9 @@
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:font_awesome_flutter/font_awesome_flutter.dart";
 import "package:google_sign_in/google_sign_in.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
 import "package:semo/components/snack_bar.dart";
 import "package:semo/gen/assets.gen.dart";
 import "package:semo/screens/base_screen.dart";
@@ -30,10 +33,15 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
 
     try {
       await _authService.signIn();
-      await navigate(
-        const FragmentsScreen(),
-        replace: true,
-      );
+
+      if (mounted) {
+        context.read<AppBloc>().add(LoadInitialData());
+
+        await navigate(
+          const FragmentsScreen(),
+          replace: true,
+        );
+      }
     } catch (_) {
       if (mounted) {
         showSnackBar(context, "An error occurred");

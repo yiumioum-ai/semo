@@ -25,13 +25,12 @@ class _SplashScreenState extends BaseScreenState<SplashScreen> {
   }
 
   void _checkAuthState() {
-    User? user = AuthService().getUser();
     Widget destination;
     
-    if (user == null) {
-      destination = const LandingScreen();
-    } else {
+    if (AuthService().isAuthenticated()) {
       destination = const FragmentsScreen();
+    } else {
+      destination = const LandingScreen();
     }
 
     Future<void>.delayed(const Duration(seconds: 3), () async {

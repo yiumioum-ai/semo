@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:semo/gen/assets.gen.dart";

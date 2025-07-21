@@ -13,14 +13,12 @@ import "package:semo/bloc/app_bloc.dart";
 import "package:semo/bloc/app_state.dart";
 import "package:semo/firebase_options.dart";
 import "package:semo/screens/splash_screen.dart";
-import "package:semo/services/tmdb_service.dart";
 import "package:semo/services/preferences.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initializeFirebase();
   await AppPreferences.init();
-  TMDBService.init();
   runApp(const Semo());
 }
 

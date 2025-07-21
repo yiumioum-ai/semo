@@ -17,7 +17,21 @@ import "package:semo/enums/media_type.dart";
 import "package:semo/utils/urls.dart";
 
 class TMDBService {
-  factory TMDBService() => _instance;
+  factory TMDBService() {
+    _dio.interceptors.add(
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        responseHeader: false,
+        error: true,
+        compact: true,
+        enabled: kDebugMode,
+      ),
+    );
+    return _instance;
+  }
+
   TMDBService._internal();
 
   static final TMDBService _instance = TMDBService._internal();
@@ -32,20 +46,6 @@ class TMDBService {
     ),
   );
   final Logger _logger = Logger();
-
-  static void init() {
-    _dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        enabled: kDebugMode,
-      ),
-    );
-  }
 
   // Movie Methods
   Future<SearchResults> getNowPlayingMovies() => _search(MediaType.movies, Urls.nowPlayingMovies, 1);

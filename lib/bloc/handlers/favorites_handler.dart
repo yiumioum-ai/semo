@@ -35,6 +35,7 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
       final List<TvShow> favoriteTvShows = await _helpers.fetchTvShowsByIds(tvShowIds);
 
       emit(state.copyWith(
+        favorites: favorites,
         favoriteMovies: favoriteMovies,
         favoriteTvShows: favoriteTvShows,
         isLoadingFavorites: false,
@@ -53,9 +54,9 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
     try {
       final int id = _getMediaId(media);
       if (mediaType == MediaType.movies) {
-        await _favoritesService.addMovie(id);
+        await _favoritesService.addMovie(id, allFavorites: state.favorites);
       } else if (mediaType == MediaType.tvShows) {
-        await _favoritesService.addTvShow(id);
+        await _favoritesService.addTvShow(id, allFavorites: state.favorites);
       }
     } catch (e, s) {
       _logger.e("Error adding favorite", error: e, stackTrace: s);
@@ -106,9 +107,9 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
     try {
       final int id = _getMediaId(media);
       if (mediaType == MediaType.movies) {
-        await _favoritesService.removeMovie(id);
+        await _favoritesService.removeMovie(id, allFavorites: state.favorites);
       } else if (mediaType == MediaType.tvShows) {
-        await _favoritesService.removeTvShow(id);
+        await _favoritesService.removeTvShow(id, allFavorites: state.favorites);
       }
     } catch (e, s) {
       _logger.e("Error removing favorite", error: e, stackTrace: s);

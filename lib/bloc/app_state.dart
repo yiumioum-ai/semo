@@ -20,6 +20,7 @@ class AppState {
     this.recentlyWatched,
     this.recentlyWatchedMovies,
     this.recentlyWatchedTvShows,
+    this.favorites,
     this.favoriteMovies,
     this.favoriteTvShows,
     this.movieGenres,
@@ -53,6 +54,7 @@ class AppState {
   final List<Movie>? recentlyWatchedMovies;
   final List<TvShow>? recentlyWatchedTvShows;
 
+  final Map<String, dynamic>? favorites;
   final List<Movie>? favoriteMovies;
   final List<TvShow>? favoriteTvShows;
 
@@ -86,6 +88,7 @@ class AppState {
     Map<String, dynamic>? recentlyWatched,
     List<Movie>? recentlyWatchedMovies,
     List<TvShow>? recentlyWatchedTvShows,
+    Map<String, dynamic>? favorites,
     List<Movie>? favoriteMovies,
     List<TvShow>? favoriteTvShows,
     List<Genre>? movieGenres,
@@ -114,6 +117,7 @@ class AppState {
     recentlyWatched: recentlyWatched ?? this.recentlyWatched,
     recentlyWatchedMovies: recentlyWatchedMovies ?? this.recentlyWatchedMovies,
     recentlyWatchedTvShows: recentlyWatchedTvShows ?? this.recentlyWatchedTvShows,
+    favorites: favorites ?? this.favorites,
     favoriteMovies: favoriteMovies ?? this.favoriteMovies,
     favoriteTvShows: favoriteTvShows ?? this.favoriteTvShows,
     movieGenres: movieGenres ?? this.movieGenres,

@@ -64,7 +64,7 @@ flutter pub get
 
 - Auto generate asset and env helpers using build_runner:
 ```bash
-dart run build_runner build --delete-conflicting-outputs;
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 - Add Firebase to the app using FlutterFire CLI. You can follow insructions from the [official documentation](https://firebase.google.com/docs/flutter/setup)

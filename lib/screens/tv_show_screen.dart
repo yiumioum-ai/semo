@@ -375,7 +375,6 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     child: MediaCardHorizontalList(
       title: title,
       pagingController: controller,
-      viewAllSource: viewAllSource,
       mediaType: MediaType.tvShows,
       //ignore: avoid_annotating_with_dynamic
       onTap: (dynamic media) => navigate(

@@ -13,6 +13,8 @@ class AppState {
     this.popularTvShowsPagingController,
     this.topRatedMoviesPagingController,
     this.topRatedTvShowsPagingController,
+    this.streamingPlatformMoviesPagingControllers,
+    this.streamingPlatformTvShowsPagingControllers,
     this.incompleteMovies,
     this.incompleteTvShows,
     this.movies,
@@ -25,8 +27,11 @@ class AppState {
     this.favoriteTvShows,
     this.movieGenres,
     this.tvShowGenres,
+    this.genreMoviesPagingControllers,
+    this.genreTvShowsPagingControllers,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
+    this.isLoadingStreamingPlatformsMedia = false,
     this.isLoadingMovieGenres = false,
     this.isLoadingTvShowGenres = false,
     this.isLoadingRecentlyWatched = false,
@@ -45,6 +50,10 @@ class AppState {
   final PagingController<int, Movie>? topRatedMoviesPagingController;
   final PagingController<int, TvShow>? topRatedTvShowsPagingController;
 
+  // Map of streaming platform IDs to their respective PagingControllers
+  final Map<String, PagingController<int, Movie>>? streamingPlatformMoviesPagingControllers;
+  final Map<String, PagingController<int, TvShow>>? streamingPlatformTvShowsPagingControllers;
+
   final List<Movie>? incompleteMovies; // Movies that have missing data (typically from search results)
   final List<TvShow>? incompleteTvShows; // TV Shows that have missing data (typically from search results)
   final List<Movie>? movies; // Movies with complete data
@@ -60,9 +69,12 @@ class AppState {
 
   final List<Genre>? movieGenres;
   final List<Genre>? tvShowGenres;
+  final Map<String, PagingController<int, Movie>>? genreMoviesPagingControllers;
+  final Map<String, PagingController<int, TvShow>>? genreTvShowsPagingControllers;
 
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
+  final bool isLoadingStreamingPlatformsMedia;
   final bool isLoadingMovieGenres;
   final bool isLoadingTvShowGenres;
   final bool isLoadingRecentlyWatched;
@@ -81,6 +93,8 @@ class AppState {
     PagingController<int, TvShow>? popularTvShowsPagingController,
     PagingController<int, Movie>? topRatedMoviesPagingController,
     PagingController<int, TvShow>? topRatedTvShowsPagingController,
+    Map<String, PagingController<int, Movie>>? streamingPlatformMoviesPagingControllers,
+    Map<String, PagingController<int, TvShow>>? streamingPlatformTvShowsPagingControllers,
     List<Movie>? incompleteMovies,
     List<TvShow>? incompleteTvShows,
     List<Movie>? movies,
@@ -93,8 +107,11 @@ class AppState {
     List<TvShow>? favoriteTvShows,
     List<Genre>? movieGenres,
     List<Genre>? tvShowGenres,
+    Map<String, PagingController<int, Movie>>? genreMoviesPagingControllers,
+    Map<String, PagingController<int, TvShow>>? genreTvShowsPagingControllers,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
+    bool? isLoadingStreamingPlatformsMedia,
     bool? isLoadingMovieGenres,
     bool? isLoadingTvShowGenres,
     bool? isLoadingRecentlyWatched,
@@ -110,6 +127,8 @@ class AppState {
     popularTvShowsPagingController: popularTvShowsPagingController ?? this.popularTvShowsPagingController,
     topRatedMoviesPagingController: topRatedMoviesPagingController ?? this.topRatedMoviesPagingController,
     topRatedTvShowsPagingController: topRatedTvShowsPagingController ?? this.topRatedTvShowsPagingController,
+    streamingPlatformMoviesPagingControllers: streamingPlatformMoviesPagingControllers ?? this.streamingPlatformMoviesPagingControllers,
+    streamingPlatformTvShowsPagingControllers: streamingPlatformTvShowsPagingControllers ?? this.streamingPlatformTvShowsPagingControllers,
     incompleteMovies: incompleteMovies ?? this.incompleteMovies,
     incompleteTvShows: incompleteTvShows ?? this.incompleteTvShows,
     movies: movies ?? this.movies,
@@ -122,9 +141,12 @@ class AppState {
     favoriteTvShows: favoriteTvShows ?? this.favoriteTvShows,
     movieGenres: movieGenres ?? this.movieGenres,
     tvShowGenres: tvShowGenres ?? this.tvShowGenres,
+    genreMoviesPagingControllers: genreMoviesPagingControllers ?? this.genreMoviesPagingControllers,
+    genreTvShowsPagingControllers: genreTvShowsPagingControllers ?? this.genreTvShowsPagingControllers,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
-    isLoadingMovieGenres: isLoadingMovieGenres ?? this.isLoadingMovieGenres,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
+    isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,
+    isLoadingMovieGenres: isLoadingMovieGenres ?? this.isLoadingMovieGenres,
     isLoadingTvShowGenres: isLoadingTvShowGenres ?? this.isLoadingTvShowGenres,
     isLoadingRecentlyWatched: isLoadingRecentlyWatched ?? this.isLoadingRecentlyWatched,
     isLoadingFavorites: isLoadingFavorites ?? this.isLoadingFavorites,

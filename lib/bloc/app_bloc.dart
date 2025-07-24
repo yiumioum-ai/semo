@@ -5,12 +5,13 @@ import "package:semo/bloc/handlers/favorites_handler.dart";
 import "package:semo/bloc/handlers/genres_handler.dart";
 import "package:semo/bloc/handlers/movies_handler.dart";
 import "package:semo/bloc/handlers/recently_watched_handler.dart";
+import "package:semo/bloc/handlers/streaming_platforms_handler.dart";
 import "package:semo/bloc/handlers/tv_shows_handler.dart";
 import "package:semo/enums/media_type.dart";
 import "package:semo/services/auth_service.dart";
 
 class AppBloc extends Bloc<AppEvent, AppState>
-    with MoviesHandler, TvShowsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler {
+    with MoviesHandler, TvShowsHandler, StreamingPlatformsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler {
   AppBloc() : super(const AppState()) {
     // General
     on<LoadInitialData>(_onLoadInitialData);
@@ -25,6 +26,10 @@ class AppBloc extends Bloc<AppEvent, AppState>
     on<LoadTvShows>(onLoadTvShows);
     on<RefreshTvShows>(onRefreshTvShows);
     on<AddIncompleteTvShows>(onAddIncompleteTvShows);
+
+    // Streaming Platforms
+    on<LoadStreamingPlatformsMedia>(onLoadStreamingPlatformsMedia);
+    on<RefreshStreamingPlatformsMedia>(onRefreshStreamingPlatformsMedia);
 
     // Genres
     on<LoadGenres>(onLoadGenres);
@@ -56,6 +61,7 @@ class AppBloc extends Bloc<AppEvent, AppState>
   void _onLoadInitialData(LoadInitialData event, Emitter<AppState> emit) {
     add(LoadMovies());
     add(LoadTvShows());
+    add(LoadStreamingPlatformsMedia());
     add(const LoadGenres(MediaType.movies));
     add(const LoadGenres(MediaType.tvShows));
     add(LoadRecentlyWatched());

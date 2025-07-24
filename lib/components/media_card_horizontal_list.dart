@@ -12,14 +12,12 @@ class MediaCardHorizontalList extends StatelessWidget {
     required this.title,
     required this.pagingController,
     required this.mediaType,
-    required this.viewAllSource,
     required this.onTap,
   });
 
   final String title;
   final PagingController<int, dynamic> pagingController;
   final MediaType mediaType;
-  final String viewAllSource;
   //ignore: avoid_annotating_with_dynamic
   final Function(dynamic media) onTap;
 
@@ -42,7 +40,7 @@ class MediaCardHorizontalList extends StatelessWidget {
       context,
       ViewAllScreen(
         title: title,
-        source: viewAllSource,
+        pagingController: pagingController,
         mediaType: mediaType,
       ),
     ),

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:semo/components/genre_card.dart";
 import "package:semo/components/horizontal_media_list.dart";
 import "package:semo/enums/media_type.dart";
@@ -10,13 +11,13 @@ class GenresList extends StatelessWidget {
   const GenresList({
     super.key,
     required this.genres,
+    required this.mediaPagingControllers,
     required this.mediaType,
-    required this.viewAllSource,
   });
 
   final List<Genre> genres;
+  final Map<String, PagingController<int, dynamic>> mediaPagingControllers;
   final MediaType mediaType;
-  final String viewAllSource;
 
   @override
   Widget build(BuildContext context) => HorizontalMediaList<Genre>(
@@ -34,10 +35,7 @@ class GenresList extends StatelessWidget {
           context,
           ViewAllScreen(
             title: genre.name,
-            source: viewAllSource,
-            parameters: <String, String>{
-              "with_genres": "${genre.id}",
-            },
+            pagingController: mediaPagingControllers[genre.id.toString()]!,
             mediaType: mediaType,
           ),
         ),

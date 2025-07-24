@@ -252,7 +252,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     child: MediaCardHorizontalList(
       title: title,
       pagingController: controller,
-      viewAllSource: viewAllSource,
       mediaType: MediaType.movies,
       //ignore: avoid_annotating_with_dynamic
       onTap: (dynamic media) => navigate(

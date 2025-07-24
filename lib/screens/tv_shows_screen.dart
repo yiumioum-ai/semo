@@ -107,7 +107,6 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
       child: MediaCardHorizontalList(
         title: title,
         pagingController: controller,
-        viewAllSource: viewAllSource,
         mediaType: MediaType.tvShows,
         //ignore: avoid_annotating_with_dynamic
         onTap: (dynamic media) => navigate(TvShowScreen(media as TvShow)),
@@ -115,22 +114,34 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
     );
   }
 
-  Widget _buildStreamingPlatforms() => Container(
-    margin: const EdgeInsets.only(top: 30),
-    child: StreamingPlatformCardHorizontalList(
-      mediaType: MediaType.tvShows,
-      viewAllSource: Urls.discoverTvShow,
-    ),
-  );
+  Widget _buildStreamingPlatforms(Map<String, PagingController<int, TvShow>>? pagingControllers) {
+    if (pagingControllers == null || pagingControllers.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildGenres(List<Genre>? genres) => Container(
-    margin: const EdgeInsets.only(top: 30),
-    child: GenresList(
-      genres: genres ?? <Genre>[],
-      mediaType: MediaType.tvShows,
-      viewAllSource: Urls.discoverTvShow,
-    ),
-  );
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      child: StreamingPlatformCardHorizontalList(
+        mediaType: MediaType.tvShows,
+        pagingControllers: pagingControllers,
+      ),
+    );
+  }
+
+  Widget _buildGenres(List<Genre>? genres, Map<String, PagingController<int, TvShow>>? tvShowsPagingControllers) {
+    if (tvShowsPagingControllers == null || tvShowsPagingControllers.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      child: GenresList(
+        genres: genres ?? <Genre>[],
+        mediaPagingControllers: tvShowsPagingControllers,
+        mediaType: MediaType.tvShows,
+      ),
+    );
+  }
 
   @override
   String get screenName => "TV Shows";
@@ -171,8 +182,8 @@ class _TvShowsScreenState extends BaseScreenState<TvShowsScreen> {
                     controller: state.topRatedTvShowsPagingController,
                     viewAllSource: Urls.topRatedTvShows,
                   ),
-                  _buildStreamingPlatforms(),
-                  _buildGenres(state.tvShowGenres),
+                  _buildStreamingPlatforms(state.streamingPlatformTvShowsPagingControllers),
+                  _buildGenres(state.tvShowGenres, state.genreTvShowsPagingControllers),
                 ],
               ),
             ),

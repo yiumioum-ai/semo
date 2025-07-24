@@ -36,6 +36,16 @@ class AddIncompleteTvShows extends AppEvent {
   final List<TvShow> tvShows;
 }
 
+// Streaming Platforms
+
+class LoadStreamingPlatformsMedia extends AppEvent {}
+
+class RefreshStreamingPlatformsMedia extends AppEvent {
+  const RefreshStreamingPlatformsMedia(this.mediaType);
+
+  final MediaType mediaType;
+}
+
 // Genres
 
 class LoadGenres extends AppEvent {

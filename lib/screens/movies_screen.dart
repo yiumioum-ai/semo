@@ -40,6 +40,7 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     Timer(const Duration(milliseconds: 500), () {
       try {
         context.read<AppBloc>().add(RefreshMovies());
+        context.read<AppBloc>().add(const RefreshStreamingPlatformsMedia(MediaType.movies));
         context.read<AppBloc>().add(const RefreshGenres(MediaType.movies));
       } catch (_) {}
     });
@@ -99,7 +100,6 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
       child: MediaCardHorizontalList(
         title: title,
         pagingController: controller,
-        viewAllSource: viewAllSource,
         mediaType: MediaType.movies,
         //ignore: avoid_annotating_with_dynamic
         onTap: (dynamic media) => navigate(MovieScreen(media as Movie)),
@@ -107,22 +107,34 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
     );
   }
 
-  Widget _buildStreamingPlatforms() => Container(
-    margin: const EdgeInsets.only(top: 30),
-    child: StreamingPlatformCardHorizontalList(
-      mediaType: MediaType.movies,
-      viewAllSource: Urls.discoverMovie,
-    ),
-  );
+  Widget _buildStreamingPlatforms(Map<String, PagingController<int, Movie>>? pagingControllers) {
+    if (pagingControllers == null || pagingControllers.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildGenres(List<Genre>? genres) => Container(
-    margin: const EdgeInsets.only(top: 30),
-    child: GenresList(
-      genres: genres ?? <Genre>[],
-      mediaType: MediaType.movies,
-      viewAllSource: Urls.discoverMovie,
-    ),
-  );
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      child: StreamingPlatformCardHorizontalList(
+        mediaType: MediaType.movies,
+        pagingControllers: pagingControllers,
+      ),
+    );
+  }
+
+  Widget _buildGenres(List<Genre>? genres, Map<String, PagingController<int, Movie>>? moviesPagingControllers) {
+    if (moviesPagingControllers == null || moviesPagingControllers.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      child: GenresList(
+        genres: genres ?? <Genre>[],
+        mediaPagingControllers: moviesPagingControllers,
+        mediaType: MediaType.movies,
+      ),
+    );
+  }
 
   @override
   String get screenName => "Movies";
@@ -163,8 +175,8 @@ class _MoviesScreenState extends BaseScreenState<MoviesScreen> {
                     controller: state.topRatedMoviesPagingController,
                     viewAllSource: Urls.topRatedMovies,
                   ),
-                  _buildStreamingPlatforms(),
-                  _buildGenres(state.movieGenres),
+                  _buildStreamingPlatforms(state.streamingPlatformMoviesPagingControllers),
+                  _buildGenres(state.movieGenres, state.genreMoviesPagingControllers),
                 ],
               ),
             ),

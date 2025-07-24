@@ -6,7 +6,6 @@ import "package:logger/logger.dart";
 import "package:semo/bloc/app_event.dart";
 import "package:semo/bloc/app_state.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/models/genre.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/search_results.dart";
 import "package:semo/models/streaming_platform.dart";

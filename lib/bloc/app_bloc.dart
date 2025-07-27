@@ -3,6 +3,7 @@ import "package:semo/bloc/app_event.dart";
 import "package:semo/bloc/app_state.dart";
 import "package:semo/bloc/handlers/favorites_handler.dart";
 import "package:semo/bloc/handlers/genres_handler.dart";
+import "package:semo/bloc/handlers/movie_handler.dart";
 import "package:semo/bloc/handlers/movies_handler.dart";
 import "package:semo/bloc/handlers/recently_watched_handler.dart";
 import "package:semo/bloc/handlers/streaming_platforms_handler.dart";
@@ -11,7 +12,7 @@ import "package:semo/enums/media_type.dart";
 import "package:semo/services/auth_service.dart";
 
 class AppBloc extends Bloc<AppEvent, AppState>
-    with MoviesHandler, TvShowsHandler, StreamingPlatformsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler {
+    with MoviesHandler, TvShowsHandler, StreamingPlatformsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler, MovieHandler {
   AppBloc() : super(const AppState()) {
     // General
     on<LoadInitialData>(_onLoadInitialData);
@@ -50,6 +51,10 @@ class AppBloc extends Bloc<AppEvent, AppState>
     on<LoadFavorites>(onLoadFavorites);
     on<AddFavorite>(onAddFavorite);
     on<RemoveFavorite>(onRemoveFavorite);
+
+    // Movie
+    on<LoadMovieDetails>(onLoadMovieDetails);
+    on<RefreshMovieDetails>(onRefreshMovieDetails);
   }
 
   void init() {

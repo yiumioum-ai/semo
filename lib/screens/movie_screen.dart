@@ -14,15 +14,11 @@ import "package:semo/components/snack_bar.dart";
 import "package:semo/models/media_stream.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/person.dart";
-import "package:semo/models/search_results.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
-import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
-import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/utils/urls.dart";
 
 class MovieScreen extends BaseScreen {
   const MovieScreen(this.movie, {super.key});
@@ -34,80 +30,10 @@ class MovieScreen extends BaseScreen {
 }
 
 class _MovieScreenState extends BaseScreenState<MovieScreen> {
-  late Movie _movie;
-  final TMDBService _tmdbService = TMDBService();
-  final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
+  late Movie _movie = widget.movie;
   final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
   bool _isLoading = true;
-  late final PagingController<int, Movie> _recommendationsController = PagingController<int, Movie>(
-    getNextPageKey: (PagingState<int, Movie> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getRecommendations(
-        MediaType.movies,
-        _movie.id,
-        pageKey,
-      );
-      return results.movies ?? <Movie>[];
-    },
-  );
-  late final PagingController<int, Movie> _similarController = PagingController<int, Movie>(
-    getNextPageKey: (PagingState<int, Movie> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults result = await _tmdbService.getSimilar(
-        MediaType.movies,
-        _movie.id,
-        pageKey,
-      );
-      return result.movies ?? <Movie>[];
-    },
-  );
-
-  Future<void> _loadMovieDetails() async {
-    try {
-      await Future.wait(<Future<void>>[
-        _getCompleteMovieDetails(),
-        _checkIfRecentlyWatched(),
-        _loadTrailer(),
-        _loadCast(),
-      ]);
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to load movie details");
-      }
-    }
-
-    setState(() => _isLoading = false);
-  }
-
-  Future<void> _getCompleteMovieDetails() async {
-    final Movie? movie = await _tmdbService.getMovie(_movie.id);
-    if (movie != null) {
-      setState(() => _movie = movie);
-    }
-  }
-
-  Future<void> _checkIfRecentlyWatched() async {
-    final int? progress = await _recentlyWatchedService.getMovieProgress(_movie.id);
-    if (progress != null) {
-      setState(() {
-        _movie.isRecentlyWatched = true;
-        _movie.watchedProgress = progress;
-      });
-    }
-  }
-
-  Future<void> _loadTrailer() async {
-    final String? url = await _tmdbService.getTrailerUrl(MediaType.movies, _movie.id);
-    if (url != null) {
-      setState(() => _movie.trailerUrl = url);
-    }
-  }
-
-  Future<void> _loadCast() async {
-    final List<Person> cast = await _tmdbService.getCast(MediaType.movies, _movie.id);
-    setState(() => _movie.cast = cast);
-  }
 
   void _toggleFavorite() {
     try {
@@ -162,11 +88,6 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       if (mounted) {
         if (result["error"] != null) {
           showSnackBar(context, "Playback error. Try again");
-        } else if (result["progress"] != null) {
-          setState(() {
-            _movie.isRecentlyWatched = true;
-            _movie.watchedProgress = result["progress"];
-          });
         }
       }
     } catch (_) {}
@@ -176,14 +97,9 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     setState(() {
       _isLoading = true;
       _isFavorite = false;
-      _movie.trailerUrl = null;
-      _movie.cast = null;
     });
 
-    _recommendationsController.refresh();
-    _similarController.refresh();
-
-    await _loadMovieDetails();
+    context.read<AppBloc>().add(RefreshMovieDetails(_movie.id));
   }
 
   String _formatDuration(Duration d) {
@@ -229,8 +145,8 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     ),
   );
 
-  Widget _buildPersonCardHorizontalList() {
-    if (_movie.cast == null || _movie.cast!.isEmpty) {
+  Widget _buildPersonCardHorizontalList({List<Person>? cast}) {
+    if (cast == null || cast.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -238,48 +154,47 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: PersonCardHorizontalList(
         title: "Cast",
-        people: _movie.cast!,
+        people: cast,
       ),
     );
   }
 
-  Widget _buildMediaCardHorizontalList({
-    required PagingController<int, Movie> controller,
-    required String title,
-    required String viewAllSource,
-  }) => Padding(
-    padding: const EdgeInsets.only(top: 30),
-    child: MediaCardHorizontalList(
-      title: title,
-      pagingController: controller,
-      mediaType: MediaType.movies,
-      //ignore: avoid_annotating_with_dynamic
-      onTap: (dynamic media) => navigate(
-        MovieScreen(media as Movie),
+  Widget _buildMediaCardHorizontalList({required PagingController<int, Movie>? controller, required String title}) {
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 30),
+      child: MediaCardHorizontalList(
+        title: title,
+        pagingController: controller,
+        mediaType: MediaType.movies,
+        //ignore: avoid_annotating_with_dynamic
+        onTap: (dynamic media) => navigate(
+          MovieScreen(media as Movie),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   @override
   String get screenName => "Movie - ${widget.movie.title}";
 
   @override
   Future<void> initializeScreen() async {
-    _movie = widget.movie;
-    await _loadMovieDetails();
-  }
-
-  @override
-  void handleDispose() {
-    _recommendationsController.dispose();
-    _similarController.dispose();
+    context.read<AppBloc>().add(LoadMovieDetails(widget.movie.id));
   }
 
   @override
   Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
     listener: (BuildContext context, AppState state) {
       if (mounted) {
-        setState(() => _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false);
+        setState(() {
+          _isLoading = state.isMovieLoading?[_movie.id.toString()] ?? true;
+          _movie = state.movies?.firstWhere((Movie movie) => movie.id == _movie.id, orElse: () => widget.movie) ?? widget.movie;
+          _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false;
+        });
       }
 
       if (state.error != null) {
@@ -312,7 +227,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
               children: <Widget>[
                 MediaPoster(
                   backdropPath: _movie.backdropPath,
-                  trailerUrl: _movie.trailerUrl,
+                  trailerUrl: state.movieTrailers?[_movie.id.toString()],
                 ),
                 Padding(
                   padding: const EdgeInsets.all(18),
@@ -325,16 +240,16 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
                         overview: _movie.overview,
                       ),
                       _buildPlayButton(),
-                      _buildPersonCardHorizontalList(),
+                      _buildPersonCardHorizontalList(
+                        cast: state.movieCast?[_movie.id.toString()],
+                      ),
                       _buildMediaCardHorizontalList(
                         title: "Recommendations",
-                        controller: _recommendationsController,
-                        viewAllSource: Urls.getMovieRecommendations(_movie.id),
+                        controller: state.movieRecommendationsPagingControllers?[_movie.id.toString()],
                       ),
                       _buildMediaCardHorizontalList(
                         title: "Similar",
-                        controller: _similarController,
-                        viewAllSource: Urls.getMovieSimilar(_movie.id),
+                        controller: state.similarMoviesPagingControllers?[_movie.id.toString()],
                       ),
                     ],
                   ),

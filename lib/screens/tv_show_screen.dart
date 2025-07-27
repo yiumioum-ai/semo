@@ -26,7 +26,6 @@ import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
 import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
-import "package:semo/utils/urls.dart";
 
 class TvShowScreen extends BaseScreen {
   const TvShowScreen(this.tvShow, {super.key});
@@ -366,11 +365,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     );
   }
 
-  Widget _buildMediaCardHorizontalList({
-    required PagingController<int, TvShow> controller,
-    required String title,
-    required String viewAllSource,
-  }) => Padding(
+  Widget _buildMediaCardHorizontalList({required PagingController<int, TvShow> controller, required String title}) => Padding(
     padding: const EdgeInsets.only(top: 30),
     child: MediaCardHorizontalList(
       title: title,
@@ -452,12 +447,10 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
                       _buildMediaCardHorizontalList(
                         title: "Recommendations",
                         controller: _recommendationsController,
-                        viewAllSource: Urls.getTvShowRecommendations(widget.tvShow.id),
                       ),
                       _buildMediaCardHorizontalList(
                         title: "Similar",
                         controller: _similarController,
-                        viewAllSource: Urls.getTvShowSimilar(widget.tvShow.id),
                       ),
                     ],
                   ),

@@ -1,5 +1,4 @@
 import "package:semo/models/genre.dart";
-import "package:semo/models/person.dart";
 
 class Movie {
   Movie({
@@ -19,11 +18,6 @@ class Movie {
     required this.voteAverage,
     required this.voteCount,
     required this.duration,
-    this.creditsStart,
-    this.isRecentlyWatched,
-    this.watchedProgress,
-    this.trailerUrl,
-    this.cast,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) => Movie(
@@ -62,9 +56,4 @@ class Movie {
   final double voteAverage;
   final int voteCount;
   final int duration;
-  Duration? creditsStart;
-  bool? isRecentlyWatched;
-  int? watchedProgress;
-  String? trailerUrl;
-  List<Person>? cast;
 }

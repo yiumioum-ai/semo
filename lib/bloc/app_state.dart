@@ -1,6 +1,7 @@
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:semo/models/genre.dart";
 import "package:semo/models/movie.dart";
+import "package:semo/models/person.dart";
 import "package:semo/models/tv_show.dart";
 
 class AppState {
@@ -29,6 +30,10 @@ class AppState {
     this.tvShowGenres,
     this.genreMoviesPagingControllers,
     this.genreTvShowsPagingControllers,
+    this.movieTrailers,
+    this.movieCast,
+    this.movieRecommendationsPagingControllers,
+    this.similarMoviesPagingControllers,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
     this.isLoadingStreamingPlatformsMedia = false,
@@ -36,6 +41,7 @@ class AppState {
     this.isLoadingTvShowGenres = false,
     this.isLoadingRecentlyWatched = false,
     this.isLoadingFavorites = false,
+    this.isMovieLoading,
     this.currentlyPlayingProgress = 0,
     this.error,
   });
@@ -72,6 +78,11 @@ class AppState {
   final Map<String, PagingController<int, Movie>>? genreMoviesPagingControllers;
   final Map<String, PagingController<int, TvShow>>? genreTvShowsPagingControllers;
 
+  final Map<String, List<Person>>? movieCast;
+  final Map<String, String>? movieTrailers;
+  final Map<String, PagingController<int, Movie>>? movieRecommendationsPagingControllers;
+  final Map<String, PagingController<int, Movie>>? similarMoviesPagingControllers;
+
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
   final bool isLoadingStreamingPlatformsMedia;
@@ -79,6 +90,7 @@ class AppState {
   final bool isLoadingTvShowGenres;
   final bool isLoadingRecentlyWatched;
   final bool isLoadingFavorites;
+  final Map<String, bool>? isMovieLoading;
 
   final int currentlyPlayingProgress; // Progress of the currently playing movie or episode
 
@@ -109,6 +121,10 @@ class AppState {
     List<Genre>? tvShowGenres,
     Map<String, PagingController<int, Movie>>? genreMoviesPagingControllers,
     Map<String, PagingController<int, TvShow>>? genreTvShowsPagingControllers,
+    Map<String, String>? movieTrailers,
+    Map<String, List<Person>>? movieCast,
+    Map<String, PagingController<int, Movie>>? movieRecommendationsPagingControllers,
+    Map<String, PagingController<int, Movie>>? similarMoviesPagingControllers,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
     bool? isLoadingStreamingPlatformsMedia,
@@ -116,6 +132,7 @@ class AppState {
     bool? isLoadingTvShowGenres,
     bool? isLoadingRecentlyWatched,
     bool? isLoadingFavorites,
+    Map<String, bool>? isMovieLoading,
     int? currentlyPlayingProgress,
     String? error,
   }) => AppState(
@@ -143,6 +160,10 @@ class AppState {
     tvShowGenres: tvShowGenres ?? this.tvShowGenres,
     genreMoviesPagingControllers: genreMoviesPagingControllers ?? this.genreMoviesPagingControllers,
     genreTvShowsPagingControllers: genreTvShowsPagingControllers ?? this.genreTvShowsPagingControllers,
+    movieTrailers: movieTrailers ?? this.movieTrailers,
+    movieCast: movieCast ?? this.movieCast,
+    movieRecommendationsPagingControllers: movieRecommendationsPagingControllers ?? this.movieRecommendationsPagingControllers,
+    similarMoviesPagingControllers: similarMoviesPagingControllers ?? this.similarMoviesPagingControllers,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
     isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,
@@ -150,6 +171,7 @@ class AppState {
     isLoadingTvShowGenres: isLoadingTvShowGenres ?? this.isLoadingTvShowGenres,
     isLoadingRecentlyWatched: isLoadingRecentlyWatched ?? this.isLoadingRecentlyWatched,
     isLoadingFavorites: isLoadingFavorites ?? this.isLoadingFavorites,
+    isMovieLoading: isMovieLoading ?? this.isMovieLoading,
     currentlyPlayingProgress: currentlyPlayingProgress ?? this.currentlyPlayingProgress,
     error: error ?? this.error,
   );

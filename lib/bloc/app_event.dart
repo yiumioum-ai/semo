@@ -137,3 +137,17 @@ class RemoveFavorite extends AppEvent {
   final dynamic media;
   final MediaType mediaType;
 }
+
+// Movie
+
+class LoadMovieDetails extends AppEvent {
+  const LoadMovieDetails(this.movieId);
+
+  final int movieId;
+}
+
+class RefreshMovieDetails extends AppEvent {
+  const RefreshMovieDetails(this.movieId);
+
+  final int movieId;
+}

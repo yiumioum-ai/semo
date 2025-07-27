@@ -169,7 +169,7 @@ mixin TvShowHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<dynamic> _loadTvShowTrailer(int tvShowId, Emitter<AppState> emit) async {
+  Future<void> _loadTvShowTrailer(int tvShowId, Emitter<AppState> emit) async {
     try {
       final String? trailerUrl = await _tmdbService.getTrailerUrl(MediaType.tvShows, tvShowId);
 
@@ -183,11 +183,10 @@ mixin TvShowHandler on Bloc<AppEvent, AppState> {
       }
     } catch (e, s) {
       _logger.e("Error loading TV show trailer for ID $tvShowId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadTvShowCast(int tvShowId, Emitter<AppState> emit) async {
+  Future<void> _loadTvShowCast(int tvShowId, Emitter<AppState> emit) async {
     try {
       final List<Person> cast = await _tmdbService.getCast(MediaType.tvShows, tvShowId);
 
@@ -199,11 +198,10 @@ mixin TvShowHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading TV show cast for ID $tvShowId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadTvShowRecommendations(int tvShowId, Emitter<AppState> emit) async {
+  Future<void> _loadTvShowRecommendations(int tvShowId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, TvShow>> recommendationsControllers =
       Map<String, PagingController<int, TvShow>>.from(state.tvShowRecommendationsPagingControllers ?? <String, PagingController<int, TvShow>>{});
@@ -225,11 +223,10 @@ mixin TvShowHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading TV show recommendations for ID $tvShowId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadSimilarTvShows(int tvShowId, Emitter<AppState> emit) async {
+  Future<void> _loadSimilarTvShows(int tvShowId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, TvShow>> similarTvShowsControllers =
       Map<String, PagingController<int, TvShow>>.from(state.similarTvShowsPagingControllers ?? <String, PagingController<int, TvShow>>{});
@@ -251,7 +248,6 @@ mixin TvShowHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading similar TV shows for ID $tvShowId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 

@@ -96,7 +96,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<dynamic> _loadMovieTrailer(int movieId, Emitter<AppState> emit) async {
+  Future<void> _loadMovieTrailer(int movieId, Emitter<AppState> emit) async {
     try {
       final String? trailerUrl = await _tmdbService.getTrailerUrl(MediaType.movies, movieId);
 
@@ -110,11 +110,10 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
       }
     } catch (e, s) {
       _logger.e("Error loading movie trailer for ID $movieId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadMovieCast(int movieId, Emitter<AppState> emit) async {
+  Future<void> _loadMovieCast(int movieId, Emitter<AppState> emit) async {
     try {
       final List<Person> cast = await _tmdbService.getCast(MediaType.movies, movieId);
 
@@ -126,11 +125,10 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading movie cast for ID $movieId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadMovieRecommendations(int movieId, Emitter<AppState> emit) async {
+  Future<void> _loadMovieRecommendations(int movieId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, Movie>> recommendationsControllers =
       Map<String, PagingController<int, Movie>>.from(state.movieRecommendationsPagingControllers ?? <String, PagingController<int, Movie>>{});
@@ -152,11 +150,10 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading movie recommendations for ID $movieId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 
-  Future<dynamic> _loadSimilarMovies(int movieId, Emitter<AppState> emit) async {
+  Future<void> _loadSimilarMovies(int movieId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, Movie>> similarMoviesControllers =
       Map<String, PagingController<int, Movie>>.from(state.similarMoviesPagingControllers ?? <String, PagingController<int, Movie>>{});
@@ -178,7 +175,6 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
       ));
     } catch (e, s) {
       _logger.e("Error loading similar movies for ID $movieId", error: e, stackTrace: s);
-      rethrow;
     }
   }
 

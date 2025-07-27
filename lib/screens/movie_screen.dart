@@ -145,7 +145,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     ),
   );
 
-  Widget _buildPersonCardHorizontalList({List<Person>? cast}) {
+  Widget _buildPersonCardHorizontalList(List<Person>? cast) {
     if (cast == null || cast.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -253,9 +253,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
                           overview: _movie.overview,
                         ),
                         _buildPlayButton(),
-                        _buildPersonCardHorizontalList(
-                          cast: state.movieCast?[_movie.id.toString()],
-                        ),
+                        _buildPersonCardHorizontalList(state.movieCast?[_movie.id.toString()]),
                         _buildMediaCardHorizontalList(
                           title: "Recommendations",
                           controller: state.movieRecommendationsPagingControllers?[_movie.id.toString()],

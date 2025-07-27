@@ -202,63 +202,77 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
         context.read<AppBloc>().add(ClearError());
       }
     },
-    builder: (BuildContext context, AppState state) => Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () => Navigator.pop(context, "refresh"),
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
-            ),
-            color: _isFavorite ? Colors.red : Colors.white,
-            onPressed: _toggleFavorite,
+    builder: (BuildContext context, AppState state) {
+      Movie? movie;
+
+      try {
+        movie = state.movies?.firstWhere((Movie movie) => movie.id == widget.movie.id, orElse: () => widget.movie);
+
+        if (mounted && movie != null) {
+          setState(() => _movie = movie!);
+        }
+      } catch (_) {}
+
+      bool isMovieLoaded = movie != null;
+
+      return Scaffold(
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () => Navigator.pop(context, "refresh"),
           ),
-        ],
-      ),
-      body: !_isLoading ? SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshData,
-          color: Theme.of(context).primaryColor,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                MediaPoster(
-                  backdropPath: _movie.backdropPath,
-                  trailerUrl: state.movieTrailers?[_movie.id.toString()],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      MediaInfo(
-                        title: _movie.title,
-                        subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
-                        overview: _movie.overview,
-                      ),
-                      _buildPlayButton(),
-                      _buildPersonCardHorizontalList(
-                        cast: state.movieCast?[_movie.id.toString()],
-                      ),
-                      _buildMediaCardHorizontalList(
-                        title: "Recommendations",
-                        controller: state.movieRecommendationsPagingControllers?[_movie.id.toString()],
-                      ),
-                      _buildMediaCardHorizontalList(
-                        title: "Similar",
-                        controller: state.similarMoviesPagingControllers?[_movie.id.toString()],
-                      ),
-                    ],
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+              ),
+              color: _isFavorite ? Colors.red : Colors.white,
+              onPressed: _toggleFavorite,
+            ),
+          ],
+        ),
+        body: (isMovieLoaded || !_isLoading) ? SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _refreshData,
+            color: Theme.of(context).primaryColor,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  MediaPoster(
+                    backdropPath: _movie.backdropPath,
+                    trailerUrl: state.movieTrailers?[_movie.id.toString()],
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        MediaInfo(
+                          title: _movie.title,
+                          subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
+                          overview: _movie.overview,
+                        ),
+                        _buildPlayButton(),
+                        _buildPersonCardHorizontalList(
+                          cast: state.movieCast?[_movie.id.toString()],
+                        ),
+                        _buildMediaCardHorizontalList(
+                          title: "Recommendations",
+                          controller: state.movieRecommendationsPagingControllers?[_movie.id.toString()],
+                        ),
+                        _buildMediaCardHorizontalList(
+                          title: "Similar",
+                          controller: state.similarMoviesPagingControllers?[_movie.id.toString()],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ) : const Center(child: CircularProgressIndicator()),
-    ),
+        ) : const Center(child: CircularProgressIndicator()),
+      );
+    },
   );
 }

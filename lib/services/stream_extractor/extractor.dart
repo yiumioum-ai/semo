@@ -6,6 +6,7 @@ import "package:semo/models/movie.dart";
 import "package:semo/models/stream_extractor_options.dart";
 import "package:semo/models/streaming_server.dart";
 import "package:semo/models/media_stream.dart";
+import "package:semo/models/tv_show.dart";
 import "package:semo/services/stream_extractor/extractors/base_stream_extractor.dart";
 import "package:semo/services/stream_extractor/extractors/kiss_kh_extractor.dart";
 import "package:semo/services/preferences.dart";
@@ -19,7 +20,7 @@ class StreamExtractor {
 
   static List<StreamingServer> get streamingServers => _streamingServers;
 
-  static Future<MediaStream?> getStream({Movie? movie, Episode? episode}) async {
+  static Future<MediaStream?> getStream({Movie? movie, TvShow? tvShow, Episode? episode}) async {
     try {
       math.Random random = math.Random();
       String serverName = AppPreferences().getStreamingServer();
@@ -39,12 +40,12 @@ class StreamExtractor {
           title: movie.title,
           movieReleaseYear: movie.releaseDate.split("-")[0]
         );
-      } else if (episode != null) {
+      } else if (tvShow != null && episode != null) {
         streamExtractorOptions = StreamExtractorOptions(
           tmdbId: episode.id,
           season: episode.season,
           episode: episode.number,
-          title: episode.tvShowName,
+          title: tvShow.name,
         );
       }
 

@@ -11,7 +11,7 @@ class SeasonSelector extends StatelessWidget {
 
   final List<Season> seasons;
   final Season selectedSeason;
-  final Function(Season) onSeasonChanged;
+  final Function(List<Season>, Season) onSeasonChanged;
 
   @override
   Widget build(BuildContext context) => DropdownMenu<Season>(
@@ -30,7 +30,7 @@ class SeasonSelector extends StatelessWidget {
     ),
     onSelected: (Season? season) {
       if (season != null) {
-        onSeasonChanged(season);
+        onSeasonChanged(seasons, season);
       }
     },
     dropdownMenuEntries: seasons.map<DropdownMenuEntry<Season>>((Season season) => DropdownMenuEntry<Season>(

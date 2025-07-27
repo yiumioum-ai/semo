@@ -1,12 +1,9 @@
-import "package:semo/models/episode.dart";
-
 class Season {
   Season({
     required this.id,
     required this.number,
     required this.name,
     required this.airDate,
-    this.episodes,
   });
 
   factory Season.fromJson(Map<String, dynamic> json) => Season(
@@ -20,5 +17,4 @@ class Season {
   final int number;
   final String name;
   final String? airDate;
-  List<Episode>? episodes;
 }

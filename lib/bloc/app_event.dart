@@ -151,3 +151,24 @@ class RefreshMovieDetails extends AppEvent {
 
   final int movieId;
 }
+
+// TV Show
+
+class LoadTvShowDetails extends AppEvent {
+  const LoadTvShowDetails(this.tvShowId);
+
+  final int tvShowId;
+}
+
+class LoadSeasonEpisodes extends AppEvent {
+  const LoadSeasonEpisodes(this.tvShowId, this.seasonNumber);
+
+  final int tvShowId;
+  final int seasonNumber;
+}
+
+class RefreshTvShowDetails extends AppEvent {
+  const RefreshTvShowDetails(this.tvShowId);
+
+  final int tvShowId;
+}

@@ -16,7 +16,6 @@ import "package:semo/components/snack_bar.dart";
 import "package:semo/models/episode.dart";
 import "package:semo/models/media_stream.dart";
 import "package:semo/models/person.dart";
-import "package:semo/models/search_results.dart";
 import "package:semo/models/season.dart";
 import "package:semo/models/tv_show.dart";
 import "package:semo/screens/base_screen.dart";
@@ -24,7 +23,6 @@ import "package:semo/screens/player_screen.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/subtitle_service.dart";
-import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
 
 class TvShowScreen extends BaseScreen {
@@ -37,124 +35,11 @@ class TvShowScreen extends BaseScreen {
 }
 
 class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
-  final TMDBService _tmdbService = TMDBService();
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
   final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
   bool _isLoading = true;
   int _currentSeasonIndex = 0;
-  late final PagingController<int, TvShow> _recommendationsController = PagingController<int, TvShow>(
-    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getRecommendations(
-        MediaType.tvShows,
-        widget.tvShow.id,
-        pageKey,
-      );
-      return results.tvShows ?? <TvShow>[];
-    },
-  );
-  late final PagingController<int, TvShow> _similarController = PagingController<int, TvShow>(
-    getNextPageKey: (PagingState<int, TvShow> state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (int pageKey) async {
-      final SearchResults results = await _tmdbService.getSimilar(
-        MediaType.tvShows,
-        widget.tvShow.id,
-        pageKey,
-      );
-      return results.tvShows ?? <TvShow>[];
-    },
-  );
-
-  Future<void> _loadTvShowDetails() async {
-    try {
-      await Future.wait(<Future<void>>[
-        _loadSeasons(),
-        _loadTrailer(),
-        _loadCast(),
-      ]);
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to load TV show details");
-      }
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadSeasons() async {
-    final List<Season> seasons = await _tmdbService.getTvShowSeasons(widget.tvShow.id);
-    if (mounted && seasons.isNotEmpty) {
-      setState(() => widget.tvShow.seasons = seasons);
-      await _loadEpisodesForSeason(0);
-    }
-  }
-
-  Future<void> _loadEpisodesForSeason(int seasonIndex) async {
-    if (widget.tvShow.seasons == null || seasonIndex >= widget.tvShow.seasons!.length) {
-      return;
-    }
-
-    try {
-      final Season season = widget.tvShow.seasons![seasonIndex];
-      if (season.episodes != null) {
-        return;
-      }
-
-      if (!_isLoading) {
-        spinner.show();
-      }
-
-      final List<Episode> episodes = await _tmdbService.getEpisodes(
-        widget.tvShow.id,
-        season.number,
-        widget.tvShow.name,
-      );
-      final Map<String, Map<String, dynamic>>? recentlyWatchedEpisodes = await _recentlyWatchedService.getEpisodes(
-        widget.tvShow.id,
-        season.id,
-      );
-
-      if (recentlyWatchedEpisodes != null) {
-        for (final Episode episode in episodes) {
-          final Map<String, dynamic>? recentlyWatchedEpisodeData = recentlyWatchedEpisodes["${episode.id}"];
-
-          if (recentlyWatchedEpisodeData != null) {
-            episode.isRecentlyWatched = true;
-            episode.watchedProgress = recentlyWatchedEpisodeData["progress"] ?? 0;
-          }
-        }
-      }
-
-      if (mounted) {
-        setState(() => widget.tvShow.seasons![seasonIndex].episodes = episodes);
-      }
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to load episodes");
-      }
-    }
-
-    if (!_isLoading) {
-      spinner.dismiss();
-    }
-  }
-
-  Future<void> _loadTrailer() async {
-    final String? url = await _tmdbService.getTrailerUrl(MediaType.tvShows, widget.tvShow.id);
-    if (mounted) {
-      setState(() => widget.tvShow.trailerUrl = url);
-    }
-  }
-
-  Future<void> _loadCast() async {
-    final List<Person> cast = await _tmdbService.getCast(MediaType.tvShows, widget.tvShow.id);
-    if (mounted) {
-      setState(() => widget.tvShow.cast = cast);
-    }
-  }
 
   void _toggleFavorite() {
     try {
@@ -167,12 +52,11 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     } catch (_) {}
   }
 
-  Future<void> _playEpisode(Episode episode) async {
+  Future<void> _playEpisode(Season season, Episode episode) async {
     spinner.show();
 
     try {
-      final Season season = widget.tvShow.seasons![_currentSeasonIndex];
-      final MediaStream? stream = await StreamExtractor.getStream(episode: episode);
+      final MediaStream? stream = await StreamExtractor.getStream(tvShow: widget.tvShow, episode: episode);
 
       if (stream != null && stream.url.isNotEmpty) {
         stream.subtitleFiles = await _subtitleService.getSubtitles(
@@ -212,30 +96,14 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   }
 
   void _handlePlayerResult(Map<String, dynamic> result) {
-    try {
-      final int? episodeId = result["episodeId"] as int?;
-      final int? progressSeconds = result["progress"] as int?;
-
-      if (episodeId != null && progressSeconds != null) {
-        final List<Episode>? episodes = widget.tvShow.seasons?[_currentSeasonIndex].episodes;
-        final int? episodeIndex = episodes?.indexWhere((Episode episode) => episode.id == episodeId);
-
-        if (episodes != null && episodeIndex != null && episodeIndex != -1) {
-          if (mounted) {
-            setState(() {
-              episodes[episodeIndex].isRecentlyWatched = true;
-              episodes[episodeIndex].watchedProgress = progressSeconds;
-            });
-          }
-        }
-      }
-    } catch (_) {}
+    if (result["error"] != null) {
+      showSnackBar(context, "Playback error. Try again");
+      return;
+    }
   }
 
-  Future<void> _markEpisodeAsWatched(Episode episode) async {
+  Future<void> _markEpisodeAsWatched(Season season, Episode episode) async {
     try {
-      final Season season = widget.tvShow.seasons![_currentSeasonIndex];
-
       unawaited(
         _recentlyWatchedService.updateEpisodeProgress(
           widget.tvShow.id,
@@ -252,10 +120,8 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     });
   }
 
-  Future<void> _removeEpisodeFromRecentlyWatched(Episode episode) async {
+  Future<void> _removeEpisodeFromRecentlyWatched(Season season, Episode episode) async {
     try {
-      final Season season = widget.tvShow.seasons![_currentSeasonIndex];
-
       unawaited(
         _recentlyWatchedService.removeEpisodeProgress(
           widget.tvShow.id,
@@ -271,14 +137,12 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     });
   }
 
-  Future<void> _onSeasonChanged(Season season) async {
-    final int? selectedSeasonIndex = widget.tvShow.seasons?.indexOf(season);
+  Future<void> _onSeasonChanged(List<Season> seasons, Season season) async {
+    final int selectedSeasonIndex = seasons.indexOf(season);
 
-    if (selectedSeasonIndex != null && selectedSeasonIndex != -1) {
+    if (selectedSeasonIndex != -1) {
       setState(() => _currentSeasonIndex = selectedSeasonIndex);
-      if (season.episodes == null) {
-        await _loadEpisodesForSeason(selectedSeasonIndex);
-      }
+      context.read<AppBloc>().add(LoadSeasonEpisodes(widget.tvShow.id, season.number));
     }
   }
 
@@ -286,24 +150,18 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     setState(() {
       _isLoading = true;
       _isFavorite = false;
-      widget.tvShow.trailerUrl = null;
-      widget.tvShow.cast = null;
-      widget.tvShow.seasons = null;
       _currentSeasonIndex = 0;
     });
 
-    _recommendationsController.refresh();
-    _similarController.refresh();
-
-    await _loadTvShowDetails();
+    context.read<AppBloc>().add(RefreshTvShowDetails(widget.tvShow.id));
   }
 
-  Widget _buildSeasonSelector() {
-    if (widget.tvShow.seasons == null || widget.tvShow.seasons!.isEmpty) {
+  Widget _buildSeasonSelector(List<Season>? seasons) {
+    if (seasons == null || seasons.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final Season selectedSeason = widget.tvShow.seasons![_currentSeasonIndex];
+    final Season selectedSeason = seasons[_currentSeasonIndex];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +169,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
         Row(
           children: <Widget>[
             SeasonSelector(
-              seasons: widget.tvShow.seasons!,
+              seasons: seasons,
               selectedSeason: selectedSeason,
               onSeasonChanged: _onSeasonChanged,
             ),
@@ -322,37 +180,39 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     );
   }
 
-  Widget _buildSelectedSeasonEpisodes() {
-    if (widget.tvShow.seasons == null || widget.tvShow.seasons!.isEmpty) {
+  Widget _buildSelectedSeasonEpisodes(List<Season>? seasons, List<Episode>? episodes, {bool isLoadingEpisodes = false}) {
+    if (seasons == null || seasons.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final Season selectedSeason = widget.tvShow.seasons![_currentSeasonIndex];
+    if (isLoadingEpisodes) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    if (selectedSeason.episodes == null) {
+    if (episodes == null) {
       return const Text("No episodes available for this season.");
     }
+
+    Season selectedSeason = seasons[_currentSeasonIndex];
 
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemCount: selectedSeason.episodes!.length,
+      itemCount: episodes.length,
       itemBuilder: (BuildContext context, int index) {
-        final Episode episode = selectedSeason.episodes![index];
+        final Episode episode = episodes[index];
         return EpisodeCard(
           episode: episode,
-          onTap: () => _playEpisode(episode),
-          onMarkWatched: () => _markEpisodeAsWatched(episode),
-          onRemove: episode.isRecentlyWatched
-              ? () => _removeEpisodeFromRecentlyWatched(episode)
-              : null,
+          onTap: () => _playEpisode(selectedSeason, episode),
+          onMarkWatched: () => _markEpisodeAsWatched(selectedSeason, episode),
+          onRemove: episode.isRecentlyWatched ? () => _removeEpisodeFromRecentlyWatched(selectedSeason, episode) : null,
         );
       },
     );
   }
 
-  Widget _buildPersonCardHorizontalList() {
-    if (widget.tvShow.cast == null || widget.tvShow.cast!.isEmpty) {
+  Widget _buildPersonCardHorizontalList({List<Person>? cast}) {
+    if (cast == null || cast.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -360,43 +220,46 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: PersonCardHorizontalList(
         title: "Cast",
-        people: widget.tvShow.cast!,
+        people: cast,
       ),
     );
   }
 
-  Widget _buildMediaCardHorizontalList({required PagingController<int, TvShow> controller, required String title}) => Padding(
-    padding: const EdgeInsets.only(top: 30),
-    child: MediaCardHorizontalList(
-      title: title,
-      pagingController: controller,
-      mediaType: MediaType.tvShows,
-      //ignore: avoid_annotating_with_dynamic
-      onTap: (dynamic media) => navigate(
-        TvShowScreen(media as TvShow),
+  Widget _buildMediaCardHorizontalList({required PagingController<int, TvShow>? controller, required String title}) {
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 30),
+      child: MediaCardHorizontalList(
+        title: title,
+        pagingController: controller,
+        mediaType: MediaType.tvShows,
+        //ignore: avoid_annotating_with_dynamic
+        onTap: (dynamic media) => navigate(
+          TvShowScreen(media as TvShow),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   @override
   String get screenName => "TV Show - ${widget.tvShow.name}";
 
   @override
   Future<void> initializeScreen() async {
-    await _loadTvShowDetails();
-  }
-
-  @override
-  void handleDispose() {
-    _recommendationsController.dispose();
-    _similarController.dispose();
+    context.read<AppBloc>().add(LoadTvShowDetails(widget.tvShow.id));
   }
 
   @override
   Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
     listener: (BuildContext context, AppState state) {
       if (mounted) {
-        setState(() => _isFavorite = state.favoriteTvShows?.any((TvShow tvShow) => tvShow.id == widget.tvShow.id) ?? false);
+        setState(() {
+          _isLoading = state.isTvShowLoading?[widget.tvShow.id.toString()] ?? true;
+          _isFavorite = state.favoriteTvShows?.any((TvShow tvShow) => tvShow.id == widget.tvShow.id) ?? false;
+        });
       }
 
       if (state.error != null) {
@@ -404,62 +267,70 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
         context.read<AppBloc>().add(ClearError());
       }
     },
-    builder: (BuildContext context, AppState state) => Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.pop(context, "refresh")),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
+    builder: (BuildContext context, AppState state) {
+      List<Season>? seasons = state.tvShowSeasons?[widget.tvShow.id.toString()];
+      Season? selectedSeason = seasons?[_currentSeasonIndex];
+      List<Episode>? episodes = state.tvShowEpisodes?[widget.tvShow.id.toString()]?[selectedSeason?.number];
+      bool isLoadingEpisodes = state.isSeasonEpisodesLoading?[widget.tvShow.id.toString()]?[selectedSeason?.number] ?? false;
+      bool isTvShowLoaded = seasons != null && seasons.isNotEmpty && episodes != null && episodes.isNotEmpty;
+
+      return Scaffold(
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => Navigator.pop(context, "refresh")),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+              ),
+              color: _isFavorite ? Colors.red : Colors.white,
+              onPressed: _toggleFavorite,
             ),
-            color: _isFavorite ? Colors.red : Colors.white,
-            onPressed: _toggleFavorite,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshData,
-          color: Theme.of(context).primaryColor,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          child: !_isLoading ? SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                MediaPoster(
-                  backdropPath: widget.tvShow.backdropPath,
-                  trailerUrl: widget.tvShow.trailerUrl,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      MediaInfo(
-                        title: widget.tvShow.name,
-                        subtitle: "${widget.tvShow.firstAirDate.split("-")[0]} · ${widget.tvShow.seasons?.length ?? 1} Seasons",
-                        overview: widget.tvShow.overview,
-                      ),
-                      const SizedBox(height: 30),
-                      _buildSeasonSelector(),
-                      const SizedBox(height: 30),
-                      _buildSelectedSeasonEpisodes(),
-                      _buildPersonCardHorizontalList(),
-                      _buildMediaCardHorizontalList(
-                        title: "Recommendations",
-                        controller: _recommendationsController,
-                      ),
-                      _buildMediaCardHorizontalList(
-                        title: "Similar",
-                        controller: _similarController,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ) : const Center(child: CircularProgressIndicator()),
+          ],
         ),
-      ),
-    ),
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _refreshData,
+            color: Theme.of(context).primaryColor,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            child: (isTvShowLoaded || !_isLoading) ? SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  MediaPoster(
+                    backdropPath: widget.tvShow.backdropPath,
+                    trailerUrl: state.tvShowTrailers?[widget.tvShow.id.toString()],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        MediaInfo(
+                          title: widget.tvShow.name,
+                          subtitle: "${widget.tvShow.firstAirDate.split("-")[0]} · ${seasons?.length ?? 1} Seasons",
+                          overview: widget.tvShow.overview,
+                        ),
+                        const SizedBox(height: 30),
+                        _buildSeasonSelector(seasons),
+                        const SizedBox(height: 30),
+                        _buildSelectedSeasonEpisodes(seasons, episodes, isLoadingEpisodes: isLoadingEpisodes),
+                        _buildPersonCardHorizontalList(),
+                        _buildMediaCardHorizontalList(
+                          title: "Recommendations",
+                          controller: state.tvShowRecommendationsPagingControllers?[widget.tvShow.id.toString()],
+                        ),
+                        _buildMediaCardHorizontalList(
+                          title: "Similar",
+                          controller: state.similarTvShowsPagingControllers?[widget.tvShow.id.toString()],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ) : const Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      );
+    },
   );
 }

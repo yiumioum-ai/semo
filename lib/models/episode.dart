@@ -1,8 +1,6 @@
 class Episode {
   Episode({
     required this.id,
-    required this.tvShowId,
-    required this.tvShowName,
     required this.number,
     required this.season,
     required this.name,
@@ -17,8 +15,6 @@ class Episode {
 
   factory Episode.fromJson(Map<String, dynamic> json) => Episode(
     id: json["id"] ?? 0,
-    tvShowId: json["show_id"] ?? 0,
-    tvShowName: json["show_name"] ?? "",
     number: json["episode_number"] ?? 0,
     season: json["season_number"] ?? 0,
     name: json["name"] ?? "",
@@ -29,8 +25,6 @@ class Episode {
   );
 
   final int id;
-  final int tvShowId;
-  final String tvShowName;
   final int number;
   final int season;
   final String name;

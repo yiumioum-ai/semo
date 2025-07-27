@@ -1,7 +1,9 @@
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
+import "package:semo/models/episode.dart";
 import "package:semo/models/genre.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/person.dart";
+import "package:semo/models/season.dart";
 import "package:semo/models/tv_show.dart";
 
 class AppState {
@@ -34,6 +36,12 @@ class AppState {
     this.movieCast,
     this.movieRecommendationsPagingControllers,
     this.similarMoviesPagingControllers,
+    this.tvShowSeasons,
+    this.tvShowEpisodes,
+    this.tvShowCast,
+    this.tvShowTrailers,
+    this.tvShowRecommendationsPagingControllers,
+    this.similarTvShowsPagingControllers,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
     this.isLoadingStreamingPlatformsMedia = false,
@@ -42,6 +50,8 @@ class AppState {
     this.isLoadingRecentlyWatched = false,
     this.isLoadingFavorites = false,
     this.isMovieLoading,
+    this.isTvShowLoading,
+    this.isSeasonEpisodesLoading,
     this.currentlyPlayingProgress = 0,
     this.error,
   });
@@ -83,6 +93,13 @@ class AppState {
   final Map<String, PagingController<int, Movie>>? movieRecommendationsPagingControllers;
   final Map<String, PagingController<int, Movie>>? similarMoviesPagingControllers;
 
+  final Map<String, List<Season>>? tvShowSeasons;
+  final Map<String, Map<int, List<Episode>>>? tvShowEpisodes;
+  final Map<String, List<Person>>? tvShowCast;
+  final Map<String, String>? tvShowTrailers;
+  final Map<String, PagingController<int, TvShow>>? tvShowRecommendationsPagingControllers;
+  final Map<String, PagingController<int, TvShow>>? similarTvShowsPagingControllers;
+
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
   final bool isLoadingStreamingPlatformsMedia;
@@ -91,6 +108,8 @@ class AppState {
   final bool isLoadingRecentlyWatched;
   final bool isLoadingFavorites;
   final Map<String, bool>? isMovieLoading;
+  final Map<String, bool>? isTvShowLoading;
+  final Map<String, Map<int, bool>>? isSeasonEpisodesLoading;
 
   final int currentlyPlayingProgress; // Progress of the currently playing movie or episode
 
@@ -125,6 +144,12 @@ class AppState {
     Map<String, List<Person>>? movieCast,
     Map<String, PagingController<int, Movie>>? movieRecommendationsPagingControllers,
     Map<String, PagingController<int, Movie>>? similarMoviesPagingControllers,
+    Map<String, List<Season>>? tvShowSeasons,
+    Map<String, Map<int, List<Episode>>>? tvShowEpisodes,
+    Map<String, List<Person>>? tvShowCast,
+    Map<String, String>? tvShowTrailers,
+    Map<String, PagingController<int, TvShow>>? tvShowRecommendationsPagingControllers,
+    Map<String, PagingController<int, TvShow>>? similarTvShowsPagingControllers,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
     bool? isLoadingStreamingPlatformsMedia,
@@ -133,6 +158,8 @@ class AppState {
     bool? isLoadingRecentlyWatched,
     bool? isLoadingFavorites,
     Map<String, bool>? isMovieLoading,
+    Map<String, bool>? isTvShowLoading,
+    Map<String, Map<int, bool>>? isSeasonEpisodesLoading,
     int? currentlyPlayingProgress,
     String? error,
   }) => AppState(
@@ -164,6 +191,12 @@ class AppState {
     movieCast: movieCast ?? this.movieCast,
     movieRecommendationsPagingControllers: movieRecommendationsPagingControllers ?? this.movieRecommendationsPagingControllers,
     similarMoviesPagingControllers: similarMoviesPagingControllers ?? this.similarMoviesPagingControllers,
+    tvShowSeasons: tvShowSeasons ?? this.tvShowSeasons,
+    tvShowEpisodes: tvShowEpisodes ?? this.tvShowEpisodes,
+    tvShowCast: tvShowCast ?? this.tvShowCast,
+    tvShowTrailers: tvShowTrailers ?? this.tvShowTrailers,
+    tvShowRecommendationsPagingControllers: tvShowRecommendationsPagingControllers ?? this.tvShowRecommendationsPagingControllers,
+    similarTvShowsPagingControllers: similarTvShowsPagingControllers ?? this.similarTvShowsPagingControllers,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
     isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,
@@ -172,6 +205,8 @@ class AppState {
     isLoadingRecentlyWatched: isLoadingRecentlyWatched ?? this.isLoadingRecentlyWatched,
     isLoadingFavorites: isLoadingFavorites ?? this.isLoadingFavorites,
     isMovieLoading: isMovieLoading ?? this.isMovieLoading,
+    isTvShowLoading: isTvShowLoading ?? this.isTvShowLoading,
+    isSeasonEpisodesLoading: isSeasonEpisodesLoading ?? this.isSeasonEpisodesLoading,
     currentlyPlayingProgress: currentlyPlayingProgress ?? this.currentlyPlayingProgress,
     error: error ?? this.error,
   );

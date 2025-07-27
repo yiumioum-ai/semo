@@ -1,6 +1,4 @@
 import "package:semo/models/genre.dart";
-import "package:semo/models/person.dart";
-import "package:semo/models/season.dart";
 
 class TvShow {
   TvShow({
@@ -18,9 +16,6 @@ class TvShow {
     required this.name,
     required this.voteAverage,
     required this.voteCount,
-    this.trailerUrl,
-    this.seasons,
-    this.cast,
   });
 
   factory TvShow.fromJson(Map<String, dynamic> json) => TvShow(
@@ -39,8 +34,6 @@ class TvShow {
       name: json["name"] ?? "",
       voteAverage: double.parse((json["vote_average"]?.toDouble() ?? 0.0).toStringAsFixed(1)),
       voteCount: json["vote_count"] ?? 0,
-      //ignore: always_specify_types
-      seasons: json["seasons"] != null ? List<Season>.from(json["seasons"].map((json) => Season.fromJson(json)).toList()) : null,
     );
 
   final bool adult;
@@ -57,7 +50,4 @@ class TvShow {
   final String name;
   final double voteAverage;
   final int voteCount;
-  String? trailerUrl;
-  List<Season>? seasons;
-  List<Person>? cast;
 }

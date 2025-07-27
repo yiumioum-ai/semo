@@ -142,7 +142,7 @@ class TMDBService {
     }
   }
 
-  Future<List<Episode>> getEpisodes(int showId, int seasonNumber, String showName) async {
+  Future<List<Episode>> getEpisodes(int showId, int seasonNumber) async {
     try {
       final Response<dynamic> response = await _dio.get(Urls.getEpisodes(showId, seasonNumber));
 
@@ -151,7 +151,6 @@ class TMDBService {
         final List<Episode> episodes = <Episode>[];
 
         for (Map<String, dynamic> episodeMap in episodesMap) {
-          episodeMap["show_name"] = showName;
           final Episode episode = Episode.fromJson(episodeMap);
           if (episode.airDate != null) {
             episodes.add(episode);

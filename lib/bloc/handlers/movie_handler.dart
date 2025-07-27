@@ -48,7 +48,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     ));
 
     try {
-      await Future.wait(<Future<void>>[
+      await Future.wait(<Future<dynamic>>[
         _loadMovieBasicDetails(event.movieId, emit),
         _loadMovieTrailer(event.movieId, emit),
         _loadMovieCast(event.movieId, emit),
@@ -71,7 +71,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _loadMovieBasicDetails(int movieId, Emitter<AppState> emit) async {
+  Future<dynamic> _loadMovieBasicDetails(int movieId, Emitter<AppState> emit) async {
     try {
       final Movie? movie = await _tmdbService.getMovie(movieId);
 
@@ -96,7 +96,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _loadMovieTrailer(int movieId, Emitter<AppState> emit) async {
+  Future<dynamic> _loadMovieTrailer(int movieId, Emitter<AppState> emit) async {
     try {
       final String? trailerUrl = await _tmdbService.getTrailerUrl(MediaType.movies, movieId);
 
@@ -114,7 +114,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _loadMovieCast(int movieId, Emitter<AppState> emit) async {
+  Future<dynamic> _loadMovieCast(int movieId, Emitter<AppState> emit) async {
     try {
       final List<Person> cast = await _tmdbService.getCast(MediaType.movies, movieId);
 
@@ -130,7 +130,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _loadMovieRecommendations(int movieId, Emitter<AppState> emit) async {
+  Future<dynamic> _loadMovieRecommendations(int movieId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, Movie>> recommendationsControllers =
       Map<String, PagingController<int, Movie>>.from(state.movieRecommendationsPagingControllers ?? <String, PagingController<int, Movie>>{});
@@ -156,7 +156,7 @@ mixin MovieHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<void> _loadSimilarMovies(int movieId, Emitter<AppState> emit) async {
+  Future<dynamic> _loadSimilarMovies(int movieId, Emitter<AppState> emit) async {
     try {
       final Map<String, PagingController<int, Movie>> similarMoviesControllers =
       Map<String, PagingController<int, Movie>>.from(state.similarMoviesPagingControllers ?? <String, PagingController<int, Movie>>{});

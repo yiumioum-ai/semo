@@ -50,7 +50,7 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
   }
 
   // ignore: avoid_annotating_with_dynamic
-  Future<void> _addFavorite(dynamic media, MediaType mediaType) async {
+  Future<dynamic> _addFavorite(dynamic media, MediaType mediaType) async {
     try {
       final int id = _getMediaId(media);
       if (mediaType == MediaType.movies) {
@@ -103,7 +103,7 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
   }
 
   // ignore: avoid_annotating_with_dynamic
-  Future<void> _removeFavorite(dynamic media, MediaType mediaType) async {
+  Future<dynamic> _removeFavorite(dynamic media, MediaType mediaType) async {
     try {
       final int id = _getMediaId(media);
       if (mediaType == MediaType.movies) {

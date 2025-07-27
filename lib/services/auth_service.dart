@@ -76,7 +76,7 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
+  Future<dynamic> signOut() async {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
@@ -86,7 +86,7 @@ class AuthService {
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<dynamic> deleteAccount() async {
     try {
       if (_auth.currentUser == null) {
         throw Exception("User is null");

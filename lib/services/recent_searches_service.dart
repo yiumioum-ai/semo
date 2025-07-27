@@ -52,7 +52,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> add(MediaType mediaType, String query) async {
+  Future<dynamic> add(MediaType mediaType, String query) async {
     final String fieldName = mediaType.toJsonField();
     final List<String> searches = await getRecentSearches(mediaType);
 
@@ -77,7 +77,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> remove(MediaType mediaType, String query) async {
+  Future<dynamic> remove(MediaType mediaType, String query) async {
     final String fieldName = mediaType.toJsonField();
     final List<String> searches = await getRecentSearches(mediaType);
 
@@ -92,7 +92,7 @@ class RecentSearchesService {
     }
   }
 
-  Future<void> clear() async {
+  Future<dynamic> clear() async {
     try {
       await _getDocReference().delete();
     } catch (e, s) {

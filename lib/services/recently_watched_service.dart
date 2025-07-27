@@ -312,7 +312,7 @@ class RecentlyWatchedService {
     return recentlyWatched;
   }
 
-  Future<void> clear() async {
+  Future<dynamic> clear() async {
     try {
       await _getDocReference().delete();
     } catch (e, s) {

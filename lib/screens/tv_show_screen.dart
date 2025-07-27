@@ -211,7 +211,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
     );
   }
 
-  Widget _buildPersonCardHorizontalList({List<Person>? cast}) {
+  Widget _buildPersonCardHorizontalList(List<Person>? cast) {
     if (cast == null || cast.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -272,6 +272,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
       Season? selectedSeason = seasons?[_currentSeasonIndex];
       List<Episode>? episodes = state.tvShowEpisodes?[widget.tvShow.id.toString()]?[selectedSeason?.number];
       bool isLoadingEpisodes = state.isSeasonEpisodesLoading?[widget.tvShow.id.toString()]?[selectedSeason?.number] ?? false;
+      List<Person>? cast = state.tvShowCast?[widget.tvShow.id.toString()];
       bool isTvShowLoaded = seasons != null && seasons.isNotEmpty && episodes != null && episodes.isNotEmpty;
 
       return Scaffold(
@@ -313,7 +314,7 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
                         _buildSeasonSelector(seasons),
                         const SizedBox(height: 30),
                         _buildSelectedSeasonEpisodes(seasons, episodes, isLoadingEpisodes: isLoadingEpisodes),
-                        _buildPersonCardHorizontalList(),
+                        _buildPersonCardHorizontalList(cast),
                         _buildMediaCardHorizontalList(
                           title: "Recommendations",
                           controller: state.tvShowRecommendationsPagingControllers?[widget.tvShow.id.toString()],

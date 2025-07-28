@@ -127,7 +127,6 @@ jobs:
     permissions:
       actions: read
       contents: write
-      models: read
 
     steps:
       - name: Checkout code

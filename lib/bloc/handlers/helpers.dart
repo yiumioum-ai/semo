@@ -5,13 +5,12 @@ import "package:semo/models/tv_show.dart";
 import "package:semo/services/tmdb_service.dart";
 
 class HandlerHelpers {
-  HandlerHelpers(this.state);
+  HandlerHelpers();
 
-  final AppState state;
   final Logger _logger = Logger();
   final TMDBService _tmdbService = TMDBService();
 
-  Future<Movie> fetchMovieById(int id) async {
+  Future<Movie> fetchMovieById(AppState state, int id) async {
     if (state.movies != null && state.movies!.any((Movie movie) => movie.id == id)) {
       return state.movies!.firstWhere((Movie movie) => movie.id == id);
     } else if (state.incompleteMovies != null && state.incompleteMovies!.any((Movie movie) => movie.id == id)) {
@@ -31,12 +30,12 @@ class HandlerHelpers {
     }
   }
 
-  Future<List<Movie>> fetchMoviesByIds(List<int> ids) async {
+  Future<List<Movie>> fetchMoviesByIds(AppState state, List<int> ids) async {
     List<Movie> movies = <Movie>[];
 
     for (final int id in ids) {
       try {
-        Movie movie = await fetchMovieById(id);
+        Movie movie = await fetchMovieById(state, id);
         movies.add(movie);
       } catch (_) {}
     }
@@ -44,7 +43,7 @@ class HandlerHelpers {
     return movies;
   }
 
-  Future<TvShow> fetchTvShowById(int id) async {
+  Future<TvShow> fetchTvShowById(AppState state, int id) async {
     if (state.tvShows != null && state.tvShows!.any((TvShow tvShow) => tvShow.id == id)) {
       return state.tvShows!.firstWhere((TvShow tvShow) => tvShow.id == id);
     } else if (state.incompleteTvShows != null && state.incompleteTvShows!.any((TvShow tvShow) => tvShow.id == id)) {
@@ -64,12 +63,12 @@ class HandlerHelpers {
     }
   }
 
-  Future<List<TvShow>> fetchTvShowsByIds(List<int> ids) async {
+  Future<List<TvShow>> fetchTvShowsByIds(AppState state, List<int> ids) async {
     List<TvShow> tvShows = <TvShow>[];
 
     for (final int id in ids) {
       try {
-        TvShow tvShow = await fetchTvShowById(id);
+        TvShow tvShow = await fetchTvShowById(state, id);
         tvShows.add(tvShow);
       } catch (_) {}
     }

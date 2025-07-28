@@ -12,7 +12,7 @@ import "package:semo/services/recently_watched_service.dart";
 mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
   final Logger _logger = Logger();
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
-  late final HandlerHelpers _helpers = HandlerHelpers(state);
+  late final HandlerHelpers _helpers = HandlerHelpers();
 
   Future<void> onLoadRecentlyWatched(LoadRecentlyWatched event, Emitter<AppState> emit) async {
     if ((state.recentlyWatchedMovies != null && state.recentlyWatchedTvShows != null) || state.isLoadingRecentlyWatched) {
@@ -30,8 +30,8 @@ mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
       final List<int> movieIds = await _recentlyWatchedService.getMovieIds(recentlyWatched: recentlyWatched);
       final List<int> tvShowIds = await _recentlyWatchedService.getTvShowIds(recentlyWatched: recentlyWatched);
 
-      final List<Movie> recentlyWatchedMovies = await _helpers.fetchMoviesByIds(movieIds);
-      final List<TvShow> recentlyWatchedTvShows = await _helpers.fetchTvShowsByIds(tvShowIds);
+      final List<Movie> recentlyWatchedMovies = await _helpers.fetchMoviesByIds(state, movieIds);
+      final List<TvShow> recentlyWatchedTvShows = await _helpers.fetchTvShowsByIds(state, tvShowIds);
 
       emit(state.copyWith(
         recentlyWatched: recentlyWatched,
@@ -54,7 +54,7 @@ mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
       final List<Movie> updatedRecentlyWatchedMovies = state.recentlyWatchedMovies ?? <Movie>[];
 
       if (state.recentlyWatchedMovies != null && !state.recentlyWatchedMovies!.any((Movie movie) => movie.id == event.movieId)) {
-        final Movie movie = await _helpers.fetchMovieById(event.movieId);
+        final Movie movie = await _helpers.fetchMovieById(state, event.movieId);
         updatedRecentlyWatchedMovies.add(movie);
       }
 
@@ -82,7 +82,7 @@ mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
       final List<TvShow> updatedRecentlyWatchedTvShows = state.recentlyWatchedTvShows ?? <TvShow>[];
 
       if (state.recentlyWatchedTvShows != null && !state.recentlyWatchedTvShows!.any((TvShow tvShow) => tvShow.id == event.tvShowId)) {
-        final TvShow tvShow = await _helpers.fetchTvShowById(event.tvShowId);
+        final TvShow tvShow = await _helpers.fetchTvShowById(state, event.tvShowId);
         updatedRecentlyWatchedTvShows.add(tvShow);
       }
 

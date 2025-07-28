@@ -13,7 +13,7 @@ import "package:semo/services/favorites_service.dart";
 mixin FavoritesHandler on Bloc<AppEvent, AppState> {
   final Logger _logger = Logger();
   final FavoritesService _favoritesService = FavoritesService();
-  late final HandlerHelpers _helpers = HandlerHelpers(state);
+  late final HandlerHelpers _helpers = HandlerHelpers();
 
   Future<void> onLoadFavorites(LoadFavorites event, Emitter<AppState> emit) async {
     if ((state.favoriteMovies != null && state.favoriteTvShows != null) || state.isLoadingFavorites) {
@@ -31,8 +31,8 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
       final List<int> movieIds = favorites[MediaType.movies.toJsonField()] ?? <int>[];
       final List<int> tvShowIds = favorites[MediaType.tvShows.toJsonField()] ?? <int>[];
 
-      final List<Movie> favoriteMovies = await _helpers.fetchMoviesByIds(movieIds);
-      final List<TvShow> favoriteTvShows = await _helpers.fetchTvShowsByIds(tvShowIds);
+      final List<Movie> favoriteMovies = await _helpers.fetchMoviesByIds(state, movieIds);
+      final List<TvShow> favoriteTvShows = await _helpers.fetchTvShowsByIds(state, tvShowIds);
 
       emit(state.copyWith(
         favorites: favorites,

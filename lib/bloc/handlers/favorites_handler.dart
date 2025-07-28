@@ -143,6 +143,21 @@ mixin FavoritesHandler on Bloc<AppEvent, AppState> {
     }
   }
 
+  void onClearFavorites(ClearFavorites event, Emitter<AppState> emit) {
+    try {
+      unawaited(_favoritesService.clear());
+    } catch (e, s) {
+      _logger.e("Error clearing favorites", error: e, stackTrace: s);
+    }
+
+    emit(state.copyWith(
+      favorites: <String, List<int>>{},
+      favoriteMovies: <Movie>[],
+      favoriteTvShows: <TvShow>[],
+      isLoadingFavorites: false,
+    ));
+  }
+
   // ignore: avoid_annotating_with_dynamic
   int _getMediaId(dynamic media) {
     if (media is Movie) {

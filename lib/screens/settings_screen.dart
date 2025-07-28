@@ -4,8 +4,11 @@ import "package:cached_network_image/cached_network_image.dart";
 import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_settings_ui/flutter_settings_ui.dart";
 import "package:package_info_plus/package_info_plus.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
 import "package:semo/components/snack_bar.dart";
 import "package:semo/gen/assets.gen.dart";
 import "package:semo/screens/base_screen.dart";
@@ -14,9 +17,6 @@ import "package:semo/models/streaming_server.dart";
 import "package:semo/screens/open_source_libraries_screen.dart";
 import "package:semo/screens/subtitles_preferences_screen.dart";
 import "package:semo/services/auth_service.dart";
-import "package:semo/services/favorites_service.dart";
-import "package:semo/services/recent_searches_service.dart";
-import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
 import "package:semo/services/preferences.dart";
 import "package:semo/utils/urls.dart";
@@ -272,23 +272,20 @@ class _SettingsScreenState extends BaseScreenState<SettingsScreen> {
   }
 
   Future<void> _clearRecentSearches({bool showResponse = true}) async {
-    await RecentSearchesService().clear();
-    if (showResponse && mounted) {
-      showSnackBar(context, "Cleared");
+    if (mounted) {
+      context.read<AppBloc>().add(ClearRecentSearches());
     }
   }
 
   Future<void> _clearFavorites({bool showResponse = true}) async {
-    await FavoritesService().clear();
-    if (showResponse && mounted) {
-      showSnackBar(context, "Cleared");
+    if (mounted) {
+      context.read<AppBloc>().add(ClearFavorites());
     }
   }
 
   Future<void> _clearRecentlyWatched({bool showResponse = true}) async {
-    await RecentlyWatchedService().clear();
-    if (showResponse && mounted) {
-      showSnackBar(context, "Cleared");
+    if (mounted) {
+      context.read<AppBloc>().add(ClearRecentlyWatched());
     }
   }
 

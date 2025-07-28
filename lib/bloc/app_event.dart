@@ -106,6 +106,8 @@ class HideTvShowProgress extends AppEvent {
   final int tvShowId;
 }
 
+class ClearRecentlyWatched extends AppEvent {}
+
 // Favorites
 
 class LoadFavorites extends AppEvent {}
@@ -123,6 +125,8 @@ class RemoveFavorite extends AppEvent {
   final dynamic media;
   final MediaType mediaType;
 }
+
+class ClearFavorites extends AppEvent {}
 
 // Movie
 

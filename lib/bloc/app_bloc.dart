@@ -47,11 +47,13 @@ class AppBloc extends Bloc<AppEvent, AppState>
     on<DeleteEpisodeProgress>(onDeleteEpisodeProgress);
     on<DeleteTvShowProgress>(onDeleteTvShowProgress);
     on<HideTvShowProgress>(onHideTvShowProgress);
+    on<ClearRecentlyWatched>(onClearRecentlyWatched);
 
     // Favorites
     on<LoadFavorites>(onLoadFavorites);
     on<AddFavorite>(onAddFavorite);
     on<RemoveFavorite>(onRemoveFavorite);
+    on<ClearFavorites>(onClearFavorites);
 
     // Movie
     on<LoadMovieDetails>(onLoadMovieDetails);

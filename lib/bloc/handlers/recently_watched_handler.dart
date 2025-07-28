@@ -176,4 +176,18 @@ mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
       ));
     }
   }
+
+  void onClearRecentlyWatched(ClearRecentlyWatched event, Emitter<AppState> emit) {
+    try {
+      unawaited(_recentlyWatchedService.clear());
+    } catch (e, s) {
+      _logger.e("Error clearing recently watched", error: e, stackTrace: s);
+    }
+
+    emit(state.copyWith(
+      recentlyWatched: <String, dynamic>{},
+      recentlyWatchedMovies: <Movie>[],
+      recentlyWatchedTvShows: <TvShow>[],
+    ));
+  }
 }

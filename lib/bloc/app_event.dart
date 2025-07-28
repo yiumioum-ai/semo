@@ -64,20 +64,6 @@ class RefreshGenres extends AppEvent {
 
 class LoadRecentlyWatched extends AppEvent {}
 
-class GetMovieProgress extends AppEvent {
-  const GetMovieProgress(this.movieId);
-
-  final int movieId;
-}
-
-class GetEpisodeProgress extends AppEvent {
-  const GetEpisodeProgress(this.tvShowId, this.seasonId, this.episodeId);
-
-  final int tvShowId;
-  final int seasonId;
-  final int episodeId;
-}
-
 class UpdateMovieProgress extends AppEvent {
   const UpdateMovieProgress(this.movieId, this.progress);
 

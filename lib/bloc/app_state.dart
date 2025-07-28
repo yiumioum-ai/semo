@@ -57,7 +57,6 @@ class AppState {
     this.isTvShowLoading,
     this.isSeasonEpisodesLoading,
     this.isLoadingPersonMedia,
-    this.currentlyPlayingProgress = 0,
     this.error,
   });
 
@@ -123,8 +122,6 @@ class AppState {
   final Map<String, Map<int, bool>>? isSeasonEpisodesLoading;
   final Map<String, bool>? isLoadingPersonMedia;
 
-  final int currentlyPlayingProgress; // Progress of the currently playing movie or episode
-
   final String? error;
 
   AppState copyWith({
@@ -177,7 +174,6 @@ class AppState {
     Map<String, bool>? isTvShowLoading,
     Map<String, Map<int, bool>>? isSeasonEpisodesLoading,
     Map<String, bool>? isLoadingPersonMedia,
-    int? currentlyPlayingProgress,
     String? error,
   }) => AppState(
     nowPlayingMovies: nowPlayingMovies ?? this.nowPlayingMovies,
@@ -229,7 +225,6 @@ class AppState {
     isTvShowLoading: isTvShowLoading ?? this.isTvShowLoading,
     isSeasonEpisodesLoading: isSeasonEpisodesLoading ?? this.isSeasonEpisodesLoading,
     isLoadingPersonMedia: isLoadingPersonMedia ?? this.isLoadingPersonMedia,
-    currentlyPlayingProgress: currentlyPlayingProgress ?? this.currentlyPlayingProgress,
     error: error ?? this.error,
   );
 }

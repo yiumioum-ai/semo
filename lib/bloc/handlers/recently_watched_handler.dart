@@ -48,41 +48,6 @@ mixin RecentlyWatchedHandler on Bloc<AppEvent, AppState> {
     }
   }
 
-  Future<int?> onGetMovieProgress(GetMovieProgress event, Emitter<AppState> emit) async {
-    try {
-      int? progress = await _recentlyWatchedService.getMovieProgress(event.movieId, recentlyWatched: state.recentlyWatched);
-      emit(state.copyWith(
-        currentlyPlayingProgress: progress,
-      ));
-    } catch (e, s) {
-      _logger.e("Error loading movie progress", error: e, stackTrace: s);
-      emit(state.copyWith(
-        error: "Failed to load movie progress",
-      ));
-    }
-
-    return null;
-  }
-
-  Future<void> onGetEpisodeProgress(GetEpisodeProgress event, Emitter<AppState> emit) async {
-    try {
-      int? progress = await _recentlyWatchedService.getEpisodeProgress(
-        event.tvShowId,
-        event.seasonId,
-        event.episodeId,
-        recentlyWatched: state.recentlyWatched,
-      );
-      emit(state.copyWith(
-        currentlyPlayingProgress: progress,
-      ));
-    } catch (e, s) {
-      _logger.e("Error loading episode progress", error: e, stackTrace: s);
-      emit(state.copyWith(
-        error: "Failed to load episode progress",
-      ));
-    }
-  }
-
   Future<void> onUpdateMovieProgress(UpdateMovieProgress event, Emitter<AppState> emit) async {
     try {
       final Map<String, dynamic> updatedRecentlyWatched = await _recentlyWatchedService.updateMovieProgress(event.movieId, event.progress, recentlyWatched: state.recentlyWatched);

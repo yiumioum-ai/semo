@@ -54,17 +54,19 @@ class RecentlyWatchedService {
     return map.map<String, Map<String, dynamic>>((key, value) => MapEntry<String, Map<String, dynamic>>(key, Map<String, dynamic>.from(value)));
   }
 
-  Future<int?> getMovieProgress(int movieId, {Map<String, dynamic>? recentlyWatched}) async {
-    recentlyWatched ??= await getRecentlyWatched();
+  int getMovieProgress(int movieId, Map<String, dynamic>? recentlyWatched) {
+    if (recentlyWatched == null) {
+      return 0;
+    }
 
     try {
       final Map<String, Map<String, dynamic>> movies = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["movies"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
 
       final Map<String, dynamic>? movie = movies["$movieId"];
-      return movie?["progress"] as int?;
+      return movie?["progress"] ?? 0;
     } catch (e, s) {
       _logger.e("Error getting recently watched movie", error: e, stackTrace: s);
-      rethrow;
+      return 0;
     }
   }
 
@@ -91,20 +93,39 @@ class RecentlyWatchedService {
     return null;
   }
 
-  Future<int?> getEpisodeProgress(int tvShowId, int seasonId, int episodeId, {Map<String, dynamic>? recentlyWatched}) async {
-    try {
-      final Map<String, Map<String, dynamic>>? episodes = await getEpisodes(tvShowId, seasonId, recentlyWatched: recentlyWatched);
-
-      if (episodes != null) {
-        final Map<String, dynamic>? episode = episodes["$episodeId"];
-        return episode?["progress"] as int?;
-      }
-    } catch (e, s) {
-      _logger.e("Error getting recently watched episode progress", error: e, stackTrace: s);
-      rethrow;
+  Map<String, Map<String, dynamic>> getEpisodesFromCache(int tvShowId, int seasonId, Map<String, dynamic>? recentlyWatched) {
+    if (recentlyWatched == null) {
+      return <String, Map<String, dynamic>>{};
     }
 
-    return null;
+    try {
+      final Map<String, Map<String, dynamic>> tvShows = _mapDynamicDynamicToMapStringDynamic((recentlyWatched["tv_shows"] ?? <dynamic, dynamic>{}) as Map<dynamic, dynamic>);
+
+      if (tvShows.containsKey("$tvShowId")) {
+        tvShows["$tvShowId"]!.remove("visibleInMenu");
+        final Map<String, Map<String, dynamic>> seasons = _mapDynamicDynamicToMapStringDynamic(tvShows["$tvShowId"]!);
+
+        if (seasons.containsKey("$seasonId")) {
+          final Map<String, dynamic> episodes = seasons["$seasonId"] ?? <String, dynamic>{};
+          return _mapDynamicDynamicToMapStringDynamic(episodes as Map<dynamic, dynamic>);
+        }
+      }
+    } catch (e, s) {
+      _logger.e("Error getting recently watched episodes for the TV show", error: e, stackTrace: s);
+    }
+
+    return <String, Map<String, dynamic>>{};
+  }
+
+  int getEpisodeProgress(int tvShowId, int seasonId, int episodeId, Map<String, dynamic>? recentlyWatched) {
+    try {
+      final Map<String, Map<String, dynamic>> episodes = getEpisodesFromCache(tvShowId, seasonId, recentlyWatched);
+      final Map<String, dynamic>? episode = episodes["$episodeId"];
+      return episode?["progress"] ?? 0;
+    } catch (e, s) {
+      _logger.e("Error getting recently watched episode progress", error: e, stackTrace: s);
+      return 0;
+    }
   }
 
   Future<Map<String, dynamic>> updateMovieProgress(int movieId, int progress, {Map<String, dynamic>? recentlyWatched}) async {

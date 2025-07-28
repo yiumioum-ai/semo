@@ -2,7 +2,12 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/components/semo_player.dart";
+import "package:semo/components/snack_bar.dart";
 import "package:semo/models/media_stream.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/services/recently_watched_service.dart";
@@ -35,38 +40,24 @@ class PlayerScreen extends BaseScreen {
 
 class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
-  int _watchedProgressSeconds = 0;
 
-  Future<void> _initializeWatchedProgress() async {
+  void _updateRecentlyWatched(int progressSeconds) {
     try {
       if (widget.mediaType == MediaType.movies) {
-        final int? progress = await _recentlyWatchedService.getMovieProgress(widget.tmdbId);
-        if (progress != null && progress > 0) {
-          setState(() => _watchedProgressSeconds = progress);
-        }
-      } else {
-        final int? progress = await _recentlyWatchedService.getEpisodeProgress(
-          widget.tmdbId,
-          widget.seasonId!,
-          widget.episodeId!,
+        context.read<AppBloc>().add(
+          UpdateMovieProgress(
+            widget.tmdbId,
+            progressSeconds,
+          ),
         );
-        if (progress != null && progress > 0) {
-          setState(() => _watchedProgressSeconds = progress);
-        }
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _updateRecentlyWatched(int progressSeconds) async {
-    try {
-      if (widget.mediaType == MediaType.movies) {
-        await _recentlyWatchedService.updateMovieProgress(widget.tmdbId, progressSeconds);
       } else {
-        await _recentlyWatchedService.updateEpisodeProgress(
-          widget.tmdbId,
-          widget.seasonId!,
-          widget.episodeId!,
-          progressSeconds,
+        context.read<AppBloc>().add(
+          UpdateEpisodeProgress(
+            widget.tmdbId,
+            widget.seasonId!,
+            widget.episodeId!,
+            progressSeconds,
+          ),
         );
       }
     } catch (_) {}
@@ -107,12 +98,10 @@ class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
     }
   }
 
-  Future<void> _saveThenGoBack() async {
+  Future<void> _saveThenGoBack(int progressSeconds) async {
     if (mounted) {
-      Navigator.pop(context, <String, dynamic>{
-        if (widget.episodeId != null) "episodeId": widget.episodeId,
-        "progress": _watchedProgressSeconds,
-      });
+      _updateRecentlyWatched(progressSeconds);
+      Navigator.pop(context);
     }
   }
 
@@ -123,7 +112,6 @@ class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
   Future<void> initializeScreen() async {
     await WakelockPlus.enable();
     await _forceLandscape();
-    await _initializeWatchedProgress();
   }
 
   @override
@@ -133,15 +121,38 @@ class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
   }
 
   @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    body: SemoPlayer(
-      stream: widget.stream,
-      title: widget.title,
-      initialProgress: _watchedProgressSeconds,
-      onProgress: _onProgress,
-      onPlaybackComplete: _saveThenGoBack,
-      onBack: _saveThenGoBack,
-      onError: _onError,
-    ),
+  Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
+    listener: (BuildContext context, AppState state) {
+      if (state.error != null) {
+        showSnackBar(context, state.error!);
+        context.read<AppBloc>().add(ClearError());
+      }
+    },
+    builder: (BuildContext context, AppState state) {
+      int progressSeconds;
+
+      if (widget.mediaType == MediaType.movies) {
+        progressSeconds = _recentlyWatchedService.getMovieProgress(widget.tmdbId, state.recentlyWatched);
+      } else {
+        progressSeconds = _recentlyWatchedService.getEpisodeProgress(
+          widget.tmdbId,
+          widget.seasonId!,
+          widget.episodeId!,
+          state.recentlyWatched,
+        );
+      }
+
+      return Scaffold(
+        body: SemoPlayer(
+          stream: widget.stream,
+          title: widget.title,
+          initialProgress: progressSeconds,
+          onProgress: _onProgress,
+          onPlaybackComplete: _saveThenGoBack,
+          onBack: _saveThenGoBack,
+          onError: _onError,
+        ),
+      );
+    },
   );
 }

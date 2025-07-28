@@ -35,8 +35,8 @@ class SemoPlayer extends StatefulWidget {
   final int initialProgress;
   final OnProgressCallback? onProgress;
   final OnErrorCallback? onError;
-  final VoidCallback? onPlaybackComplete;
-  final VoidCallback? onBack;
+  final Function(int progressSeconds)? onPlaybackComplete;
+  final Function(int progressSeconds)? onBack;
   final bool showBackButton;
   final bool autoPlay;
   final Duration autoHideControlsDelay;
@@ -201,7 +201,7 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
 
       // Check if playback is complete
       if (total.inSeconds != 0 && progress == total) {
-        widget.onPlaybackComplete?.call();
+        widget.onPlaybackComplete?.call(progress.inSeconds);
       }
     } catch (e) {
       widget.onError?.call(e);
@@ -416,7 +416,9 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
                 child: AppBar(
                   backgroundColor: Colors.transparent,
                   leading: widget.showBackButton ? BackButton(
-                    onPressed: widget.onBack,
+                    onPressed: () {
+                      widget.onBack?.call(_mediaProgress.progress.inSeconds);
+                    },
                   ) : null,
                   title: Text(widget.title),
                   actions: <Widget>[

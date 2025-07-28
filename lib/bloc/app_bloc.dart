@@ -41,8 +41,6 @@ class AppBloc extends Bloc<AppEvent, AppState>
 
     // Recently Watched
     on<LoadRecentlyWatched>(onLoadRecentlyWatched);
-    on<GetMovieProgress>(onGetMovieProgress);
-    on<GetEpisodeProgress>(onGetEpisodeProgress);
     on<UpdateMovieProgress>(onUpdateMovieProgress);
     on<UpdateEpisodeProgress>(onUpdateEpisodeProgress);
     on<DeleteMovieProgress>(onDeleteMovieProgress);

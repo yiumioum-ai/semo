@@ -302,11 +302,11 @@ class TMDBService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getPersonMedia(Person person, MediaType mediaType) async {
+  Future<List<Map<String, dynamic>>> _getPersonMedia(int personId, MediaType mediaType) async {
     try {
       final String url = mediaType == MediaType.movies
-          ? Urls.getPersonMovies(person.id)
-          : Urls.getPersonTvShows(person.id);
+          ? Urls.getPersonMovies(personId)
+          : Urls.getPersonTvShows(personId);
 
       final Response<dynamic> response = await _dio.get(url);
 
@@ -314,29 +314,29 @@ class TMDBService {
         return (response.data["cast"] as List<dynamic>).cast<Map<String, dynamic>>();
       }
 
-      throw Exception("Error getting ${mediaType.toString()} for person ${person.id}");
+      throw Exception("Error getting ${mediaType.toString()} for person $personId");
     } catch (e, s) {
-      _logger.e("Error getting ${mediaType.toString()} for person ${person.id}", error: e, stackTrace: s);
+      _logger.e("Error getting ${mediaType.toString()} for person $personId", error: e, stackTrace: s);
       rethrow;
     }
   }
 
-  Future<List<Movie>> getPersonMovies(Person person) async {
+  Future<List<Movie>> getPersonMovies(int personId) async {
     try {
-      final List<Map<String, dynamic>> moviesData = await _getPersonMedia(person, MediaType.movies);
+      final List<Map<String, dynamic>> moviesData = await _getPersonMedia(personId, MediaType.movies);
       return moviesData.map((Map<String, dynamic> json) => Movie.fromJson(json)).toList();
     } catch (e, s) {
-      _logger.e("Error getting movies for cast for person ${person.id}", error: e, stackTrace: s);
+      _logger.e("Error getting movies for cast for person $personId", error: e, stackTrace: s);
       rethrow;
     }
   }
 
-  Future<List<TvShow>> getPersonTvShows(Person person) async {
+  Future<List<TvShow>> getPersonTvShows(int personId) async {
     try {
-      final List<Map<String, dynamic>> tvShowsData = await _getPersonMedia(person, MediaType.tvShows);
+      final List<Map<String, dynamic>> tvShowsData = await _getPersonMedia(personId, MediaType.tvShows);
       return tvShowsData.map((Map<String, dynamic> json) => TvShow.fromJson(json)).toList();
     } catch (e, s) {
-      _logger.e("Error getting TV shows for cast for person ${person.id}", error: e, stackTrace: s);
+      _logger.e("Error getting TV shows for cast for person $personId", error: e, stackTrace: s);
       rethrow;
     }
   }

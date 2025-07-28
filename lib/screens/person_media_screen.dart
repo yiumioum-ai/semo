@@ -1,8 +1,11 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
+import "package:semo/bloc/app_bloc.dart";
+import "package:semo/bloc/app_event.dart";
+import "package:semo/bloc/app_state.dart";
 import "package:semo/components/media_card.dart";
-import "package:semo/components/snack_bar.dart";
 import "package:semo/components/vertical_media_list.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/person.dart";
@@ -10,7 +13,6 @@ import "package:semo/models/tv_show.dart" ;
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/movie_screen.dart";
 import "package:semo/screens/tv_show_screen.dart";
-import "package:semo/services/tmdb_service.dart";
 import "package:semo/enums/media_type.dart";
 
 class PersonMediaScreen extends BaseScreen {
@@ -23,81 +25,40 @@ class PersonMediaScreen extends BaseScreen {
 }
 
 class _PersonMediaScreenState extends BaseScreenState<PersonMediaScreen> with TickerProviderStateMixin {
-  final TMDBService _tmdbService = TMDBService();
-  List<Movie> _movies = <Movie>[];
-  List<TvShow> _tvShows = <TvShow>[];
   late final TabController _tabController = TabController(length: 2, vsync: this);
   MediaType _mediaType = MediaType.movies;
   bool _isLoading = true;
-
-  Future<void> _getMedia() async {
-    await Future.wait(<Future<void>>[
-      _getMovies(),
-      _getTvShows(),
-    ]);
-    setState(() => _isLoading = false);
-  }
-
-  Future<void> _getMovies() async {
-    try {
-      List<Movie> movies = await _tmdbService.getPersonMovies(widget.person);
-      setState(() => _movies = movies);
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to get movies");
-      }
-    }
-  }
-
-  Future<void> _getTvShows() async {
-    try {
-      List<TvShow> tvShows = await _tmdbService.getPersonTvShows(widget.person);
-      setState(() => _tvShows = tvShows);
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to get TV shows");
-      }
-    }
-  }
 
   void onTabChanged() {
     MediaType mediaType = _tabController.index == 0 ? MediaType.movies : MediaType.tvShows;
     setState(() => _mediaType = mediaType);
   }
 
-  Widget _buildMoviesList() => VerticalMediaList<Movie>(
-    isLoading: _isLoading,
-    items: _movies,
-    itemBuilder: (BuildContext context, Movie movie, int index) => MediaCard(
-      media: movie,
-      mediaType: MediaType.movies,
-      onTap: () => navigate(MovieScreen(movie)),
-    ),
-    crossAxisCount: 3,
-    childAspectRatio: 0.5,
-    crossAxisSpacing: 10,
-    mainAxisSpacing: 10,
-    emptyStateMessage: "No movies found",
-    errorMessage: "Failed to load movies",
-    shrinkWrap: false,
-    physics: const AlwaysScrollableScrollPhysics(),
-  );
+  // ignore: avoid_annotating_with_dynamic
+  Future<void> _navigateToMediaScreen(dynamic media, MediaType mediaType) async {
+    if (mediaType == MediaType.movies) {
+      await navigate(MovieScreen(media));
+    } else if (mediaType == MediaType.tvShows) {
+      await navigate(TvShowScreen(media));
+    }
+  }
 
-  Widget _buildTvShowsList() => VerticalMediaList<TvShow>(
-    isLoading: _isLoading,
-    items: _tvShows,
-    itemBuilder: (BuildContext context, TvShow tvShow, int index) => MediaCard(
-      media: tvShow,
-      mediaType: MediaType.tvShows,
-      onTap: () => navigate(TvShowScreen(tvShow)),
+  Widget _buildList(List<dynamic>? media, MediaType mediaType, {bool isLoading = false}) => VerticalMediaList<dynamic>(
+    isLoading: isLoading,
+    items: media ?? <dynamic>[],
+    // ignore: avoid_annotating_with_dynamic
+    itemBuilder: (BuildContext context, dynamic media, int index) => MediaCard(
+      media: media,
+      mediaType: mediaType,
+      onTap: () => _navigateToMediaScreen(media, mediaType),
     ),
     crossAxisCount: 3,
     childAspectRatio: 0.5,
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
-    emptyStateMessage: "No TV shows found",
-    errorMessage: "Failed to load TV shows",
-    shrinkWrap: false,
+    emptyStateMessage: "No ${mediaType.toString()} found",
+    errorMessage: "Failed to load ${mediaType.toString()}",
+    shrinkWrap: true,
     physics: const AlwaysScrollableScrollPhysics(),
   );
 
@@ -107,43 +68,75 @@ class _PersonMediaScreenState extends BaseScreenState<PersonMediaScreen> with Ti
   @override
   Future<void> initializeScreen() async {
     _tabController.addListener(onTabChanged);
-    await _getMedia();
+    context.read<AppBloc>().add(LoadPersonMedia(widget.person.id));
   }
 
   @override
   void handleDispose() {
     _tabController.removeListener(onTabChanged);
+    _tabController.dispose();
   }
 
   @override
-  Widget buildContent(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(widget.person.name),
-      bottom: TabBar(
-        controller: _tabController,
-        tabs: const <Tab>[
-          Tab(
-            icon: Icon(Icons.movie),
-            text: "Movies",
+  Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
+    listener: (BuildContext context, AppState state) {
+      if (mounted) {
+        setState(() {
+          _isLoading = state.isLoadingPersonMedia?[widget.person.id.toString()] ?? true;
+        });
+      }
+
+      if (state.error != null) {
+        context.read<AppBloc>().add(ClearError());
+      }
+    },
+    builder: (BuildContext context, AppState state) {
+      List<Movie> movies = state.personMovies?[widget.person.id.toString()] ?? <Movie>[];
+      List<TvShow> tvShows = state.personTvShows?[widget.person.id.toString()] ?? <TvShow>[];
+      bool isPersonMediaLoaded = movies.isNotEmpty && tvShows.isNotEmpty;
+
+      if (mounted && isPersonMediaLoaded) {
+         _isLoading = false;
+      }
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.person.name),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const <Tab>[
+              Tab(
+                icon: Icon(Icons.movie),
+                text: "Movies",
+              ),
+              Tab(
+                icon: Icon(Icons.video_library),
+                text: "TV Shows",
+              ),
+            ],
           ),
-          Tab(
-            icon: Icon(Icons.video_library),
-            text: "TV Shows",
-          ),
-        ],
-      ),
-    ),
-    body: SafeArea(
-      child: Container(
-        margin: const EdgeInsets.all(18),
-        child: TabBarView(
-          controller: _tabController,
-          children: <Widget>[
-            _buildMoviesList(),
-            _buildTvShowsList(),
-          ],
         ),
-      ),
-    ),
+        body: SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(18),
+            child: TabBarView(
+              controller: _tabController,
+              children: <Widget>[
+                _buildList(
+                  movies,
+                  MediaType.movies,
+                  isLoading: _isLoading,
+                ),
+                _buildList(
+                  tvShows,
+                  MediaType.tvShows,
+                  isLoading: _isLoading,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
   );
 }

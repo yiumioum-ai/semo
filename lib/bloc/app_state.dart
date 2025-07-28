@@ -42,6 +42,8 @@ class AppState {
     this.tvShowTrailers,
     this.tvShowRecommendationsPagingControllers,
     this.similarTvShowsPagingControllers,
+    this.personMovies,
+    this.personTvShows,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
     this.isLoadingStreamingPlatformsMedia = false,
@@ -52,6 +54,7 @@ class AppState {
     this.isMovieLoading,
     this.isTvShowLoading,
     this.isSeasonEpisodesLoading,
+    this.isLoadingPersonMedia,
     this.currentlyPlayingProgress = 0,
     this.error,
   });
@@ -100,6 +103,9 @@ class AppState {
   final Map<String, PagingController<int, TvShow>>? tvShowRecommendationsPagingControllers;
   final Map<String, PagingController<int, TvShow>>? similarTvShowsPagingControllers;
 
+  final Map<String, List<Movie>>? personMovies;
+  final Map<String, List<TvShow>>? personTvShows;
+
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
   final bool isLoadingStreamingPlatformsMedia;
@@ -110,6 +116,7 @@ class AppState {
   final Map<String, bool>? isMovieLoading;
   final Map<String, bool>? isTvShowLoading;
   final Map<String, Map<int, bool>>? isSeasonEpisodesLoading;
+  final Map<String, bool>? isLoadingPersonMedia;
 
   final int currentlyPlayingProgress; // Progress of the currently playing movie or episode
 
@@ -150,6 +157,8 @@ class AppState {
     Map<String, String>? tvShowTrailers,
     Map<String, PagingController<int, TvShow>>? tvShowRecommendationsPagingControllers,
     Map<String, PagingController<int, TvShow>>? similarTvShowsPagingControllers,
+    Map<String, List<Movie>>? personMovies,
+    Map<String, List<TvShow>>? personTvShows,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
     bool? isLoadingStreamingPlatformsMedia,
@@ -160,6 +169,7 @@ class AppState {
     Map<String, bool>? isMovieLoading,
     Map<String, bool>? isTvShowLoading,
     Map<String, Map<int, bool>>? isSeasonEpisodesLoading,
+    Map<String, bool>? isLoadingPersonMedia,
     int? currentlyPlayingProgress,
     String? error,
   }) => AppState(
@@ -197,6 +207,8 @@ class AppState {
     tvShowTrailers: tvShowTrailers ?? this.tvShowTrailers,
     tvShowRecommendationsPagingControllers: tvShowRecommendationsPagingControllers ?? this.tvShowRecommendationsPagingControllers,
     similarTvShowsPagingControllers: similarTvShowsPagingControllers ?? this.similarTvShowsPagingControllers,
+    personMovies: personMovies ?? this.personMovies,
+    personTvShows: personTvShows ?? this.personTvShows,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
     isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,
@@ -207,6 +219,7 @@ class AppState {
     isMovieLoading: isMovieLoading ?? this.isMovieLoading,
     isTvShowLoading: isTvShowLoading ?? this.isTvShowLoading,
     isSeasonEpisodesLoading: isSeasonEpisodesLoading ?? this.isSeasonEpisodesLoading,
+    isLoadingPersonMedia: isLoadingPersonMedia ?? this.isLoadingPersonMedia,
     currentlyPlayingProgress: currentlyPlayingProgress ?? this.currentlyPlayingProgress,
     error: error ?? this.error,
   );

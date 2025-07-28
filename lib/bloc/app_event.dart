@@ -172,3 +172,11 @@ class RefreshTvShowDetails extends AppEvent {
 
   final int tvShowId;
 }
+
+// Person
+
+class LoadPersonMedia extends AppEvent {
+  const LoadPersonMedia(this.personId);
+
+  final int personId;
+}

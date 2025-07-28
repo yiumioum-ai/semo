@@ -6,6 +6,7 @@ import "package:semo/bloc/handlers/genres_handler.dart";
 import "package:semo/bloc/handlers/movie_handler.dart";
 import "package:semo/bloc/handlers/movies_handler.dart";
 import "package:semo/bloc/handlers/person_handler.dart";
+import "package:semo/bloc/handlers/recent_searches_handler.dart";
 import "package:semo/bloc/handlers/recently_watched_handler.dart";
 import "package:semo/bloc/handlers/streaming_platforms_handler.dart";
 import "package:semo/bloc/handlers/tv_show_handler.dart";
@@ -14,7 +15,7 @@ import "package:semo/enums/media_type.dart";
 import "package:semo/services/auth_service.dart";
 
 class AppBloc extends Bloc<AppEvent, AppState>
-    with MoviesHandler, TvShowsHandler, StreamingPlatformsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler, MovieHandler, TvShowHandler, PersonHandler {
+    with MoviesHandler, TvShowsHandler, StreamingPlatformsHandler, GenresHandler, RecentlyWatchedHandler, FavoritesHandler, MovieHandler, TvShowHandler, PersonHandler, RecentSearchesHandler {
   AppBloc() : super(const AppState()) {
     // General
     on<LoadInitialData>(_onLoadInitialData);
@@ -65,6 +66,12 @@ class AppBloc extends Bloc<AppEvent, AppState>
 
     // Person
     on<LoadPersonMedia>(onLoadPersonMedia);
+
+    // Recent Searches
+    on<LoadRecentSearches>(onLoadRecentSearches);
+    on<AddRecentSearch>(onAddRecentSearch);
+    on<RemoveRecentSearch>(onRemoveRecentSearch);
+    on<ClearRecentSearches>(onClearRecentSearches);
   }
 
   void init() {
@@ -81,6 +88,7 @@ class AppBloc extends Bloc<AppEvent, AppState>
     add(const LoadGenres(MediaType.tvShows));
     add(LoadRecentlyWatched());
     add(LoadFavorites());
+    add(LoadRecentSearches());
   }
 
   void _onClearError(ClearError event, Emitter<AppState> emit) {

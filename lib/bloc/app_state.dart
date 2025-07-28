@@ -44,6 +44,8 @@ class AppState {
     this.similarTvShowsPagingControllers,
     this.personMovies,
     this.personTvShows,
+    this.moviesRecentSearches,
+    this.tvShowsRecentSearches,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
     this.isLoadingStreamingPlatformsMedia = false,
@@ -106,6 +108,9 @@ class AppState {
   final Map<String, List<Movie>>? personMovies;
   final Map<String, List<TvShow>>? personTvShows;
 
+  final List<String>? moviesRecentSearches;
+  final List<String>? tvShowsRecentSearches;
+
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
   final bool isLoadingStreamingPlatformsMedia;
@@ -159,6 +164,8 @@ class AppState {
     Map<String, PagingController<int, TvShow>>? similarTvShowsPagingControllers,
     Map<String, List<Movie>>? personMovies,
     Map<String, List<TvShow>>? personTvShows,
+    List<String>? moviesRecentSearches,
+    List<String>? tvShowsRecentSearches,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
     bool? isLoadingStreamingPlatformsMedia,
@@ -209,6 +216,8 @@ class AppState {
     similarTvShowsPagingControllers: similarTvShowsPagingControllers ?? this.similarTvShowsPagingControllers,
     personMovies: personMovies ?? this.personMovies,
     personTvShows: personTvShows ?? this.personTvShows,
+    moviesRecentSearches: moviesRecentSearches ?? this.moviesRecentSearches,
+    tvShowsRecentSearches: tvShowsRecentSearches ?? this.tvShowsRecentSearches,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
     isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,

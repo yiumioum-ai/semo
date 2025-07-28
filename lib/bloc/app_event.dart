@@ -180,3 +180,23 @@ class LoadPersonMedia extends AppEvent {
 
   final int personId;
 }
+
+// Recent Searches
+
+class LoadRecentSearches extends AppEvent {}
+
+class AddRecentSearch extends AppEvent {
+  const AddRecentSearch(this.query, this.mediaType);
+
+  final String query;
+  final MediaType mediaType;
+}
+
+class RemoveRecentSearch extends AppEvent {
+  const RemoveRecentSearch(this.query, this.mediaType);
+
+  final String query;
+  final MediaType mediaType;
+}
+
+class ClearRecentSearches extends AppEvent {}

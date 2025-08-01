@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:io";
 
 import "package:audio_video_progress_bar/audio_video_progress_bar.dart";
 import "package:flutter/material.dart";
@@ -20,6 +21,7 @@ class SemoPlayer extends StatefulWidget {
     super.key,
     required this.stream,
     required this.title,
+    this.subtitleFiles,
     this.initialProgress = 0,
     this.onProgress,
     this.onError,
@@ -32,6 +34,7 @@ class SemoPlayer extends StatefulWidget {
 
   final MediaStream stream;
   final String title;
+  final List<File>? subtitleFiles;
   final int initialProgress;
   final OnProgressCallback? onProgress;
   final OnErrorCallback? onError;
@@ -274,17 +277,21 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
   }
 
   Future<void> _setSubtitle(int index) async {
-    String? subtitleContent = index >= 0 ? await widget.stream.subtitleFiles![index].readAsString() : null;
+    File? subtitleFile = widget.subtitleFiles?[index];
 
-    setState(() {
-      _subtitleController = SubtitleController(
-        subtitleType: SubtitleType.srt,
-        subtitlesContent: subtitleContent,
-        showSubtitles: index >= 0,
-      );
-      _selectedSubtitle = index;
-      _showSubtitles = index >= 0;
-    });
+    if (subtitleFile != null) {
+      String? subtitleContent = index >= 0 ? await subtitleFile.readAsString() : null;
+
+      setState(() {
+        _subtitleController = SubtitleController(
+          subtitleType: SubtitleType.srt,
+          subtitlesContent: subtitleContent,
+          showSubtitles: index >= 0,
+        );
+        _selectedSubtitle = index;
+        _showSubtitles = index >= 0;
+      });
+    }
   }
 
   Future<void> _showSubtitleSelector() async => showDialog(
@@ -295,7 +302,7 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
         width: double.maxFinite,
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: widget.stream.subtitleFiles!.length,
+          itemCount: widget.subtitleFiles?.length,
           itemBuilder: (BuildContext context, int index) {
             bool isSelected = index == _selectedSubtitle;
             return ListTile(
@@ -422,7 +429,7 @@ class _SemoPlayerState extends State<SemoPlayer> with TickerProviderStateMixin {
                   ) : null,
                   title: Text(widget.title),
                   actions: <Widget>[
-                    if (widget.stream.subtitleFiles != null && widget.stream.subtitleFiles!.isNotEmpty) InkWell(
+                    if (widget.subtitleFiles != null && widget.subtitleFiles!.isNotEmpty) InkWell(
                       borderRadius: BorderRadius.circular(1000),
                       onTap: () async {
                         if (_showSubtitles) {

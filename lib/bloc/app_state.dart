@@ -1,6 +1,9 @@
+import "dart:io";
+
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:semo/models/episode.dart";
 import "package:semo/models/genre.dart";
+import "package:semo/models/media_stream.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/person.dart";
 import "package:semo/models/season.dart";
@@ -46,6 +49,10 @@ class AppState {
     this.personTvShows,
     this.moviesRecentSearches,
     this.tvShowsRecentSearches,
+    this.movieStreams,
+    this.episodeStreams,
+    this.movieSubtitles,
+    this.episodeSubtitles,
     this.isLoadingMovies = false,
     this.isLoadingTvShows = false,
     this.isLoadingStreamingPlatformsMedia = false,
@@ -57,6 +64,8 @@ class AppState {
     this.isTvShowLoading,
     this.isSeasonEpisodesLoading,
     this.isLoadingPersonMedia,
+    this.isExtractingMovieStream,
+    this.isExtractingEpisodeStream,
     this.error,
   });
 
@@ -109,6 +118,12 @@ class AppState {
 
   final List<String>? moviesRecentSearches;
   final List<String>? tvShowsRecentSearches;
+  
+  final Map<String, MediaStream>? movieStreams;
+  final Map<String, MediaStream>? episodeStreams;
+
+  final Map<String, List<File>>? movieSubtitles;
+  final Map<String, List<File>>? episodeSubtitles; 
 
   final bool isLoadingMovies;
   final bool isLoadingTvShows;
@@ -121,6 +136,8 @@ class AppState {
   final Map<String, bool>? isTvShowLoading;
   final Map<String, Map<int, bool>>? isSeasonEpisodesLoading;
   final Map<String, bool>? isLoadingPersonMedia;
+  final Map<String, bool>? isExtractingMovieStream;
+  final Map<String, bool>? isExtractingEpisodeStream;
 
   final String? error;
 
@@ -163,6 +180,10 @@ class AppState {
     Map<String, List<TvShow>>? personTvShows,
     List<String>? moviesRecentSearches,
     List<String>? tvShowsRecentSearches,
+    Map<String, MediaStream>? movieStreams,
+    Map<String, MediaStream>? episodeStreams,
+    Map<String, List<File>>? movieSubtitles,
+    Map<String, List<File>>? episodeSubtitles,
     bool? isLoadingMovies,
     bool? isLoadingTvShows,
     bool? isLoadingStreamingPlatformsMedia,
@@ -174,6 +195,8 @@ class AppState {
     Map<String, bool>? isTvShowLoading,
     Map<String, Map<int, bool>>? isSeasonEpisodesLoading,
     Map<String, bool>? isLoadingPersonMedia,
+    Map<String, bool>? isExtractingMovieStream,
+    Map<String, bool>? isExtractingEpisodeStream,
     String? error,
   }) => AppState(
     nowPlayingMovies: nowPlayingMovies ?? this.nowPlayingMovies,
@@ -214,6 +237,10 @@ class AppState {
     personTvShows: personTvShows ?? this.personTvShows,
     moviesRecentSearches: moviesRecentSearches ?? this.moviesRecentSearches,
     tvShowsRecentSearches: tvShowsRecentSearches ?? this.tvShowsRecentSearches,
+    movieStreams: movieStreams ?? this.movieStreams,
+    episodeStreams: episodeStreams ?? this.episodeStreams,
+    movieSubtitles: movieSubtitles ?? this.movieSubtitles,
+    episodeSubtitles: episodeSubtitles ?? this.episodeSubtitles,
     isLoadingMovies: isLoadingMovies ?? this.isLoadingMovies,
     isLoadingTvShows: isLoadingTvShows ?? this.isLoadingTvShows,
     isLoadingStreamingPlatformsMedia: isLoadingStreamingPlatformsMedia ?? this.isLoadingStreamingPlatformsMedia,
@@ -225,6 +252,8 @@ class AppState {
     isTvShowLoading: isTvShowLoading ?? this.isTvShowLoading,
     isSeasonEpisodesLoading: isSeasonEpisodesLoading ?? this.isSeasonEpisodesLoading,
     isLoadingPersonMedia: isLoadingPersonMedia ?? this.isLoadingPersonMedia,
+    isExtractingMovieStream: isExtractingMovieStream ?? this.isExtractingMovieStream,
+    isExtractingEpisodeStream: isExtractingEpisodeStream ?? this.isExtractingEpisodeStream,
     error: error ?? this.error,
   );
 }

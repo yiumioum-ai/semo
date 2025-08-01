@@ -22,7 +22,6 @@ import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
 import "package:semo/services/recently_watched_service.dart";
 import "package:semo/services/stream_extractor/extractor.dart";
-import "package:semo/services/subtitle_service.dart";
 import "package:semo/enums/media_type.dart";
 
 class TvShowScreen extends BaseScreen {
@@ -36,7 +35,6 @@ class TvShowScreen extends BaseScreen {
 
 class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
-  final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
   bool _isLoading = true;
   int _currentSeasonIndex = 0;
@@ -59,12 +57,6 @@ class _TvShowScreenState extends BaseScreenState<TvShowScreen> {
       final MediaStream? stream = await StreamExtractor.getStream(tvShow: widget.tvShow, episode: episode);
 
       if (stream != null && stream.url.isNotEmpty) {
-        stream.subtitleFiles = await _subtitleService.getSubtitles(
-          widget.tvShow.id,
-          seasonNumber: episode.season,
-          episodeNumber: episode.number,
-        );
-
         spinner.dismiss();
 
         final dynamic result = await navigate(

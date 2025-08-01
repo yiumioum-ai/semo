@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:io";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
@@ -40,6 +41,7 @@ class PlayerScreen extends BaseScreen {
 
 class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
   final RecentlyWatchedService _recentlyWatchedService = RecentlyWatchedService();
+  List<File>? _subtitleFiles;
 
   void _updateRecentlyWatched(int progressSeconds) {
     try {
@@ -123,6 +125,14 @@ class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
   @override
   Widget buildContent(BuildContext context) => BlocConsumer<AppBloc, AppState>(
     listener: (BuildContext context, AppState state) {
+      if (mounted) {
+        if (widget.mediaType == MediaType.movies) {
+          setState(() => _subtitleFiles = state.movieSubtitles?["${widget.tmdbId}"]);
+        } else {
+          setState(() => _subtitleFiles = state.episodeSubtitles?["${widget.episodeId}"]);
+        }
+      }
+
       if (state.error != null) {
         showSnackBar(context, state.error!);
         context.read<AppBloc>().add(ClearError());
@@ -142,10 +152,17 @@ class _PlayerScreenState extends BaseScreenState<PlayerScreen> {
         );
       }
 
+      if (widget.mediaType == MediaType.movies) {
+        _subtitleFiles = state.movieSubtitles?["${widget.tmdbId}"];
+      } else {
+        _subtitleFiles = state.episodeSubtitles?["${widget.episodeId}"];
+      }
+
       return Scaffold(
         body: SemoPlayer(
           stream: widget.stream,
           title: widget.title,
+          subtitleFiles: _subtitleFiles,
           initialProgress: progressSeconds,
           onProgress: _onProgress,
           onPlaybackComplete: _saveThenGoBack,

@@ -1,55 +1,100 @@
 import "dart:io";
-import "dart:typed_data";
 
 import "package:archive/archive.dart";
 import "package:dio/dio.dart";
+import "package:flutter/foundation.dart";
 import "package:logger/logger.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart";
+import "package:pretty_dio_logger/pretty_dio_logger.dart";
 import "package:semo/utils/secrets.dart";
 import "package:semo/utils/urls.dart";
 
 class SubtitleService {
-  factory SubtitleService() => _instance;
+  factory SubtitleService() {
+    if (!_instance._isDioLoggerInitialized) {
+      _dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: false,
+          error: true,
+          compact: true,
+          enabled: kDebugMode,
+        ),
+      );
+
+      _instance._isDioLoggerInitialized = true;
+    }
+
+    return _instance;
+  }
+
   SubtitleService._internal();
 
   static final SubtitleService _instance = SubtitleService._internal();
 
   final Logger _logger = Logger();
+  static final Dio _dio = Dio();
+  bool _isDioLoggerInitialized = false;
 
-  Future<List<File>> getSubtitles(int tmdbId, {int? seasonNumber, int? episodeNumber}) async {
+  Future<List<File>> getSubtitles(int tmdbId, {int? seasonNumber, int? episodeNumber, String? locale = "EN"}) async {
     try {
       final List<File> srtFiles = <File>[];
+      final Directory directory = await getTemporaryDirectory();
+      String destinationDirectoryPath = "${directory.path}/$tmdbId/$locale";
+
+      if (seasonNumber != null && episodeNumber != null) {
+        destinationDirectoryPath = "${directory.path}/$tmdbId/$locale/$seasonNumber/$episodeNumber";
+      }
+
+      Directory destinationDirectory = Directory(destinationDirectoryPath);
+
+      if (destinationDirectory.existsSync()) {
+        List<FileSystemEntity> destinationDirectoryEntities = destinationDirectory.listSync();
+
+        for (FileSystemEntity entity in destinationDirectoryEntities) {
+          if (entity is File) {
+            String fileExtension = path.extension(entity.path);
+
+            if (fileExtension == ".srt") {
+              srtFiles.add(entity);
+            }
+          }
+        }
+      }
+
+      if (srtFiles.isNotEmpty) {
+        return srtFiles;
+      }
 
       final Map<String, dynamic> parameters = <String, dynamic>{
         "api_key": Secrets.subdlApiKey,
         "tmdb_id": "$tmdbId",
-        "languages": "EN",
+        "languages": locale,
         "subs_per_page": "5",
       };
 
-      if (seasonNumber != null) {
+      if (seasonNumber != null && episodeNumber != null) {
         parameters["season_number"] = "$seasonNumber";
-      }
-      if (episodeNumber != null) {
         parameters["episode_number"] = "$episodeNumber";
       }
 
-      Dio dio = Dio();
-      final Response<dynamic> response = await dio.get(Urls.subtitles, queryParameters: parameters);
+      final Response<dynamic> response = await _dio.get(
+        Urls.subtitles,
+        queryParameters: parameters,
+      );
 
       if (response.statusCode == 200) {
         final dynamic subtitlesData = response.data;
         final List<dynamic> subtitles = subtitlesData["subtitles"] as List<dynamic>;
 
-        final Directory directory = await getTemporaryDirectory();
-        final String destinationDirectory = directory.path;
-
         for (final dynamic subtitle in subtitles) {
           final String zipUrl = subtitle["url"] as String;
           final String fullZipUrl = Urls.subdlDownloadBase + zipUrl;
 
-          final Response<dynamic> zipResponse = await dio.get<List<int>>(
+          final Response<dynamic> zipResponse = await _dio.get<List<int>>(
             fullZipUrl,
             options: Options(responseType: ResponseType.bytes),
           );
@@ -65,7 +110,7 @@ class SubtitleService {
 
                 if (extension == ".srt") {
                   final List<int> data = file.content as List<int>;
-                  final File srtFile = File("$destinationDirectory/$fileName");
+                  final File srtFile = File("$destinationDirectoryPath/$fileName");
                   await srtFile.writeAsBytes(data);
                   srtFiles.add(srtFile);
                 }

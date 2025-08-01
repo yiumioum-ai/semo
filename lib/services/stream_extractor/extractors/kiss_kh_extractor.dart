@@ -26,7 +26,13 @@ class KissKhExtractor implements BaseStreamExtractor {
   final String _providerKey = "kissKh";
 
   final StreamingServerBaseUrlService _streamingServerBaseUrlService = StreamingServerBaseUrlService();
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+    ),
+  );
   final Logger _logger = Logger();
 
   Future<String?> _findExternalId(String baseUrl, StreamExtractorOptions options) async {

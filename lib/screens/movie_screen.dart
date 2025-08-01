@@ -16,8 +16,6 @@ import "package:semo/models/movie.dart";
 import "package:semo/models/person.dart";
 import "package:semo/screens/base_screen.dart";
 import "package:semo/screens/player_screen.dart";
-import "package:semo/services/stream_extractor/extractor.dart";
-import "package:semo/services/subtitle_service.dart";
 import "package:semo/enums/media_type.dart";
 
 class MovieScreen extends BaseScreen {
@@ -31,9 +29,10 @@ class MovieScreen extends BaseScreen {
 
 class _MovieScreenState extends BaseScreenState<MovieScreen> {
   late Movie _movie = widget.movie;
-  final SubtitleService _subtitleService = SubtitleService();
   bool _isFavorite = false;
   bool _isLoading = true;
+  bool _isPlayTriggered = false;
+  bool _isExtractingStream = false;
 
   void _toggleFavorite() {
     try {
@@ -46,51 +45,21 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     } catch (_) {}
   }
 
-  Future<void> _playMovie() async {
-    spinner.show();
-
-    try {
-      final MediaStream? stream = await StreamExtractor.getStream(movie: _movie);
-
-      if (stream != null && stream.url.isNotEmpty) {
-        stream.subtitleFiles = await _subtitleService.getSubtitles(_movie.id);
-
-        spinner.dismiss();
-
-        final dynamic result = await navigate(
-          PlayerScreen(
-            tmdbId: _movie.id,
-            title: _movie.title,
-            stream: stream,
-            mediaType: MediaType.movies,
-          ),
-        );
-
-        if (result != null) {
-          _handlePlayerResult(result);
-        }
-      } else {
-        if (mounted) {
-          showSnackBar(context, "No stream found");
-        }
-      }
-    } catch (_) {
-      if (mounted) {
-        showSnackBar(context, "Failed to load stream");
-      }
-    }
-
-    spinner.dismiss();
+  Future<void> _extractMovieStream() async {
+    setState(() => _isPlayTriggered = true);
+    context.read<AppBloc>().add(ExtractMovieStream(_movie));
   }
 
-  void _handlePlayerResult(Map<String, dynamic> result) {
-    try {
-      if (mounted) {
-        if (result["error"] != null) {
-          showSnackBar(context, "Playback error. Try again");
-        }
-      }
-    } catch (_) {}
+  Future<void> _playMovie(MediaStream stream) async {
+    context.read<AppBloc>().add(LoadMovieSubtitles(_movie.id));
+    await navigate(
+      PlayerScreen(
+        tmdbId: _movie.id,
+        title: _movie.title,
+        stream: stream,
+        mediaType: MediaType.movies,
+      ),
+    );
   }
 
   Future<void> _refreshData() async {
@@ -113,12 +82,18 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
     return "$mins ${mins == 1 ? "min" : "mins"}";
   }
 
-  Widget _buildPlayButton() => Container(
+  Widget _buildPlayButton(MediaStream? stream) => Container(
     width: double.infinity,
     height: 50,
     margin: const EdgeInsets.only(top: 30),
     child: ElevatedButton(
-      onPressed: _playMovie,
+      onPressed: !_isExtractingStream ? () {
+        if (stream != null && stream.url.isNotEmpty) {
+          _playMovie(stream);
+        } else if (!_isExtractingStream) {
+          _extractMovieStream();
+        }
+      } : null,
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).primaryColor,
         shape: RoundedRectangleBorder(
@@ -135,7 +110,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
           ),
           const SizedBox(width: 5),
           Text(
-            "Play",
+            !_isExtractingStream ? "Play" : "Loading...",
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontSize: 22,
             ),
@@ -194,7 +169,17 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
           _isLoading = state.isMovieLoading?[_movie.id.toString()] ?? true;
           _movie = state.movies?.firstWhere((Movie movie) => movie.id == _movie.id, orElse: () => widget.movie) ?? widget.movie;
           _isFavorite = state.favoriteMovies?.any((Movie movie) => movie.id == _movie.id) ?? false;
+          _isExtractingStream = state.isExtractingMovieStream?[_movie.id.toString()] ?? false;
         });
+      }
+
+      MediaStream? stream = state.movieStreams?[_movie.id.toString()];
+
+      if (_isPlayTriggered && !_isExtractingStream && stream != null) {
+        if (mounted) {
+          setState(() => _isPlayTriggered = false);
+        }
+        _playMovie(stream);
       }
 
       if (state.error != null) {
@@ -214,6 +199,11 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
       } catch (_) {}
 
       bool isMovieLoaded = movie != null;
+      MediaStream? stream = state.movieStreams?[_movie.id.toString()];
+
+      if (mounted) {
+        _isExtractingStream = state.isExtractingMovieStream?[_movie.id.toString()] ?? false;
+      }
 
       return Scaffold(
         appBar: AppBar(
@@ -252,7 +242,7 @@ class _MovieScreenState extends BaseScreenState<MovieScreen> {
                           subtitle: "${_movie.releaseDate.split("-")[0]} · ${_formatDuration(Duration(minutes: _movie.duration))}",
                           overview: _movie.overview,
                         ),
-                        _buildPlayButton(),
+                        _buildPlayButton(stream),
                         _buildPersonCardHorizontalList(state.movieCast?[_movie.id.toString()]),
                         _buildMediaCardHorizontalList(
                           title: "Recommendations",

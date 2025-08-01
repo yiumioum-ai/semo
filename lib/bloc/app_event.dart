@@ -1,4 +1,5 @@
 import "package:semo/enums/media_type.dart";
+import "package:semo/models/episode.dart";
 import "package:semo/models/movie.dart";
 import "package:semo/models/tv_show.dart";
 
@@ -190,3 +191,43 @@ class RemoveRecentSearch extends AppEvent {
 }
 
 class ClearRecentSearches extends AppEvent {}
+
+// Streams
+
+class ExtractMovieStream extends AppEvent {
+  const ExtractMovieStream(this.movie);
+
+  final Movie movie;
+}
+
+class ExtractEpisodeStream extends AppEvent {
+  const ExtractEpisodeStream(this.tvShow, this.episode);
+
+  final TvShow tvShow;
+  final Episode episode;
+}
+
+// Subtitles
+
+class LoadMovieSubtitles extends AppEvent {
+  const LoadMovieSubtitles(this.movieId, {this.locale = "EN"});
+
+  final int movieId;
+  final String? locale;
+}
+
+class LoadEpisodeSubtitles extends AppEvent {
+  const LoadEpisodeSubtitles(
+      this.tvShowId, {
+        required this.seasonNumber,
+        required this.episodeId,
+        required this.episodeNumber,
+        this.locale = "EN",
+      });
+
+  final int tvShowId;
+  final int seasonNumber;
+  final int episodeId;
+  final int episodeNumber;
+  final String locale;
+}

@@ -38,6 +38,15 @@ class AuthService {
     }
   }
 
+  Future<UserCredential?> signInAsGuest() async {
+    try {
+      return await _auth.signInAnonymously();
+    } catch (e, s) {
+      _logger.e("Failed to authenticate as guest", error: e, stackTrace: s);
+      rethrow;
+    }
+  }
+
   bool isAuthenticated() {
     try {
       User? user = getUser();

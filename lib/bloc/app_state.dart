@@ -1,13 +1,13 @@
 import "dart:io";
 
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
-import "package:semo/models/episode.dart";
-import "package:semo/models/genre.dart";
-import "package:semo/models/media_stream.dart";
-import "package:semo/models/movie.dart";
-import "package:semo/models/person.dart";
-import "package:semo/models/season.dart";
-import "package:semo/models/tv_show.dart";
+import "package:index/models/episode.dart";
+import "package:index/models/genre.dart";
+import "package:index/models/media_stream.dart";
+import "package:index/models/movie.dart";
+import "package:index/models/person.dart";
+import "package:index/models/season.dart";
+import "package:index/models/tv_show.dart";
 
 class AppState {
   const AppState({

@@ -3,9 +3,9 @@ import "dart:io";
 
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:logger/logger.dart";
-import "package:semo/bloc/app_event.dart";
-import "package:semo/bloc/app_state.dart";
-import "package:semo/services/subtitle_service.dart";
+import "package:index/bloc/app_event.dart";
+import "package:index/bloc/app_state.dart";
+import "package:index/services/subtitle_service.dart";
 
 mixin SubtitlesHandler on Bloc<AppEvent, AppState> {
   final Logger _logger = Logger();

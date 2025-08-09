@@ -1,4 +1,4 @@
-package com.mosesmbaga.semo;
+package com.mosesmbaga.index;
 
 import io.flutter.embedding.android.FlutterActivity;
 

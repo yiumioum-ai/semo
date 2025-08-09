@@ -2,13 +2,13 @@ import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:font_awesome_flutter/font_awesome_flutter.dart";
 import "package:google_sign_in/google_sign_in.dart";
-import "package:semo/bloc/app_bloc.dart";
-import "package:semo/bloc/app_event.dart";
-import "package:semo/components/snack_bar.dart";
-import "package:semo/gen/assets.gen.dart";
-import "package:semo/screens/base_screen.dart";
-import "package:semo/screens/fragments_screen.dart";
-import "package:semo/services/auth_service.dart";
+import "package:index/bloc/app_bloc.dart";
+import "package:index/bloc/app_event.dart";
+import "package:index/components/snack_bar.dart";
+import "package:index/gen/assets.gen.dart";
+import "package:index/screens/base_screen.dart";
+import "package:index/screens/fragments_screen.dart";
+import "package:index/services/auth_service.dart";
 import "package:video_player/video_player.dart";
 
 class LandingScreen extends BaseScreen {
@@ -33,6 +33,29 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
 
     try {
       await _authService.signIn();
+
+      if (mounted) {
+        context.read<AppBloc>().add(LoadInitialData());
+
+        await navigate(
+          const FragmentsScreen(),
+          replace: true,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showSnackBar(context, "An error occurred");
+      }
+    }
+
+    spinner.dismiss();
+  }
+
+  Future<void> _authenticateAsGuest() async {
+    spinner.show();
+
+    try {
+      await _authService.signInAsGuest();
 
       if (mounted) {
         context.read<AppBloc>().add(LoadInitialData());
@@ -108,6 +131,63 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
     ),
   );
 
+  Widget _buildContinueAsGuestButton() => Container(
+    width: double.infinity,
+    height: 60,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        side: const BorderSide(
+          width: 3,
+          color: Colors.white,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+      onPressed: () async {
+        await _authenticateAsGuest();
+      },
+      child: Container(
+        width: double.infinity,
+        child: Stack(
+          children: <Widget>[
+            const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                FaIcon(
+                  FontAwesomeIcons.userSecret,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.only(
+                right: 16,
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    const Spacer(),
+                    Text(
+                      "Continue as Guest",
+                      style: Theme.of(context).textTheme.displayMedium,
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   Widget _buildContent() => Column(
     children: <Widget>[
       const Spacer(),
@@ -151,11 +231,21 @@ class _LandingScreenState extends BaseScreenState<LandingScreen> {
               left: false,
               right: false,
               bottom: true,
-              child: Container(
-                margin: const EdgeInsets.only(
-                  bottom: 18,
-                ),
-                child: _buildContinueWithGoogleButton(),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: _buildContinueWithGoogleButton(),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      bottom: 18,
+                    ),
+                    child: _buildContinueAsGuestButton(),
+                  ),
+                ],
               ),
             ),
           ],

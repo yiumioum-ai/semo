@@ -4,10 +4,10 @@ import "dart:io";
 import "package:audio_video_progress_bar/audio_video_progress_bar.dart";
 import "package:flutter/material.dart";
 import "package:font_awesome_flutter/font_awesome_flutter.dart";
-import "package:semo/models/media_progress.dart";
-import "package:semo/models/media_stream.dart";
-import "package:semo/services/preferences.dart";
-import "package:semo/models/subtitle_style.dart" as local;
+import "package:index/models/media_progress.dart";
+import "package:index/models/media_stream.dart";
+import "package:index/services/preferences.dart";
+import "package:index/models/subtitle_style.dart" as local;
 import "package:subtitle_wrapper_package/subtitle_wrapper_package.dart";
 import "package:video_player/video_player.dart";
 
